@@ -1,0 +1,5 @@
+unfolding
+unrolling 2
+unrolling 5
+stencil
+CSRbyNZ
