@@ -34,7 +34,7 @@ the other is for code generation. E.g. `csrByNZAnalyzer.h/cpp` and `csrByNZ.cpp`
 
 ## How to Compile
 You should have a slightly modified version of LLVM 3.7.0.
-See the `scripts` folder to see how to install LLVM.
+See the [scripts](scripts/) folder to see how to install LLVM.
 Once you have LLVM, simply do a 
 
 `make`
