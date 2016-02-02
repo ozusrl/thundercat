@@ -1,0 +1,42 @@
+Index: include/llvm/MC/MCObjectStreamer.h
+===================================================================
+--- include/llvm/MC/MCObjectStreamer.h	(revision 246980)
++++ include/llvm/MC/MCObjectStreamer.h	(working copy)
+@@ -59,6 +59,11 @@
+   void EmitFrames(MCAsmBackend *MAB);
+   void EmitCFISections(bool EH, bool Debug) override;
+ 
++  /// Get a data fragment to write into, creating a new one if the current
++  /// fragment is not a data fragment.
++  MCDataFragment *getOrCreateDataFragment();
++  MCDataFragment *createDataFragment();
++
+ protected:
+   MCFragment *getCurrentFragment() const;
+ 
+@@ -69,10 +74,6 @@
+     F->setParent(CurSection);
+   }
+ 
+-  /// Get a data fragment to write into, creating a new one if the current
+-  /// fragment is not a data fragment.
+-  MCDataFragment *getOrCreateDataFragment();
+-
+   bool changeSectionImpl(MCSection *Section, const MCExpr *Subsection);
+ 
+   /// If any labels have been emitted but not assigned fragments, ensure that
+Index: lib/MC/MCObjectStreamer.cpp
+===================================================================
+--- lib/MC/MCObjectStreamer.cpp	(revision 246980)
++++ lib/MC/MCObjectStreamer.cpp	(working copy)
+@@ -110,6 +110,10 @@
+   return F;
+ }
+ 
++MCDataFragment *MCObjectStreamer::createDataFragment() {
++  return new MCDataFragment(getCurrentSectionOnly());
++}
++
+ void MCObjectStreamer::visitUsedSymbol(const MCSymbol &Sym) {
+   Assembler->registerSymbol(Sym);
+ }
