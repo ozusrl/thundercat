@@ -69,12 +69,11 @@ Matrix* readMatrixFromFile(string fileName) {
 }
 
 int main(int argc, const char *argv[]) {
-  // Usage: spMVgen <matrixName> <splitter> <splitterArgs> 
-  //                <specializerOne> <specializerArgs>  
-  //                <specializerTwo> <specializerArgs> {-debug|-dump_object|-dump_matrix|-num_threads}
-  // E.g: spMVgen matrices/fidap037 splitAll unfolding stencil 
-  // E.g: spMVgen matrices/fidap037 splitAll unfolding stencil -debug
-  // E.g: spMVgen matrices/fidap037 splitAll unfolding stencil -dump_object
+  // Usage: spMVgen <matrixName> <specializerName> {-debug|-dump_object|-dump_matrix|-num_threads|-matrix_stats}
+  // E.g: spMVgen matrices/fidap037 unfolding 
+  // E.g: spMVgen matrices/fidap037 unfolding -debug
+  // E.g: spMVgen matrices/fidap037 unfolding -dump_object
+  // E.g: spMVgen matrices/fidap037 unfolding -num_threads 6
   string genOSKI("genOSKI");
   string genOSKI33("genOSKI33");
   string genOSKI44("genOSKI44");
@@ -85,13 +84,6 @@ int main(int argc, const char *argv[]) {
   string unrollingWithGOTO("unrollingWithGOTO");
   string mkl("MKL");
   string plainCSR("PlainCSR");
-
-  string splitAll("splitAll");
-  string splitBySize("split_by_size");
-  string splitByCount("split_by_count");
-  string splitByBand("split_by_band");
-  string splitByDenseBand("split_by_dense_band");
-  string splitByBlock("split_by_block");
 
   string debugFlag("-debug");
   string dumpObjFlag("-dump_object");
