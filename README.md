@@ -1,5 +1,5 @@
-# SpMVlib
-This is a sparse matrix-vector multiplication library that generates SpMV code specialized for the given matrix.
+# Thundercat
+This is a sparse matrix-vector multiplication (SpMV) library that generates SpMV code specialized for a given matrix.
 Code is generated and executed dynamically for the X86_64 architecture.
 For technical details see:
 
