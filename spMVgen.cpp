@@ -297,7 +297,7 @@ void SpMVSpecializer::specialize() {
     exit(1);
   }
   
-  std::unique_ptr<MemoryBuffer> Buffer(MemoryBuffer::getMemBuffer(svectorOS.str()));
+  std::unique_ptr<MemoryBuffer> Buffer(MemoryBuffer::getMemBuffer(svectorOS.str(), "", false));
   ErrorOr<std::unique_ptr<ObjectFile>> objectBuffer(ObjectFile::createObjectFile(Buffer->getMemBufferRef()));
   loadBuffer(objectBuffer.get().get());
 }
