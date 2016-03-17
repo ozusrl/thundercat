@@ -728,4 +728,43 @@ void SpMVCodeEmitter::emitFPNegation(unsigned xmmRegisterNumber) {
   DFOS->append(data, dataPtr);
 }
 
+void SpMVCodeEmitter::emitMovImm(int value, unsigned destRegister) {
+  if (destRegister != X86::RAX) {
+    std::cerr << "Destination register can only be RAX.\n";
+    exit(1);
+  }
 
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+
+  *(dataPtr++) = 0x48;
+  *(dataPtr++) = 0xc7;
+  *(dataPtr++) = 0xc0;
+
+  *(dataPtr++) = (unsigned char) value;
+  *(dataPtr++) = (unsigned char) (value >> 8);
+  *(dataPtr++) = (unsigned char) (value >> 16);
+  *(dataPtr++) = (unsigned char) (value >> 24);
+
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitADDrrInst(unsigned sourceRegister, unsigned destRegister) {
+  if (destRegister != X86::RAX) {
+    std::cerr << "Destination register can only be RAX.\n";
+    exit(1);
+  }
+  if (sourceRegister != X86::R9) {
+    std::cerr << "Source register can only be R9.\n";
+    exit(1);
+  }
+
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+
+  *(dataPtr++) = 0x4c;
+  *(dataPtr++) = 0x01;
+  *(dataPtr++) = 0xc8;
+
+  DFOS->append(data, dataPtr);
+}
