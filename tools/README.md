@@ -24,6 +24,7 @@ $ ./genSpMVlibDebugOutput.sh stencil
 For each matrix,
 performs a numerical diff between the outputs of
 two specialization methods.
+Requires the **numdiff** command (i.e. **cern-ndiff**).
 Sample usage:
 
 ```bash
