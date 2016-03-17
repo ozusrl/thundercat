@@ -12,6 +12,8 @@
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
 
+#define TEMPO_O1
+
 using namespace llvm;
 using namespace spMVgen;
 using namespace std;
@@ -170,6 +172,24 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   
   // done for a single row
   for(int i = 0 ; i < rowLength ; i++){
+#ifdef TEMPO_O1
+    //movq "i", %rax
+    emitMovImm(i, X86::RAX);
+    //addq %r9, %rax
+    emitADDrrInst(X86::R9, X86::RAX);
+    //movsd (%r8,%rax,8), %xmm1
+    emitMOVSDrmInst(0, X86::R8, X86::RAX, 8, 1);
+    //movq "i", %rax
+    emitMovImm(i, X86::RAX);
+    //addq %r9, %rax
+    emitADDrrInst(X86::R9, X86::RAX);
+    //movslq (%rcx,%rax,4), %rax
+    emitMOVSLQInst(X86::RAX, X86::RCX, X86::RAX, 4, 0);
+    //mulsd (%rdi,%rax,8), %xmm1
+    emitMULSDrmInst(0, X86::RDI, X86::RAX, 8, 1);
+    //addsd %xmm1, %xmm0
+    emitRegInst(X86::ADDSDrr, 1, 0);
+#else
     //movslq "i*4"(%rcx,%r9,4), %rax
     emitMOVSLQInst(X86::RAX, X86::RCX, X86::R9, 4, i*4);
     //movsd "i*8"(%r8,%r9,8), %xmm1
@@ -178,6 +198,7 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitMULSDrmInst(0, X86::RDI, X86::RAX, 8, 1);
     //addsd %xmm1, %xmm0
     emitRegInst(X86::ADDSDrr, 1, 0);
+#endif
   }
   
   // movslq (%rdx,%rbx,4), %rax
