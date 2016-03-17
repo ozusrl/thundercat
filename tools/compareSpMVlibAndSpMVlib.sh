@@ -14,10 +14,10 @@ echo "*" Comparing spMVlib-generated code for "$method1Name" against spMVlib-gen
 while read matrixName
 do
     echo -n $matrixName" "
-    folder1Name=../../newspecs/spMVgen/"$matrixName"/"$method1Name"
-    folder2Name=../../newspecs/spMVgen/"$matrixName"/"$method2Name"
+    folder1Name=data/"$matrixName"/"$method1Name"
+    folder2Name=data/"$matrixName"/"$method2Name"
     cd ..
-    ndiff --relative-error 1.0e-05 "$folder1Name"/output.txt "$folder2Name"/output.txt 
+    numdiff -q "$folder1Name"/output.txt "$folder2Name"/output.txt numdiff.cfg
     cd tools
 done < matrixNames.txt
 
