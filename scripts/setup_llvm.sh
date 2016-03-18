@@ -13,6 +13,10 @@ cd $DESTINATION/tools
 svn co $REVISION http://llvm.org/svn/llvm-project/cfe/$SUFFIX clang
 cd ../..
 
+cd $DESTINATION/tools
+svn co $REVISION http://llvm.org/svn/llvm-project/lldb/$SUFFIX lldb
+cd ../..
+
 cd $DESTINATION/tools/clang/tools
 svn co $REVISION http://llvm.org/svn/llvm-project/clang-tools-extra/$SUFFIX extra
 cd ../../../..
