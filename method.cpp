@@ -749,6 +749,65 @@ void SpMVCodeEmitter::emitMovImm(int value, unsigned destRegister) {
   DFOS->append(data, dataPtr);
 }
 
+void SpMVCodeEmitter::emitMovlInst(unsigned sourceRegister, unsigned destRegister) {
+  if (sourceRegister != X86::EAX) {
+    std::cerr << "Source register can only be EAX.\n";
+    exit(1);
+  }
+  unsigned char data[3];
+  unsigned char *dataPtr = data;
+  *(dataPtr++) = 0x89;
+
+  switch(destRegister) {
+    case X86::ECX:
+      *(dataPtr++) = 0xC1;
+      break;
+    case X86::EDX:
+      *(dataPtr++) = 0xC2;
+      break;
+    default:
+      std::cerr << "Destination register can only be ECX or EDX.\n";
+      break;
+  }
+  DFOS->append(data, dataPtr);
+}
+
+// addl offset(reg), 32bitreg
+void SpMVCodeEmitter::emitAddlInst(int offset, unsigned sourceRegister, unsigned destRegister) {
+  if (sourceRegister != X86::RBP) {
+    std::cerr << "Source register can only be RBP.\n";
+    exit(1);
+  }
+  unsigned char data[3];
+  unsigned char *dataPtr = data;
+  *(dataPtr++) = 0x03;
+
+  switch(destRegister) {
+    case X86::ECX:
+      *(dataPtr++) = 0x4D;
+      break;
+    case X86::EDX:
+      *(dataPtr++) = 0x55;
+      break;
+    default:
+      std::cerr << "Destination register can only be ECX or EDX.\n";
+      break;
+  }
+  
+  if (offset != 0) {
+    if (offset < 128 && offset >= -128) {
+      *(dataPtr++) = (unsigned char) offset;
+    } else {
+      *(dataPtr++) = (unsigned char) offset;
+      *(dataPtr++) = (unsigned char) (offset >> 8);
+      *(dataPtr++) = (unsigned char) (offset >> 16);
+      *(dataPtr++) = (unsigned char) (offset >> 24);
+    }
+  }
+
+  DFOS->append(data, dataPtr);
+}
+
 void SpMVCodeEmitter::emitADDrrInst(unsigned sourceRegister, unsigned destRegister) {
   if (destRegister != X86::RAX) {
     std::cerr << "Destination register can only be RAX.\n";
