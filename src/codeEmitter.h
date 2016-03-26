@@ -45,7 +45,9 @@ namespace spMVgen {
 
     void emitFPNegation(unsigned xmmRegisterNumber);
     void emitMovImm(int value, unsigned destRegister);
+    void emitMovlInst(unsigned sourceRegister, unsigned destRegister);
     void emitADDrrInst(unsigned sourceRegister, unsigned destRegister);
+    void emitAddlInst(int offset, unsigned sourceRegister, unsigned destRegister);
 
   protected:
     llvm::SmallVectorImpl<char> *DFOS;
