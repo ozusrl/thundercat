@@ -11,7 +11,7 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 
-#define TEMPO_O1
+#define SPMV
 
 using namespace llvm;
 using namespace spMVgen;
@@ -140,6 +140,9 @@ void CSRbyNZCodeEmitter::dumpPushPopHeader() {
   emitLEAQInst(X86::RDX, X86::RDX, (int)(sizeof(int) * baseRowsIndex));
   emitLEAQInst(X86::RCX, X86::RCX, (int)(sizeof(int) * baseValsIndex));
   emitLEAQInst(X86::R8, X86::R8, (int)(sizeof(double) * baseValsIndex));
+  // movq %r8, -8(%rbp)    <--- vals
+  // movq %rcx, -16(%rbp)  <--- cols
+  // movq %rdx, -24(%rbp)  <--- rows
 }
 
 void CSRbyNZCodeEmitter::dumpPushPopFooter() {
@@ -168,7 +171,15 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   
   //xorps %xmm0, %xmm0
   emitRegInst(X86::XORPSrr, 0, 0);
-  
+#ifdef TEMPO_O0  
+  //movslq -44(%rbp), %rcx <---- %rcx = a
+  //movq -24(%rbp), %rdx   <---- %rdx = rows
+  //movl (%rdx,%rcx,4), %eax 
+  //movl %eax, -52(%rbp)   <---- row = rows[a]
+  //movsd %xmm0, -64(%rbp) <---- sum
+  emitMOVSDmrInst(0, -64, X86::RBP);
+#endif
+
   // done for a single row
   for(int i = 0 ; i < rowLength ; i++){
 #ifdef TEMPO_O1
@@ -188,7 +199,35 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitMULSDrmInst(0, X86::RDI, X86::RAX, 8, 1);
     //addsd %xmm1, %xmm0
     emitRegInst(X86::ADDSDrr, 1, 0);
-#else
+#endif
+#ifdef TEMPO_O0
+    //movq "i", %rax
+    emitMovImm(i, X86::RAX);
+    //movl %eax, %ecx (89 c1)
+    emitMovlInst(X86::EAX, X86::ECX);
+    //movq "i", %rax
+    emitMovImm(i, X86::RAX);
+    //movl %eax, %edx (89 c2)
+    emitMovlInst(X86::EAX, X86::EDX);
+    //movsd -64(%rbp), %xmm0
+    emitMOVSDrmInst(-64, X86::RBP, 0);
+    //addl -48(%rbp), %edx
+    emitAddlInst(-48, X86::RBP, X86::EDX);
+    //movslq %edx, %rax
+    //movq -8(%rbp), %rsi
+    //movsd   (%rsi,%rax,8), %xmm1
+    //addl    -48(%rbp), %ecx
+    //movslq  %ecx, %rax
+    //movq    -16(%rbp), %rsi
+    //movslq  (%rsi,%rax,4), %rax
+    //movq    -32(%rbp), %rsi
+    //mulsd   (%rsi,%rax,8), %xmm1
+    //addsd %xmm1, %xmm0
+    emitRegInst(X86::ADDSDrr, 1, 0);
+    //movsd   %xmm0, -64(%rbp)   
+    emitMOVSDmrInst(0, -64, X86::RBP);
+#endif
+#ifdef SPMV
     //movslq "i*4"(%rcx,%r9,4), %rax
     emitMOVSLQInst(X86::RAX, X86::RCX, X86::R9, 4, i*4);
     //movsd "i*8"(%r8,%r9,8), %xmm1
@@ -199,7 +238,22 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitRegInst(X86::ADDSDrr, 1, 0);
 #endif
   }
-  
+
+#ifdef TEMPO_O0
+  //movslq -52(%rbp), %rcx
+  //movq -40(%rbp), %rdx
+  //addsd (%rdx,%rcx,8), %xmm0
+  //movsd %xmm0, (%rdx,%rcx,8) <--- w[row] = sum
+  //movl -44(%rbp), %eax
+  //addl $1, %eax         
+  //movl %eax, -44(%rbp)       <--- a+=1
+  //movl -48(%rbp), %eax
+  //addl rowLength, %eax
+  //movl %eax, -48(%rbp)       <--- b+=length
+  //cmpl lengthEnding, -44(%rbp)
+  //jne .LBB0_1
+  emitJNEInst(labeledBlockBeginningOffset);
+else
   // movslq (%rdx,%rbx,4), %rax
   emitMOVSLQInst(X86::RAX, X86::RDX, X86::RBX, 4, 0);
   
@@ -227,4 +281,5 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitADDQInst(numRows*rowLength*4, X86::RCX);
   //addq $numRows*rowLength*8, %r8
   emitADDQInst(numRows*rowLength*8, X86::R8);
+#endif
 }

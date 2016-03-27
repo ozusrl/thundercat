@@ -383,9 +383,10 @@ void SpMVCodeEmitter::emitMOVQInst(unsigned baseRegisterTo, unsigned baseRegiste
   unsigned char offset2 = registerCode(baseRegisterFrom);
 
   *(dataPtr++) += offset1 + 8 * offset2;
-
   DFOS->append(data, dataPtr);
 }
+
+
 
 void SpMVCodeEmitter::emitJNEInst(long destinationAddress){
   long offset = (long)destinationAddress - (long)DFOS->size();
