@@ -11,7 +11,7 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 
-#define SPMV
+#define TEMPO_O0
 
 using namespace llvm;
 using namespace spMVgen;
@@ -214,14 +214,23 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     //addl -48(%rbp), %edx
     emitAddlInst(-48, X86::RBP, X86::EDX);
     //movslq %edx, %rax
+    emitMOVSLQ32Inst(X86::EDX, X86::RAX);
     //movq -8(%rbp), %rsi
+    emitMOVQOffsetInst(-8, X86::RSI, X86::RBP);
     //movsd   (%rsi,%rax,8), %xmm1
+    emitMOVSDrmInst(0, X86::RSI, X86::RAX, 8, 1);
     //addl    -48(%rbp), %ecx
+    emitAddlInst(-48, X86::RBP, X86::ECX);
     //movslq  %ecx, %rax
+    emitMOVSLQ32Inst(X86::ECX, X86::RAX);
     //movq    -16(%rbp), %rsi
+    emitMOVQOffsetInst(-16, X86::RSI, X86::RBP);
     //movslq  (%rsi,%rax,4), %rax
+    emitMOVSLQInst(X86::RAX, X86::RSI, X86::RAX, 4, 0);
     //movq    -32(%rbp), %rsi
+    emitMOVQOffsetInst(-32, X86::RSI, X86::RBP);
     //mulsd   (%rsi,%rax,8), %xmm1
+    emitMULSDrmInst(0, X86::RSI, X86::RAX, 8, 1);
     //addsd %xmm1, %xmm0
     emitRegInst(X86::ADDSDrr, 1, 0);
     //movsd   %xmm0, -64(%rbp)   
@@ -241,22 +250,31 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
 
 #ifdef TEMPO_O0
   //movslq -52(%rbp), %rcx
+  emitMOVSLQInst(X86::RCX, X86::RBX, 0, 1, -52);
   //movq -40(%rbp), %rdx
+  emitMOVQOffsetInst(-8, X86::RSI, X86::RDX);
   //addsd (%rdx,%rcx,8), %xmm0
+  emitADDSDrmInst(0, X86::RDX, X86::RCX, 8, 0);
   //movsd %xmm0, (%rdx,%rcx,8) <--- w[row] = sum
+  emitMOVSDmrInst(0, 0, X86::RDX, X86::RCX, 8);
   //movl -44(%rbp), %eax
-  //addl $1, %eax         
+  emitMOVLOffsetInst(-44, X86::EAX, X86::RBP);
+  //addl $1, %eax        
+  emitAddlImmInst(1, X86::EAX); 
   //movl %eax, -44(%rbp)       <--- a+=1
+  emitMOVLOffsetInst(-44, X86::RBP, X86::EAX);
   //movl -48(%rbp), %eax
+  emitMOVLOffsetInst(-48, X86::EAX, X86::RBP);
   //addl rowLength, %eax
+  emitAddlImmInst(rowLength, X86::EAX);
   //movl %eax, -48(%rbp)       <--- b+=length
+  emitMOVLOffsetInst(-48, X86::RBP, X86::EAX);
   //cmpl lengthEnding, -44(%rbp)
   //jne .LBB0_1
   emitJNEInst(labeledBlockBeginningOffset);
-else
   // movslq (%rdx,%rbx,4), %rax
   emitMOVSLQInst(X86::RAX, X86::RDX, X86::RBX, 4, 0);
-  
+#else
   //addq $rowLength, %r9
   emitADDQInst(rowLength, X86::R9);
   
