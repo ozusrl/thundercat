@@ -18,8 +18,12 @@ namespace spMVgen {
                         int memOffset);
     void emitMOVSLQInst(unsigned destinationRegister, unsigned baseRegister,
                         int memOffset);
+    void emitMOVSLQ32Inst(unsigned sourceRegister, unsigned destRegister);
     void emitADDQInst(unsigned long offset, unsigned long baseRegister);
     void emitMOVQInst(unsigned baseRegisterTo, unsigned baseRegisterFrom);
+    void emitMOVQOffsetInst(int offset, unsigned baseRegisterTo, unsigned baseRegiserFrom);
+    void emitMOVLOffsetInst(int offset, unsigned baseRegisterTo, unsigned baseRegisterFrom);
+
     void emitJNEInst(long destinationAddress);
     void emitJMPInst(long destinationAddress);
     void emitDynamicJMPInst(unsigned baseRegister);
@@ -48,6 +52,7 @@ namespace spMVgen {
     void emitMovlInst(unsigned sourceRegister, unsigned destRegister);
     void emitADDrrInst(unsigned sourceRegister, unsigned destRegister);
     void emitAddlInst(int offset, unsigned sourceRegister, unsigned destRegister);
+    void emitAddlImmInst(unsigned long offset,  unsigned destRegister);
 
   protected:
     llvm::SmallVectorImpl<char> *DFOS;
