@@ -273,9 +273,9 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   //cmpl lengthEnding, -44(%rbp)
   //jne .LBB0_1
   emitJNEInst(labeledBlockBeginningOffset);
+#else
   // movslq (%rdx,%rbx,4), %rax
   emitMOVSLQInst(X86::RAX, X86::RDX, X86::RBX, 4, 0);
-#else
   //addq $rowLength, %r9
   emitADDQInst(rowLength, X86::R9);
   
