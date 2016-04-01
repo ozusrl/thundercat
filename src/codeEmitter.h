@@ -23,12 +23,16 @@ namespace spMVgen {
     void emitMOVQInst(unsigned baseRegisterTo, unsigned baseRegisterFrom);
     void emitMOVQOffsetInst(int offset, unsigned baseRegisterTo, unsigned baseRegiserFrom);
     void emitMOVLOffsetInst(int offset, unsigned baseRegisterTo, unsigned baseRegisterFrom);
+    void emitMOVQToStackInst(int offset, unsigned baseRegisterFrom);
+    void emitMOVLImmInst(int offset, unsigned baseRegisterTo, int imm);
 
     void emitJNEInst(long destinationAddress);
     void emitJMPInst(long destinationAddress);
     void emitDynamicJMPInst(unsigned baseRegister);
     void emitXOR32rrInst(unsigned registerFrom, unsigned registerTo);
     void emitCMP32riInst(unsigned registerTo, int imm);
+    void emitCMP32riInst(int offset, unsigned registerTo, int imm);
+
     void emitNOP4();
     void emitRETInst();
     void emitIntValue(int n);
