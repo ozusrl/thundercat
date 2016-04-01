@@ -648,7 +648,11 @@ void SpMVCodeEmitter::emitCMP32riInst(int offset, unsigned registerTo, int imm) 
   unsigned char data[7];
   unsigned char *dataPtr = data;
   if (registerTo == X86::RBP) {
-    *(dataPtr++) = 0x83;
+    if (imm < 128 && imm >= -128) {
+      *(dataPtr++) = 0x83;
+    } else {
+      *(dataPtr++) = 0x81;
+    }
     *(dataPtr++) = 0x7D;
   }
 

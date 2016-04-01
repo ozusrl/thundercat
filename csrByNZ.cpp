@@ -294,9 +294,9 @@ totalRows += numRows;
 
 #ifdef TEMPO_O0
   //movslq -52(%rbp), %rcx
-  emitMOVSLQInst(X86::RCX, X86::RBX, 0, 1, -52);
+  emitMOVSLQInst(X86::RCX, X86::RBP, 0, 1, -52);
   //movq -40(%rbp), %rdx
-  emitMOVQOffsetInst(-8, X86::RSI, X86::RDX);
+  emitMOVQOffsetInst(-40, X86::RDX, X86::RBP);
   //addsd (%rdx,%rcx,8), %xmm0
   emitADDSDrmInst(0, X86::RDX, X86::RCX, 8, 0);
   //movsd %xmm0, (%rdx,%rcx,8) <--- w[row] = sum
