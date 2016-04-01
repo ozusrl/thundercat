@@ -137,16 +137,42 @@ void CSRbyNZCodeEmitter::dumpPushPopHeader() {
   emitPushPopInst(X86::PUSH64r,X86::RBX);
   emitPushPopInst(X86::PUSH64r,X86::RCX);
   emitPushPopInst(X86::PUSH64r,X86::RDX);
+  emitPushPopInst(X86::PUSH64r,X86::RBP);
   
   emitLEAQInst(X86::RDX, X86::RDX, (int)(sizeof(int) * baseRowsIndex));
   emitLEAQInst(X86::RCX, X86::RCX, (int)(sizeof(int) * baseValsIndex));
   emitLEAQInst(X86::R8, X86::R8, (int)(sizeof(double) * baseValsIndex));
+#ifdef TEMPO_O0
+  // movq %rsp, %rbp
+  emitMOVQInst(X86::RBP, X86::RSP);
   // movq %r8, -8(%rbp)    <--- vals
+  emitMOVQToStackInst(-8, X86::R8);
   // movq %rcx, -16(%rbp)  <--- cols
+  emitMOVQToStackInst(-16, X86::RCX);
   // movq %rdx, -24(%rbp)  <--- rows
+  emitMOVQToStackInst(-24, X86::RDX);
+  // movq %rdi, -32(%rbp)
+  emitMOVQToStackInst(-32, X86::RDI);
+  // movq %rsi, -40(%rbp)
+  emitMOVQToStackInst(-40, X86::RSI);
+  // movl $0, -44(%rbp)
+  emitMOVLImmInst(-44, X86::RBP, 0);
+  // movl $0, -48(%rbp)
+  emitMOVLImmInst(-48, X86::RBP, 0);
+  //movl %eax, -52(%rbp)   <---- row = rows[a]
+  emitMOVLOffsetInst(-52, X86::RBP, X86::EAX);
+#endif
+ // assumptions:
+ // -32 rbp = v (%rdi)
+ // -40 rbp = w (%rsi)
+ // -44 rbp = a
+ // -48 rbp = b
+ // -52 rbp = row
+ // -64 rbp = double sum
 }
 
 void CSRbyNZCodeEmitter::dumpPushPopFooter() {
+  emitPushPopInst(X86::POP64r, X86::RBP);
   emitPushPopInst(X86::POP64r, X86::RDX);
   emitPushPopInst(X86::POP64r, X86::RCX);
   emitPushPopInst(X86::POP64r, X86::RBX);
@@ -159,26 +185,43 @@ void CSRbyNZCodeEmitter::dumpPushPopFooter() {
 
 void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long rowLength) {
   unsigned long labeledBlockBeginningOffset = 0;
-  
+static unsigned long totalRows = 0;
+totalRows += numRows;
+#ifdef TEMPO_O0  
+  //.LBB0_1:
+  labeledBlockBeginningOffset = DFOS->size();
+
+  //xorps %xmm0, %xmm0
+  emitRegInst(X86::XORPSrr, 0, 0);
+
+  //movslq -44(%rbp), %rcx <---- %rcx = a 
+  emitMOVSLQInst(X86::RCX, X86::RBP, 0, 1, -44);
+
+  //movq -24(%rbp), %rdx   <---- %rdx = rows
+  emitMOVQOffsetInst(-24, X86::RDX, X86::RBP);
+
+  //movl (%rdx,%rcx,4), %eax 
+  unsigned char data[] = {0x8b, 0x04, 0x8a};
+  DFOS->append(data, data + 3);
+
+  //movl %eax, -52(%rbp)   <---- row = rows[a]
+  emitMOVLOffsetInst(-52, X86::RBP, X86::EAX);
+  //movsd %xmm0, -64(%rbp) <---- sum
+  emitMOVSDmrInst(0, -64, X86::RBP);
+#else 
   // xorl %r9d, %r9d
   emitXOR32rrInst(X86::R9D, X86::R9D);
   // xorl %ebx, %ebx
   emitXOR32rrInst(X86::EBX, X86::EBX);
-  
+ 
   //.align 16, 0x90
   emitCodeAlignment(16);
   //.LBB0_1:
   labeledBlockBeginningOffset = DFOS->size();
-  
+ 
   //xorps %xmm0, %xmm0
   emitRegInst(X86::XORPSrr, 0, 0);
-#ifdef TEMPO_O0  
-  //movslq -44(%rbp), %rcx <---- %rcx = a
-  //movq -24(%rbp), %rdx   <---- %rdx = rows
-  //movl (%rdx,%rcx,4), %eax 
-  //movl %eax, -52(%rbp)   <---- row = rows[a]
-  //movsd %xmm0, -64(%rbp) <---- sum
-  emitMOVSDmrInst(0, -64, X86::RBP);
+
 #endif
 
   // done for a single row
@@ -270,7 +313,8 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitAddlImmInst(rowLength, X86::EAX);
   //movl %eax, -48(%rbp)       <--- b+=length
   emitMOVLOffsetInst(-48, X86::RBP, X86::EAX);
-  //cmpl lengthEnding, -44(%rbp)
+  //cmpl totalRows, -44(%rbp)
+  emitCMP32riInst(-44, X86::RBP, totalRows);
   //jne .LBB0_1
   emitJNEInst(labeledBlockBeginningOffset);
 #else

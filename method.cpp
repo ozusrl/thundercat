@@ -378,22 +378,22 @@ void SpMVCodeEmitter::emitMOVQInst(unsigned baseRegisterTo, unsigned baseRegiste
 
   //  3rd byte
   *(dataPtr) = 0xc0;
-
+  if (baseRegisterFrom == X86::RSP) {
+  *(dataPtr++) = 0xe5;
+  } else {
   unsigned char offset1 = registerCode(baseRegisterTo);
   unsigned char offset2 = registerCode(baseRegisterFrom);
 
   *(dataPtr++) += offset1 + 8 * offset2;
+  }
   DFOS->append(data, dataPtr);
 }
 
+// movq offset(%rbp), %reg
 void SpMVCodeEmitter::emitMOVQOffsetInst(int offset, unsigned baseRegisterTo, unsigned baseRegisterFrom){
   unsigned char data[7];
   unsigned char *dataPtr = data;
   
-  if (baseRegisterTo != X86::RSI) {
-    std::cerr << "Destination register can only be RSI.\n";
-    exit(1);
-  }
 
   *(dataPtr++) = 0x48;
   *(dataPtr++) = 0x8b;
@@ -409,6 +409,51 @@ void SpMVCodeEmitter::emitMOVQOffsetInst(int offset, unsigned baseRegisterTo, un
       break;
   }
  
+  if (offset != 0) {
+    if (offset < 128 && offset >= -128) {
+      *(dataPtr++) = (unsigned char) offset;
+    } else {
+      *(dataPtr++) = (unsigned char) offset;
+      *(dataPtr++) = (unsigned char) (offset >> 8);
+      *(dataPtr++) = (unsigned char) (offset >> 16);
+      *(dataPtr++) = (unsigned char) (offset >> 24);
+    }
+  }
+
+  DFOS->append(data, dataPtr);
+}
+
+// movq %reg, offset(%rbp)
+void SpMVCodeEmitter::emitMOVQToStackInst(int offset, unsigned baseRegisterFrom){
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+  if (!isR8R15Register(baseRegisterFrom)) {
+      *(dataPtr++) = 0x48;
+  } else {
+      *(dataPtr++) = 0x4c;
+  }
+  *(dataPtr++) = 0x89;
+  switch(baseRegisterFrom) {
+    case X86::RDI:
+      *(dataPtr++) = 0x7D;
+      break;
+    case X86::RSI:
+      *(dataPtr++) = 0x75;
+      break;
+    case X86::RDX:
+      *(dataPtr++) = 0x55;
+      break;
+    case X86::RCX:
+      *(dataPtr++) = 0x4D;
+      break;
+    case X86::R8:
+      *(dataPtr++) = 0x45;
+      break;
+    default:
+      std::cerr << "Source register can only be RSI RDI RDX RCX R9.\n";
+      break;
+  }
+
   if (offset != 0) {
     if (offset < 128 && offset >= -128) {
       *(dataPtr++) = (unsigned char) offset;
@@ -453,6 +498,38 @@ void SpMVCodeEmitter::emitMOVLOffsetInst(int offset, unsigned baseRegisterTo, un
 
   DFOS->append(data, dataPtr);
 }
+
+void SpMVCodeEmitter::emitMOVLImmInst(int offset, unsigned baseRegisterTo, int imm){
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+  switch(baseRegisterTo) {
+    case X86::RBP:
+      *(dataPtr++) = 0xC7;
+      break;
+    default:
+      std::cerr << "Source register can only be RBP.\n";
+      break;
+  }
+
+  *(dataPtr++) = 0x45;
+
+  if (offset != 0) {
+    if (offset < 128 && offset >= -128) {
+      *(dataPtr++) = (unsigned char) offset;
+    } else {
+      *(dataPtr++) = (unsigned char) offset;
+      *(dataPtr++) = (unsigned char) (offset >> 8);
+      *(dataPtr++) = (unsigned char) (offset >> 16);
+      *(dataPtr++) = (unsigned char) (offset >> 24);
+    }
+  }
+  *(dataPtr++) = (unsigned char) imm;
+  *(dataPtr++) = (unsigned char) (imm >> 8);
+  *(dataPtr++) = (unsigned char) (imm >> 16);
+  *(dataPtr++) = (unsigned char) (imm >> 24);
+  DFOS->append(data, dataPtr);
+}
+
 
 void SpMVCodeEmitter::emitJNEInst(long destinationAddress){
   long offset = (long)destinationAddress - (long)DFOS->size();
@@ -564,6 +641,39 @@ void SpMVCodeEmitter::emitCMP32riInst(unsigned registerTo, int imm) {
   *(dataPtr++) = (unsigned char) (imm >> 16);
   *(dataPtr++) = (unsigned char) (imm >> 24);
   
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitCMP32riInst(int offset, unsigned registerTo, int imm) {
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+  if (registerTo == X86::RBP) {
+    *(dataPtr++) = 0x83;
+    *(dataPtr++) = 0x7D;
+  }
+
+  if (offset != 0) {
+    if (offset < 128 && offset >= -128) {
+      *(dataPtr++) = (unsigned char) offset;
+    } else {
+      *(dataPtr++) = (unsigned char) offset;
+      *(dataPtr++) = (unsigned char) (offset >> 8);
+      *(dataPtr++) = (unsigned char) (offset >> 16);
+      *(dataPtr++) = (unsigned char) (offset >> 24);
+    }
+  }
+
+  if (imm != 0) {
+    if (imm < 128 && imm >= -128) {
+      *(dataPtr++) = (unsigned char) imm;
+    } else {
+      *(dataPtr++) = (unsigned char) imm;
+      *(dataPtr++) = (unsigned char) (imm >> 8);
+      *(dataPtr++) = (unsigned char) (imm >> 16);
+      *(dataPtr++) = (unsigned char) (imm >> 24);
+    }
+  }
+
   DFOS->append(data, dataPtr);
 }
 
