@@ -2,22 +2,23 @@ PARSER_DIR=../compiler
 JAVACLASSPATH=$(PARSER_DIR)
 UNAME_S := $(shell uname -s)
 ICC_PATH=$(shell whereis icc)
-ifeq ($(UNAME_S),Darwin)
+
+CXXFLAGS=-I`llvm-config --src-root`/include -I`llvm-config --obj-root`/include  -fPIC -Wnon-virtual-dtor -std=c++11   -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -I`llvm-config --src-root` -I`llvm-config --obj-root`/lib/Target/X86/ -fno-rtti -w
+
+ifeq ($(UNAME_S),Darwin) # Mac
   CLANG=clang++
   VEND=Intel
-else
+else # Linux
   CLANG=icc
   VEND=$(shell cat /proc/cpuinfo | grep -m 1 vendor | awk -F': ' '{print $$2}')
+  CXXFLAGS += -fopenmp
+  ifeq ($(VEND),AuthenticAMD)
+    CLANG=g++
+  endif
 endif
-ifeq ($(ICC_PATH),icc:)
-  CLANG=clang++
-endif
-ifeq ($(VEND),AuthenticAMD)
-  CLANG=g++
-endif
-OPT_LEVEL=-O3 -fopenmp
 
-CXXFLAGS=`llvm-config --cxxflags` -I`llvm-config --src-root` -I`llvm-config --obj-root`/lib/Target/X86/
+OPT_LEVEL=-O3
+
 LDFLAGS=`llvm-config --ldflags`
 C11FLAGS=-std=c++11
 
