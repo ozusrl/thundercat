@@ -46,8 +46,13 @@ $ ninja
 ```
 
 This will produce a main executable file, named `spMVgen`.
-
 The library runs on Mac OS X and Linux. 
+
+To force a particular compiler, e.g. icc, do the following:
+
+```
+$ cmake -G Ninja -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
+```
 
 ## How to Run
 ```

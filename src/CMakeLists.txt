@@ -1,7 +1,25 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(thundercat)
 
-message(STATUS ${llvm_libs})
+message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
+message(STATUS "Compiler is " ${CMAKE_CXX_COMPILER_ID})
+
+find_package(OpenMP)
+if(OPENMP_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+endif()
+
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mkl")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread -fopenmp")
+endif()
+
+message(STATUS "CXX Flags: " ${CMAKE_CXX_FLAGS})
+message(STATUS "Linker Flags: " ${CMAKE_EXE_LINKER_FLAGS})
+
+###################################
+
 set(LLVM_DIR "~/Programs/llvm/build/share/llvm/cmake/")
 find_package(LLVM 3.5.0 REQUIRED CONFIG)
 
