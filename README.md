@@ -13,7 +13,6 @@ For technical details see:
   
 ## Files
 
-* `Makefile`: The library is compiled with `icc`. If not present it falls back to `clang`. If cpu is AMD it falls back to `gcc`.
 * `main.cpp`
 * `matrix.*`: Matrix class that keeps matrix information in CSR format.
 * `method.*`: Specialization methods.
@@ -36,9 +35,15 @@ the other is for code generation. E.g. `csrByNZAnalyzer.h/cpp` and `csrByNZ.cpp`
 ## How to Compile
 You should have a slightly modified version of LLVM 3.5.0.
 See the [scripts](scripts/) folder to see how to install LLVM.
-Once you have LLVM, simply do a 
+Once you have LLVM, use `cmake` to build. E.g.:
 
-`make`
+```
+$ cd thundercat
+$ mkdir build
+$ cd build
+$ cmake -G Ninja ../src
+$ ninja
+```
 
 This will produce a main executable file, named `spMVgen`.
 
