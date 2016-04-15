@@ -5,6 +5,11 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
+if [ -z ${MATRICES+x} ]; then
+    echo "Set MATRICES variable to the matrices folder."
+    exit 1
+fi
+
 methodName=$1
 
 echo "*" Collecting the filesizes of the spMVlib-generated codes for "$methodName"
@@ -18,7 +23,7 @@ do
     echo -n $matrixName", " >> $fileName
     cd ..
     rm -f temp.o
-    ./spMVgen matrices/$matrixName "$methodName" -dump_object > temp.o
+    ./spMVgen $MATRICES/$matrixName "$methodName" -dump_object > temp.o
     fileSize=`ls -l temp.o | awk '{print $5}'`
     cd - > /dev/null
     echo $fileSize >> $fileName

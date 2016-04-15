@@ -5,6 +5,11 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
+if [ -z ${MATRICES+x} ]; then
+    echo "Set MATRICES variable to the matrices folder."
+    exit 1
+fi
+
 methodName=$1
 methodParam1=$2
 methodParam2=$3
@@ -15,13 +20,13 @@ runTests() {
     while read matrixName
     do
         echo -n $matrixName" "
-        folderName=../../../newspecs/spMVgen/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+        folderName=../data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
         mkdir -p "$folderName"
         
         cd ..
-        ./spMVgen matrices/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
-        ./spMVgen matrices/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
-        ./spMVgen matrices/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
+        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
+        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
+        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
         cd tools
         
     done < matrixNames.txt
@@ -35,7 +40,7 @@ findMins() {
     while read matrixName
     do
         toolsFolder=`pwd`
-        cd ../../../newspecs/spMVgen/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+        cd ../data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
         codeGen1=`grep codeGeneration stats1.txt | awk '{print $2}'`
         codeGen2=`grep codeGeneration stats2.txt | awk '{print $2}'`
         codeGen3=`grep codeGeneration stats3.txt | awk '{print $2}'`

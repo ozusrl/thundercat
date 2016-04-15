@@ -1,10 +1,15 @@
 #!/bin/bash
 
+if [ -z ${MATRICES+x} ]; then
+    echo "Set MATRICES variable to the matrices folder."
+    exit 1
+fi
+
 while read matrixName
 do
     echo -n $matrixName" "
     cd ..
-    ./spMVgen matrices/$matrixName PlainCSR -matrix_stats
+    ./spMVgen $MATRICES/$matrixName PlainCSR -matrix_stats
     cd tools
     
 done < matrixNames.txt
