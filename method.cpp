@@ -65,13 +65,13 @@ void SpMVCodeEmitter::dumpMultByMHeader(MCStreamer *Str, unsigned int index) {
 
   MCContext &Ctx = Str->getContext();
   // .globl multByM"index"
-  Str->EmitSymbolAttribute(Ctx.getOrCreateSymbol(StringRef(newName(MAIN_FUNCTION_NAME, index))), MCSA_Global);
-  Str->EmitSymbolAttribute(Ctx.getOrCreateSymbol(StringRef(newName(uscore + MAIN_FUNCTION_NAME, index))), MCSA_Global);
+  Str->EmitSymbolAttribute(Ctx.GetOrCreateSymbol(StringRef(newName(MAIN_FUNCTION_NAME, index))), MCSA_Global);
+  Str->EmitSymbolAttribute(Ctx.GetOrCreateSymbol(StringRef(newName(uscore + MAIN_FUNCTION_NAME, index))), MCSA_Global);
   // .align 4, 0x90
   Str->EmitCodeAlignment(16);
   // multByM"index":
-  Str->EmitLabel(Ctx.getOrCreateSymbol(StringRef(newName(MAIN_FUNCTION_NAME, index))));
-  Str->EmitLabel(Ctx.getOrCreateSymbol(StringRef(newName(uscore + MAIN_FUNCTION_NAME, index))));
+  Str->EmitLabel(Ctx.GetOrCreateSymbol(StringRef(newName(MAIN_FUNCTION_NAME, index))));
+  Str->EmitLabel(Ctx.GetOrCreateSymbol(StringRef(newName(uscore + MAIN_FUNCTION_NAME, index))));
   // .cfi_startproc
   Str->EmitCFIStartProc(true);
 }

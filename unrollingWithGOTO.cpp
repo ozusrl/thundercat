@@ -8,7 +8,6 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInstBuilder.h"
 #include "llvm/MC/MCStreamer.h"
-#include <pthread.h>
 
 using namespace spMVgen;
 using namespace std;

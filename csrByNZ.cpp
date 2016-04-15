@@ -10,7 +10,6 @@
 #include "llvm/MC/MCInstBuilder.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCObjectFileInfo.h"
-#include "llvm/Target/TargetLoweringObjectFile.h"
 
 using namespace llvm;
 using namespace spMVgen;

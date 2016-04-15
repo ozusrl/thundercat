@@ -4,3 +4,5 @@ spMVgen
 *.o
 *~
 matrices
+data
+tools/matrixNames.txt

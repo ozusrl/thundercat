@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 #include "llvm/MC/MCStreamer.h"
-#include "llvm/Object/ObjectFile.h"
+#include "llvm/ExecutionEngine/ObjectBuffer.h"
 
 namespace spMVgen {
   class SpMVSpecializer {
@@ -23,7 +23,7 @@ namespace spMVgen {
     void setMCStreamer(llvm::MCStreamer *Str);
     void dumpAssemblyConstData();
     void dumpAssemblyData();
-    void loadBuffer(llvm::object::ObjectFile *Buffer);
+    void loadBuffer(llvm::ObjectBuffer *Buffer);
 
     std::vector<MultByMFun> multByMFunctions;
     SpMVMethod *method;
