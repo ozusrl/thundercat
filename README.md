@@ -34,7 +34,7 @@ See the papers for details. For each method, there exist two files. One is for m
 the other is for code generation. E.g. `csrByNZAnalyzer.h/cpp` and `csrByNZ.cpp` for CSRbyNZ.
 
 ## How to Compile
-You should have a slightly modified version of LLVM 3.7.0.
+You should have a slightly modified version of LLVM 3.5.0.
 See the [scripts](scripts/) folder to see how to install LLVM.
 Once you have LLVM, simply do a 
 
@@ -75,9 +75,3 @@ Run for the lhr71 matrix (assuming `lhr71.mtx` exists in the current directory),
 ```
 ./spMVgen lhr71 stencil -num_threads 6
 ```
-
-
-
-
-
-
