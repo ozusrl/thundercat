@@ -24,9 +24,9 @@ runTests() {
         mkdir -p "$folderName"
         
         cd ..
-        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
-        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
-        ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
+        ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
+        ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
+        ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
         cd tools
         
     done < matrixNames.txt

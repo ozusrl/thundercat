@@ -27,11 +27,11 @@ do
     rm -f "$folderName"/matrixPrepTime.txt
 
     cd ..
-    ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
-    ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
-    ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
 
-    ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > tools/"$folderName"/output.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > tools/"$folderName"/output.txt
     cd tools
 
 done < matrixNames.txt

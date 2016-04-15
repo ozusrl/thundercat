@@ -23,7 +23,7 @@ do
     echo -n $matrixName", " >> $fileName
     cd ..
     rm -f temp.o
-    ./spMVgen $MATRICES/$matrixName "$methodName" -dump_object > temp.o
+    ./build/spMVgen $MATRICES/$matrixName "$methodName" -dump_object > temp.o
     fileSize=`ls -l temp.o | awk '{print $5}'`
     cd - > /dev/null
     echo $fileSize >> $fileName

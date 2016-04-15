@@ -22,7 +22,7 @@ test() {
     local methodParam1=$3
     local methodParam2=$4
     folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
-    ./spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
 }
 
 echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"
