@@ -38,11 +38,11 @@ See the [scripts](scripts/) folder to see how to install LLVM.
 Once you have LLVM, use `cmake` to build. E.g.:
 
 ```
-$ cd thundercat
-$ mkdir build
-$ cd build
-$ cmake -G Ninja ../src
-$ ninja
+~ $ cd thundercat
+~/thundercat $ mkdir build
+~/thundercat $ cd build
+~/thundercat/build $ cmake -G Ninja ../src
+~/thundercat/build $ ninja
 ```
 
 This will produce a main executable file, named `spMVgen`.
@@ -51,7 +51,7 @@ The library runs on Mac OS X and Linux.
 To force a particular compiler, e.g. icc, do the following:
 
 ```
-$ cmake -G Ninja -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
+~/thundercat/build $ cmake -G Ninja -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
 ```
 
 ## How to Run
