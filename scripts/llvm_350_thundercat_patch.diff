@@ -1,0 +1,42 @@
+Index: include/llvm/MC/MCObjectStreamer.h
+===================================================================
+--- include/llvm/MC/MCObjectStreamer.h	(revision 266415)
++++ include/llvm/MC/MCObjectStreamer.h	(working copy)
+@@ -62,6 +62,11 @@
+   void EmitFrames(MCAsmBackend *MAB);
+   void EmitCFISections(bool EH, bool Debug) override;
+ 
++  /// Get a data fragment to write into, creating a new one if the current
++  /// fragment is not a data fragment.
++  MCDataFragment *getOrCreateDataFragment() const;
++  MCDataFragment *createDataFragment() const;
++
+ protected:
+   MCSectionData *getCurrentSectionData() const {
+     return CurSectionData;
+@@ -74,10 +79,6 @@
+     F->setParent(CurSectionData);
+   }
+ 
+-  /// Get a data fragment to write into, creating a new one if the current
+-  /// fragment is not a data fragment.
+-  MCDataFragment *getOrCreateDataFragment() const;
+-
+ public:
+   void visitUsedSymbol(const MCSymbol &Sym) override;
+ 
+Index: lib/MC/MCObjectStreamer.cpp
+===================================================================
+--- lib/MC/MCObjectStreamer.cpp	(revision 266415)
++++ lib/MC/MCObjectStreamer.cpp	(working copy)
+@@ -83,6 +83,10 @@
+   return F;
+ }
+ 
++MCDataFragment *MCObjectStreamer::createDataFragment() const {
++  return new MCDataFragment(getCurrentSectionData());
++}
++
+ void MCObjectStreamer::visitUsedSymbol(const MCSymbol &Sym) {
+   Assembler->getOrCreateSymbolData(Sym);
+ }

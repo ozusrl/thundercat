@@ -1,11 +1,9 @@
 #!/bin/bash
 
 PWD=`pwd`
-#REVISION="-r 179000"
-SUFFIX=tags/RELEASE_370/final/
-#SUFFIX=trunk
-DESTINATION=src_370
-BUILD_DIR=build_370
+SUFFIX=tags/RELEASE_350/final/
+DESTINATION=src_350
+BUILD_DIR=build_350
 
 svn co $REVISION http://llvm.org/svn/llvm-project/llvm/$SUFFIX $DESTINATION
 
@@ -25,14 +23,14 @@ cd $DESTINATION/projects
 svn co $REVISION http://llvm.org/svn/llvm-project/compiler-rt/$SUFFIX compiler-rt
 cd ../..
 
-read -n1 -r -p "SVN checkout complete. Press a key to apply the patch.\n" key
+read -n1 -r -p "SVN checkout complete. Press a key to apply the patch." key
 
 ### Apply SpMVlib-specific changes
 cd $DESTINATION
-patch -p0 -i ../llvm_370_spMVlib_patch.diff
+patch -p0 -i ../llvm_350_thundercat_patch.diff
 cd ..
 
-read -n1 -r -p "Patch applied. Press a key to start the build process.\n" key
+read -n1 -r -p "Patch applied. Press a key to start the build process." key
 
 ### Compilation
 mkdir -p $BUILD_DIR
