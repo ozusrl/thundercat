@@ -35,8 +35,8 @@ read -n1 -r -p "Patch applied. Press a key to start the build process." key
 ### Compilation
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_CXX1Y=ON ../$DESTINATION
-make -j6
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_CXX1Y=ON ../$DESTINATION
+ninja
 cd ..
 ln -s $DESTINATION src
 ln -s $BUILD_DIR build
