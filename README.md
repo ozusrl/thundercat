@@ -4,8 +4,9 @@ Code is generated and executed dynamically for the X86_64 architecture.
 For technical details see:
 
 * Buse Yilmaz, Baris Aktemur, Maria Garzaran, Sam Kamin, Furkan Kirac.  
-  _Autotuning Runtime Specialization for Sparse Matrix-Vector Multiplication._  
-  ACM Transactions on Architecture and Code Optimization (TACO). To Appear.
+  [Autotuning Runtime Specialization for Sparse Matrix-Vector Multiplication.](http://dx.doi.org/10.1145/2851500)  
+  ACM Transactions on Architecture and Code Optimization (TACO).
+  Volume 13, Issue 1, Article 5.
 * Sam Kamin, Maria Garzaran, Baris Aktemur, Danqing Xu, Buse Yilmaz, Zhongbo Chen.  
   [Optimization by Runtime Specialization for Sparse Matrix-Vector Multiplication.](http://dx.doi.org/10.1145/2658761.2658773)  
   GPCE 2014: The 13th International Conference on Generative Programming: Concepts & Experiences, Västerås, Sweden.  
