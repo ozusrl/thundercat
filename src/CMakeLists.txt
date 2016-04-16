@@ -9,7 +9,7 @@ set(LLVM_DIR "~/Programs/llvm/build/share/llvm/cmake/")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../modules/")
 message(${CMAKE_MODULE_PATH})
 find_package(LLVM 3.5.0 REQUIRED CONFIG)
-find_package(MKL REQUIRED)
+find_package(MKL)
 
 
 include_directories(${LLVM_INCLUDE_DIRS}
@@ -54,7 +54,11 @@ add_executable(spMVgen ${SOURCE_FILES})
 
 llvm_map_components_to_libnames(llvm_libs all)
 
-target_link_libraries(spMVgen ${llvm_libs} 
-                              mkl_intel_lp64
-                              mkl_sequential
-                              mkl_core)
+if (MKL_FOUND)
+    target_link_libraries(spMVgen ${llvm_libs}
+                          mkl_intel_lp64
+                          mkl_sequential
+                          mkl_core)
+else()
+    target_link_libraries(spMVgen ${llvm_libs})
+endif()
