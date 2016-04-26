@@ -13,7 +13,6 @@
 
 #define TEMPO_O0
 
-#define TEMPO_O0
 
 using namespace llvm;
 using namespace spMVgen;
