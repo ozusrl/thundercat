@@ -32,6 +32,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "lib/Target/X86/X86TargetObjectFile.h"
+#include "lib/Target/ARM/ARMTargetObjectFile.h"
 //#include "llvm/Target/TargetLoweringObjectFile.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
@@ -164,8 +165,10 @@ TargetLoweringObjectFile *getMCObjectFileInfo(Triple &TheTriple) {
     mcObjectFileInfo = new X86_64MachoTargetObjectFile();
   } else if(TheTriple.getArch() == Triple::x86_64 && TheTriple.getOS() == Triple::Linux) {
     mcObjectFileInfo = new X86LinuxTargetObjectFile();
+  } else if(TheTriple.getArch() == Triple::arm && TheTriple.getOS() == Triple::Linux) {
+    mcObjectFileInfo = new ARMElfTargetObjectFile();
   } else {
-    cerr << "Only X86_64 on Linux or MacOS is supported.\n";
+    cerr << "Unsupported environment. We supoort X86_64-Linux, X86_64-MacOS, and ARM-Linux.\n";
     exit(1);
   }
   return mcObjectFileInfo;
