@@ -19,6 +19,8 @@ echo "Running spMVlib test " $methodName $methodParam1 $methodParam2
 while read matrixName
 do
     echo -n $matrixName" "
+
+    cd ..
     folderName=data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
     rm -f "$folderName"/output.txt
@@ -26,12 +28,11 @@ do
     rm -f "$folderName"/runtime.txt
     rm -f "$folderName"/matrixPrepTime.txt
 
-    cd ..
-    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
-    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
-    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> tools/"$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
 
-    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > tools/"$folderName"/output.txt
+    ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
     cd tools
 
 done < matrixNames.txt
@@ -39,11 +40,11 @@ done < matrixNames.txt
 echo " "
 
 findMins() {
-    local fileName=$HOSTNAME.spMVgen.dynamic."$methodName""$methodParam1""$methodParam2".csv 
+    local fileName=../data/$HOSTNAME.spMVgen.dynamic."$methodName""$methodParam1""$methodParam2".csv 
     rm -f $fileName
     while read matrixName
     do
-	cd data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+	cd ../data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
 	runTimes=`cat runtime.txt`
 	cd - > /dev/null
 	echo -n $matrixName" "  >> $fileName
