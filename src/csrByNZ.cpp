@@ -4,7 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "lib/Target/X86/MCTargetDesc/X86BaseInfo.h"
+#include "lib/Target/ARM/MCTargetDesc/ARMBaseInfo.h"
+
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInstBuilder.h"
@@ -121,89 +122,47 @@ void CSRbyNZCodeEmitter::emit() {
   }
   
   dumpPushPopFooter();
-  emitRETInst();
 }
   
 void CSRbyNZCodeEmitter::dumpPushPopHeader() {
-  // rows is in %rdx, cols is in %rcx, vals is in %r8
-  emitPushPopInst(X86::PUSH64r,X86::R8);
-  emitPushPopInst(X86::PUSH64r,X86::R9);
-  emitPushPopInst(X86::PUSH64r,X86::R10);
-  emitPushPopInst(X86::PUSH64r,X86::R11);
-  emitPushPopInst(X86::PUSH64r,X86::RAX);
-  emitPushPopInst(X86::PUSH64r,X86::RBX);
-  emitPushPopInst(X86::PUSH64r,X86::RCX);
-  emitPushPopInst(X86::PUSH64r,X86::RDX);
-  
-  emitLEAQInst(X86::RDX, X86::RDX, (int)(sizeof(int) * baseRowsIndex));
-  emitLEAQInst(X86::RCX, X86::RCX, (int)(sizeof(int) * baseValsIndex));
-  emitLEAQInst(X86::R8, X86::R8, (int)(sizeof(double) * baseValsIndex));
+  emitPushArmInst();
+
+  emitLDROffsetArmInst(ARM::R7, ARM::SP, 8); // load vals into R7
 }
 
 void CSRbyNZCodeEmitter::dumpPushPopFooter() {
-  emitPushPopInst(X86::POP64r, X86::RDX);
-  emitPushPopInst(X86::POP64r, X86::RCX);
-  emitPushPopInst(X86::POP64r, X86::RBX);
-  emitPushPopInst(X86::POP64r, X86::RAX);
-  emitPushPopInst(X86::POP64r, X86::R11);
-  emitPushPopInst(X86::POP64r, X86::R10);
-  emitPushPopInst(X86::POP64r, X86::R9);
-  emitPushPopInst(X86::POP64r, X86::R8);
+  emitPopArmInst();
 }
 
 void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long rowLength) {
-  unsigned long labeledBlockBeginningOffset = 0;
+  // v is in R0, w is in R1, rows is in R2, cols is in R3, vals is in R7 
+
+  emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
+  emitMOVWArmInst(ARM::R9, numRows * sizeof(int)); // loop limit
   
-  // xorl %r9d, %r9d
-  emitXOR32rrInst(X86::R9D, X86::R9D);
-  // xorl %ebx, %ebx
-  emitXOR32rrInst(X86::EBX, X86::EBX);
-  
-  //.align 16, 0x90
-  emitCodeAlignment(16);
-  //.LBB0_1:
-  labeledBlockBeginningOffset = DFOS->size();
-  
-  //xorps %xmm0, %xmm0
-  emitRegInst(X86::XORPSrr, 0, 0);
-  
-  // done for a single row
-  for(int i = 0 ; i < rowLength ; i++){
-    //movslq "i*4"(%rcx,%r9,4), %rax
-    emitMOVSLQInst(X86::RAX, X86::RCX, X86::R9, 4, i*4);
-    //movsd "i*8"(%r8,%r9,8), %xmm1
-    emitMOVSDrmInst(i*8, X86::R8, X86::R9, 8, 1);
-    //mulsd (%rdi,%rax,8), %xmm1
-    emitMULSDrmInst(0, X86::RDI, X86::RAX, 8, 1);
-    //addsd %xmm1, %xmm0
-    emitRegInst(X86::ADDSDrr, 1, 0);
+  unsigned long labeledBlockBeginningOffset = DFOS->size();
+  emitVMOVI32ArmInst(ARM::D16, 0x0);
+  for (int i = 0 ; i < rowLength ; i++) {
+    emitLDROffsetArmInst(ARM::R5, ARM::R3, i); // What if i >= 256?
+    emitVLDRArmInst(ARM::D17, ARM::R7, i); // What if i >= 256?
+    emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
+    emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
+    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
+    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
   }
   
-  // movslq (%rdx,%rbx,4), %rax
-  emitMOVSLQInst(X86::RAX, X86::RDX, X86::RBX, 4, 0);
+  emitLDRRegisterArmInst(ARM::R5, ARM::R2, ARM::R8);
+  emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R5, 3);
   
-  //addq $rowLength, %r9
-  emitADDQInst(rowLength, X86::R9);
+  emitVLDRArmInst(ARM::D18, ARM::R5, 0x0); // load w[row] into D18
+  emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+  emitVSTRArmInst(ARM::D18, ARM::R5);
   
-  //addq $1, %rbx
-  emitADDQInst(1, X86::RBX);
+  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
+  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
+  emitBNEArmInst(labeledBlockBeginningOffset);
   
-  //addsd (%rsi,%rax,8), %xmm0
-  emitADDSDrmInst(0, X86::RSI, X86::RAX, 8, 0);
-  
-  //cmpl numRows, %ebx
-  emitCMP32riInst(X86::EBX, numRows);
-  
-  //movsd %xmm0, (%rsi,%rax,8)
-  emitMOVSDmrInst(0, 0, X86::RSI, X86::RAX, 8);
-  //jne .LBB0_1
-  emitJNEInst(labeledBlockBeginningOffset);
-  
-  //addq $numRows*4, %rdx
-  emitADDQInst(numRows*4, X86::RDX);
-  
-  //addq $numRows*rowLength*4, %rcx
-  emitADDQInst(numRows*rowLength*4, X86::RCX);
-  //addq $numRows*rowLength*8, %r8
-  emitADDQInst(numRows*rowLength*8, X86::R8);
+  emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
+  emitADDOffsetArmInst(ARM::R3, ARM::R3, numRows * rowLength * sizeof(int));
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, numRows * rowLength * sizeof(double));
 }

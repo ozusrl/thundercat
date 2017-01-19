@@ -15,6 +15,7 @@ find_package(MKL)
 include_directories(${LLVM_INCLUDE_DIRS}
                     ${LLVM_BUILD_MAIN_SRC_DIR}
                     ${LLVM_BUILD_BINARY_DIR}/lib/Target/X86/
+                    ${LLVM_BUILD_BINARY_DIR}/lib/Target/ARM/
                     ${MKL_INCLUDE_DIRS})
 link_directories(${MKL_LIBRARIES})
 add_definitions(${LLVM_DEFINITIONS})
