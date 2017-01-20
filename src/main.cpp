@@ -207,23 +207,23 @@ int main(int argc, const char *argv[]) {
 
   unsigned int ITERS;
   if (nz < 5000) {
-    ITERS = 500000;
-  } else if (nz < 10000) {
-    ITERS = 200000;
-  } else if (nz < 50000) {
-    ITERS = 100000;
-  } else if (nz < 100000) {
-    ITERS = 50000;
-  } else if (nz < 200000) {
     ITERS = 10000;
-  } else if (nz < 1000000) {
-    ITERS = 5000;
-  } else if (nz < 2000000) {
+  } else if (nz < 10000) {
+    ITERS = 10000;
+  } else if (nz < 50000) {
+    ITERS = 2000;
+  } else if (nz < 100000) {
     ITERS = 1000;
-  } else if (nz < 3000000) {
+  } else if (nz < 200000) {
     ITERS = 500;
-  } else {
+  } else if (nz < 1000000) {
     ITERS = 200;
+  } else if (nz < 2000000) {
+    ITERS = 100;
+  } else if (nz < 3000000) {
+    ITERS = 50;
+  } else {
+    ITERS = 20;
   }
   
   if (__DEBUG__) {
