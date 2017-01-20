@@ -802,6 +802,20 @@ bool encodeAsARMImmediate(int n, unsigned &result) {
   return false;
 }
 
+int absoluteValueOf(int value) {
+  return (value < 0) ? (-1 * value) : value;
+}
+
+unsigned largestPowerOfTwoSmallerThan(int offset) {
+  if (offset == 0 || offset == 1) 
+    return offset; 
+  unsigned power = 1;
+  while (power * 2 < offset) {
+    power  = power * 2;
+  }
+  return power;
+}
+
 //          vldr    d17, [r2, i*8]
 void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset)
 {
@@ -940,6 +954,15 @@ void SpMVCodeEmitter::emitADDRegisterArmInst(unsigned dest_r, unsigned base1_r, 
 //     add     r5, lr, #offset
 void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 { 
+  unsigned encodedOffset = 0;
+  if (!encodeAsARMImmediate(offset, encodedOffset)) {
+    // Emit more than one instruction to handle this case 
+    unsigned powerOfTwo = largestPowerOfTwoSmallerThan(offset);
+    emitADDOffsetArmInst(dest_r, base_r, powerOfTwo);
+    emitADDOffsetArmInst(dest_r, dest_r, offset - powerOfTwo);
+    return;
+  }
+
   unsigned char data[4];
   unsigned char *dataPtr = data;
   //printf("offset :%d \n",offset);
@@ -952,12 +975,6 @@ void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int
   //e2845f7d        add     r5, r4, #500    ; 0x1f4
   unsigned dest = dest_r - ARM::R0;
   unsigned base = base_r - ARM::R0;
-
-  unsigned encodedOffset = 0;
-  if (!encodeAsARMImmediate(offset, encodedOffset)) { 
-    std::cerr << "Cannot encode offset " << offset << " in ADDOffset.\n";
-    exit(1);
-  }
 
   *(dataPtr++) = 0xFF & encodedOffset;
   *(dataPtr++) = ((dest << 4) & 0xF0) | ((encodedOffset >> 8) & 0x0F);
@@ -1094,21 +1111,26 @@ void SpMVCodeEmitter::emitCMPRegisterArmInst(unsigned dest_r, unsigned base_r)
 
   DFOS->append(data, dataPtr);
 }
+
 //bne     .LBB0_1
 void SpMVCodeEmitter::emitBNEArmInst(long destinationAddress)
 {
-  int target = DFOS->size() - destinationAddress + 4;
+  int target = destinationAddress - DFOS->size() - 8;
+  if (target % 4 != 0) {
+    std::cerr << "Can jump to a word-address only. Target address " << target << " is bad for BNE.\n";
+    exit(1);
+  }
   target = target >> 2;
-  if (target >= 256) {
-    std::cerr << "Cannot have target (" << target << ") >= 256 in BNE yet.\n";
+  if (absoluteValueOf(target) >= (1 << 24)) {
+    std::cerr << "Cannot have target (" << target << ") larger than 24 bits.\n";
     exit(1);
   } 
   unsigned char data[4];
   unsigned char *dataPtr = data;
 
-  *(dataPtr++) = 0xFF - target;
-  *(dataPtr++) = 0xFF;
-  *(dataPtr++) = 0xFF;
+  *(dataPtr++) = 0xFF & target;
+  *(dataPtr++) = 0xFF & (target >> 8);
+  *(dataPtr++) = 0xFF & (target >> 16);
   *(dataPtr++) = 0x1a;
 
   DFOS->append(data, dataPtr);
