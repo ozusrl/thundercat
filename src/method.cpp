@@ -819,7 +819,7 @@ unsigned largestPowerOfTwoSmallerThan(int offset) {
 //          vldr    d17, [r2, i*8]
 void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset)
 {
-  if (offset % 4 != 0 || (offset >> 2) >= 1024 || offset < 0) {
+  if (offset % 4 != 0 || offset >= 1024 || offset < 0) {
     std::cerr << "Cannot handle offset " << offset << " in VLDR.\n";
     exit(1);
   } 

@@ -134,7 +134,7 @@ void CSRbyNZCodeEmitter::dumpPushPopFooter() {
   emitPopArmInst();
 }
 
-#define LDR_IMM_LIMIT 512
+#define LDR_IMM_LIMIT 128
 
 void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long rowLength) {
   // v is in R0, w is in R1, rows is in R2, cols is in R3, vals is in R7 
