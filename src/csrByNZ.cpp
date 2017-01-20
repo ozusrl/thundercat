@@ -159,10 +159,11 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitVSTRArmInst(ARM::D18, ARM::R5);
   
   emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
+  emitADDOffsetArmInst(ARM::R3, ARM::R3, rowLength * sizeof(int));
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, rowLength * sizeof(double));
+
   emitCMPRegisterArmInst(ARM::R8, ARM::R9);
   emitBNEArmInst(labeledBlockBeginningOffset);
   
   emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
-  emitADDOffsetArmInst(ARM::R3, ARM::R3, numRows * rowLength * sizeof(int));
-  emitADDOffsetArmInst(ARM::R7, ARM::R7, numRows * rowLength * sizeof(double));
 }
