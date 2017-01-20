@@ -805,8 +805,8 @@ bool encodeAsARMImmediate(int n, unsigned &result) {
 //          vldr    d17, [r2, i*8]
 void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset)
 {
-  if (offset >= 256) {
-    std::cerr << "Cannot have offset >= 256 in VLDR yet.\n";
+  if (offset % 4 != 0 || (offset >> 2) >= 1024 || offset < 0) {
+    std::cerr << "Cannot handle offset " << offset << " in VLDR.\n";
     exit(1);
   } 
   //vldr    d17, [r2, i*8]
@@ -823,9 +823,9 @@ void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offs
   unsigned char *dataPtr = data;
   unsigned base = base_r - ARM::R0;
   unsigned dest = dest_d - ARM::D16;
-  *(dataPtr++) = 0xFF & (offset*2);
-  *(dataPtr++) = (dest<<4)|0x0b;
-  *(dataPtr++) = 0xd0|(base&0x0f);
+  *(dataPtr++) = 0xFF & (offset >> 2);
+  *(dataPtr++) = (dest << 4) | 0x0b;
+  *(dataPtr++) = 0xd0 | (base & 0x0f);
   *(dataPtr++) = 0xed;
   DFOS->append(data, dataPtr);
 }
@@ -856,22 +856,24 @@ void SpMVCodeEmitter::emitLDRRegisterArmInst(unsigned dest_r, unsigned base_r, u
 
 void SpMVCodeEmitter::emitLDROffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 {
-  if (offset >= 256) {
-    std::cerr << "Cannot have offset >= 256 in LDROffset yet.\n";
-    exit(1);
-  } 
   //           ldr     r5, [r1, i*4]
   //0x12 0x70 0x94 0xe5  ldr	r7, [r4, #18]
-
   unsigned char data[4];
   unsigned char *dataPtr = data;
   unsigned dest = dest_r - ARM::R0;
   unsigned base = base_r - ARM::R0;
   if (base_r == ARM::SP)
     base = 0x0d;
-  *(dataPtr++) = 0xFF & (offset*4);
-  *(dataPtr++) = ((dest<<4)&0xF0);
-  *(dataPtr++) = 0x90 | (base&0x0F);
+
+  unsigned encodedOffset = 0;
+  if (!encodeAsARMImmediate(offset, encodedOffset)) { 
+    std::cerr << "Cannot encode offset " << offset << " in LDROffset.\n";
+    exit(1);
+  }
+
+  *(dataPtr++) = 0xFF & encodedOffset;
+  *(dataPtr++) = ((dest << 4) & 0xF0) | ((encodedOffset >> 8) & 0x0F);
+  *(dataPtr++) = 0x90 | (base & 0x0F);
   *(dataPtr++) = 0xe5;
 
   DFOS->append(data, dataPtr);

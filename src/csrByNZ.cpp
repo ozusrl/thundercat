@@ -127,7 +127,7 @@ void CSRbyNZCodeEmitter::emit() {
 void CSRbyNZCodeEmitter::dumpPushPopHeader() {
   emitPushArmInst();
 
-  emitLDROffsetArmInst(ARM::R7, ARM::SP, 8); // load vals into R7
+  emitLDROffsetArmInst(ARM::R7, ARM::SP, 32); // load vals into R7
 }
 
 void CSRbyNZCodeEmitter::dumpPushPopFooter() {
@@ -143,8 +143,8 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   emitVMOVI32ArmInst(ARM::D16, 0x0);
   for (int i = 0 ; i < rowLength ; i++) {
-    emitLDROffsetArmInst(ARM::R5, ARM::R3, i); // What if i >= 256?
-    emitVLDRArmInst(ARM::D17, ARM::R7, i); // What if i >= 256?
+    emitLDROffsetArmInst(ARM::R5, ARM::R3, i * sizeof(int));
+    emitVLDRArmInst(ARM::D17, ARM::R7, i * sizeof(double));
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
     emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
@@ -154,7 +154,7 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitLDRRegisterArmInst(ARM::R5, ARM::R2, ARM::R8);
   emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R5, 3);
   
-  emitVLDRArmInst(ARM::D18, ARM::R5, 0x0); // load w[row] into D18
+  emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
   emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
   emitVSTRArmInst(ARM::D18, ARM::R5);
   
