@@ -856,6 +856,11 @@ void SpMVCodeEmitter::emitLDRRegisterArmInst(unsigned dest_r, unsigned base_r, u
 
 void SpMVCodeEmitter::emitLDROffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 {
+  if (offset < 0 || offset >= 4096) {
+    std::cerr << "Cannot handle offset " << offset << " in LDROffset.\n";
+    exit(1);
+  }
+
   //           ldr     r5, [r1, i*4]
   //0x12 0x70 0x94 0xe5  ldr	r7, [r4, #18]
   unsigned char data[4];
@@ -865,14 +870,8 @@ void SpMVCodeEmitter::emitLDROffsetArmInst(unsigned dest_r, unsigned base_r, int
   if (base_r == ARM::SP)
     base = 0x0d;
 
-  unsigned encodedOffset = 0;
-  if (!encodeAsARMImmediate(offset, encodedOffset)) { 
-    std::cerr << "Cannot encode offset " << offset << " in LDROffset.\n";
-    exit(1);
-  }
-
-  *(dataPtr++) = 0xFF & encodedOffset;
-  *(dataPtr++) = ((dest << 4) & 0xF0) | ((encodedOffset >> 8) & 0x0F);
+  *(dataPtr++) = 0xFF & offset;
+  *(dataPtr++) = ((dest << 4) & 0xF0) | ((offset >> 8) & 0x0F);
   *(dataPtr++) = 0x90 | (base & 0x0F);
   *(dataPtr++) = 0xe5;
 
