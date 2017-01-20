@@ -1039,41 +1039,51 @@ void SpMVCodeEmitter::emitVMOVI32ArmInst(unsigned dest_d, int value)
   DFOS->append(data, dataPtr);
 }
 
-//mov     r3, #0
+// mov r3, #1234
 void SpMVCodeEmitter::emitMOVArmInst(unsigned base_r, int value)
 {
-  if (value >= 256) {
-    std::cerr << "Cannot have value >= 256 in MOV yet.\n";
-    exit(1);
-  } 
-  //0x00 0x30 0xa0 0xe3          mov     r3, #0
+  unsigned encodedValue = 0;
+  if (!encodeAsARMImmediate(value, encodedValue)) {
+    if (value >= 0 && value < (1 << 16)) {
+      // try 16-bit mover
+      emitMOVWArmInst(base_r, value);
+      return;
+    } else {
+      // Emit more than one instruction to handle this case 
+      unsigned powerOfTwo = largestPowerOfTwoSmallerThan(value);
+      emitMOVArmInst(base_r, powerOfTwo);
+      emitADDOffsetArmInst(base_r, base_r, value - powerOfTwo);
+      return;
+    }
+  }
+
   unsigned char data[4];
   unsigned char *dataPtr = data;
   unsigned base = base_r - ARM::R0;
-  *(dataPtr++) = value & 0xFF;
-  *(dataPtr++) = (base<<4)&0xf0; //0x30; //r3
+
+  *(dataPtr++) = 0xFF & encodedValue;
+  *(dataPtr++) = ((base << 4) & 0xF0) | ((encodedValue >> 8) & 0x0F);
   *(dataPtr++) = 0xa0;
   *(dataPtr++) = 0xe3;
 
   DFOS->append(data, dataPtr);
 }
 
-//mov     r3, #0
+// movw r3, #1234
 void SpMVCodeEmitter::emitMOVWArmInst(unsigned base_r, int value)
 {
-  if (value >= 256) {
-    std::cerr << "Cannot have value >= 256 MOVW yet.\n";
-    exit(1);
+  if (value < 0 || value >= (1 << 16)) {
+    // try rotation encoding.
+    emitMOVArmInst(base_r, value);
+    return;
   } 
-  //0x74 0x63 0x01 0xe3   movw	r6, #4980 ;1374
-  // 0xe8 0x63 0x00 0xe3   movw	r6, #1000 ;3e8
 
   unsigned char data[4];
   unsigned char *dataPtr = data;
   unsigned base = base_r - ARM::R0;
   *(dataPtr++) = value & 0xFF;
-  *(dataPtr++) = (base<<4)&0xf0 | ((value>>8)&0xF); //0x30; //r3
-  *(dataPtr++) = 0x00 | ((value>>12)&0xF);
+  *(dataPtr++) = (base << 4) & 0xF0 | ((value >> 8) & 0x0F);
+  *(dataPtr++) = (value >> 12) & 0x0F;
   *(dataPtr++) = 0xe3;
 
   DFOS->append(data, dataPtr);
