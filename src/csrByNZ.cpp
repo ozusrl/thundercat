@@ -144,6 +144,8 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   emitVMOVI32ArmInst(ARM::D16, 0x0);
+  emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
+
   unsigned numShiftings = 0;
   for (int i = 0 ; i < rowLength ; i += 2) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
@@ -176,10 +178,9 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
       emitVADDArmInst(ARM::D16, ARM::D16, ARM::D18);
   }
   
-  emitLDRRegisterArmInst(ARM::R5, ARM::R2, ARM::R8);
   emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
   emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
-  emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R5, 3);
+  emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R4, 3);
   emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
   
   emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
