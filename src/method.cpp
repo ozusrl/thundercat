@@ -1008,10 +1008,13 @@ void SpMVCodeEmitter::emitVMULArmInst(unsigned dest_d, unsigned base1_d, unsigne
   //ee611ba4
   unsigned char data[4];
   unsigned char *dataPtr = data;
+  unsigned dest = dest_d - ARM::D16;
+  unsigned base1 = base1_d - ARM::D16;
+  unsigned base2 = base2_d - ARM::D16;
 
-  *(dataPtr++) = 0xa4;
-  *(dataPtr++) = 0x1b;
-  *(dataPtr++) = 0x61;
+  *(dataPtr++) = 0xa0 | (base2 & 0x0f);
+  *(dataPtr++) = 0x0b | ((dest << 4) & 0xf0);
+  *(dataPtr++) = 0x60 | (base1 & 0x0f);
   *(dataPtr++) = 0xee;
   DFOS->append(data, dataPtr);
 }
