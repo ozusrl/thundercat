@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "lib/Target/X86/MCTargetDesc/X86BaseInfo.h"
+#include "lib/Target/ARM/MCTargetDesc/ARMBaseInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInstBuilder.h"
@@ -118,27 +118,18 @@ void StencilCodeEmitter::emit() {
   }
   
   dumpPushPopFooter();
-  emitRETInst();
 }
 
 void StencilCodeEmitter::dumpPushPopHeader() {
-  // rows is in %rdx, cols is in %rcx, vals is in %r8
-  emitPushPopInst(X86::PUSH64r,X86::RBX);
-  emitLEAQInst(X86::R8, X86::RBX, sizeof(double) * baseValsIndex); // using %rbx for vals
-  
-  emitPushPopInst(X86::PUSH64r,X86::R8);
-  emitLEAQInst(X86::RDX, X86::R8, sizeof(int) * baseRowsIndex); // using %r8 for rows
-  
-  emitPushPopInst(X86::PUSH64r,X86::R11);
-  emitPushPopInst(X86::PUSH64r,X86::RDX);
+  emitPushArmInst();
+  emitLDROffsetArmInst(ARM::R7, ARM::SP, 32); // load vals into R7
 }
 
 void StencilCodeEmitter::dumpPushPopFooter() {
-  emitPushPopInst(X86::POP64r, X86::RDX);
-  emitPushPopInst(X86::POP64r, X86::R11);
-  emitPushPopInst(X86::POP64r, X86::R8);
-  emitPushPopInst(X86::POP64r, X86::RBX);
+  emitPopArmInst();
 }
+
+#define LDR_IMM_LIMIT 128
 
 void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
                                                  const RowIndices &rowIndices) {
@@ -146,68 +137,57 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   unsigned long stencilSize = stencil.size();
   if(stencilSize == 0 || popularity == 0) return;
   
-  int row = rowIndices[0];
-  unsigned long labeledBlockBeginningOffset = 0;
+  emitMOVArmInst(ARM::R8, 0x0);
+  emitMOVWArmInst(ARM::R9, (int)popularity * sizeof(int));
+  unsigned long labeledBlockBeginningOffset = DFOS->size();
+  emitVMOVI32ArmInst(ARM::D16, 0x0);
   
-  if (popularity == 1) {
-    //  movsd  "8*(row+stencil[0])"(%rdi), %xmm1
-    emitMOVSDrmInst((8*(row+stencil[0])), X86::RDI, 1);
-  } else {
-    //  xorl %r11d, %r11d
-    emitXOR32rrInst(X86::R11D, X86::R11D);
-    //  .align 4, 0x90
-    emitCodeAlignment(16);
-    //  LBB_"row":
-    labeledBlockBeginningOffset = DFOS->size();
-    
-    //  movslq (%r11,%r8), %rdx
-    emitMOVSLQInst(X86::RDX, X86::R11, X86::R8, 1, 0);
-    //  movsd "8*(stencil[0])"(%rdi,%rdx,8), %xmm1
-    emitMOVSDrmInst((8*(stencil[0])), X86::RDI, X86::RDX, 8, 1);
-  }
-  
-  //  mulsd (%RBX), %xmm1
-  emitMULSDrmInst(0, X86::RBX, 1);
-  
-  for(int i = 1; i < stencilSize; ++i) {
-    if (popularity == 1) {
-      //  movsd "8*(row+stencil[i])"(%rdi), %xmm0
-      emitMOVSDrmInst((8*(row+stencil[i])), X86::RDI, 0);
-    } else {
-      //  movsd "8*(stencil[i])"(%rdi,%rdx,8), %xmm0
-      emitMOVSDrmInst((8*(stencil[i])), X86::RDI, X86::RDX, 8, 0);
-    }
-    //  mulsd "8*(i)"(%RBX), %xmm0
-    emitMULSDrmInst(8*(i), X86::RBX, 0);
-    //  addsd %xmm0, %xmm1
-    emitRegInst(X86::ADDSDrr, 0, 1);
-  }
   if (popularity > 1) {
-    //  addsd (%rsi,%rdx,8), %xmm1
-    emitADDSDrmInst(0, X86::RSI, X86::RDX, 8, 1);
-    //  addq $"sizeof(int)", %r11
-    emitADDQInst(sizeof(int), X86::R11);
-    //  movsd %xmm1, (%rsi,%rdx,8)
-    emitMOVSDmrInst(1, 0, X86::RSI, X86::RDX, 8);
+    emitLDRRegisterArmInst(ARM::R6, ARM::R2, ARM::R8);
+  }
+  unsigned numShiftings = 0;
+  
+  for (int i = 0; i < stencilSize; i++) {
+    if (i % LDR_IMM_LIMIT == 0 && i != 0) {
+      emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
+      numShiftings++;
+    }
+    
+    if (popularity > 1) {
+      if (stencil[i] < 0) {
+        emitSUBOffsetArmInst(ARM::R5, ARM::R6, 0 - stencil[i]);
+        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 0x3);
+      } else if (stencil[i] > 0) {
+        emitADDOffsetArmInst(ARM::R5, ARM::R6, stencil[i]);
+        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 0x3);
+      } else {
+        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R6, 0x3);
+      }
+    } else {
+      int temp = stencil[i] + rowIndices[0];
+      emitADDOffsetArmInst(ARM::R5, ARM::R0, sizeof(double) * temp);
+    }
+    
+    emitVLDRArmInst(ARM::D18, ARM::R5, 0x0);
+    emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
+    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D18);
+    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
   }
   
-  //  leaq "sizeof(double)*stencilSize"(%RBX), %RBX
-  emitLEAQInst(X86::RBX, X86::RBX, (int)(sizeof(double)*stencilSize));
-  
-  if (popularity == 1) {
-    //  addsd "sizeof(double)*row"(%rsi), %xmm1
-    emitADDSDrmInst((sizeof(double)*row), X86::RSI, 1);
-    //  movsd %xmm1, "sizeof(double)*row"(%rsi)
-    emitMOVSDmrInst(1, (sizeof(double)*row), X86::RSI);
+  if (popularity > 1) {
+    emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R6, 3);
   } else {
-    //  cmpl $"popularity*sizeof(int)", %r11d
-    emitCMP32riInst(X86::R11D, (int)popularity*sizeof(int));
-    //  jne LBB_"row"
-    emitJNEInst(labeledBlockBeginningOffset);
-    
-    //  leaq "sizeof(int)*popularity"(%r8), %r8
-    emitLEAQInst(X86::R8, X86::R8, (int)(sizeof(int)*popularity));
+    emitADDOffsetArmInst(ARM::R5, ARM::R1, rowIndices[0] * sizeof(double));
+  }
+  emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
+  emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+  emitVSTRArmInst(ARM::D18, ARM::R5);
+  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int));
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, (stencilSize - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
+  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
+  emitBNEArmInst(labeledBlockBeginningOffset);
+  
+  if (popularity > 1) {
+    emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
   }
 }
-
-
