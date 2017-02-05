@@ -51,7 +51,19 @@ set(SOURCE_FILES csrByNZ.cpp
                  unrollingWithGOTO.cpp
                  unrollingWithGOTOAnalyzer.cpp)
 
-add_executable(spMVgen ${SOURCE_FILES})
+set(HEADER_FILES codeEmitter.h
+                 csrByNZAnalyzer.h
+                 genOskiAnalyzer.h
+                 matrix.h
+                 method.h
+                 profiler.h
+                 spMVgen.h
+                 stencilAnalyzer.h
+                 svmAnalyzer.h
+                 unfoldingAnalyzer.h
+                 unrollingWithGOTOAnalyzer.h)
+
+add_executable(spMVgen ${SOURCE_FILES} ${HEADER_FILES})
 
 llvm_map_components_to_libnames(llvm_libs all)
 
