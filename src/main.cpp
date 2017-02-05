@@ -199,10 +199,8 @@ int main(int argc, const char *argv[]) {
   double *v = new double[n];
   double *w = new double[n];
   for(int i = 0; i < n; ++i) {
-    w[i] = 0;
-  }
-  for(int i = 0; i < n; ++i) {
-    v[i] = i;
+    w[i] = i + 1;
+    v[i] = i + 1;
   }
 
   unsigned int ITERS;
