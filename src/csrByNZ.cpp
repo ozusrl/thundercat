@@ -145,32 +145,48 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   emitVMOVI32ArmInst(ARM::D16, 0x0);
   unsigned numShiftings = 0;
-  for (int i = 0 ; i < rowLength ; i++) {
+  for (int i = 0 ; i < rowLength ; i += 2) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
       emitADDOffsetArmInst(ARM::R3, ARM::R3, LDR_IMM_LIMIT * sizeof(int));
       emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
       numShiftings++;
     }
     emitLDROffsetArmInst(ARM::R5, ARM::R3, (i % LDR_IMM_LIMIT) * sizeof(int));
+    if (i + 1 < rowLength)
+      emitLDROffsetArmInst(ARM::R6, ARM::R3, ((i+1) % LDR_IMM_LIMIT) * sizeof(int));
+
     emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
+    if (i + 1 < rowLength)
+      emitVLDRArmInst(ARM::D18, ARM::R7, ((i+1) % LDR_IMM_LIMIT) * sizeof(double));
+
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
+    if (i + 1 < rowLength)
+      emitADDRegisterArmInst(ARM::R6, ARM::R0, ARM::R6, 3);
+
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
+    if (i + 1 < rowLength)
+      emitVLDRArmInst(ARM::D21, ARM::R6, 0x0);
+
     emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
+    if (i + 1 < rowLength)
+      emitVMULArmInst(ARM::D18, ARM::D18, ARM::D21);
+
     emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
+    if (i + 1 < rowLength)
+      emitVADDArmInst(ARM::D16, ARM::D16, ARM::D18);
   }
   
   emitLDRRegisterArmInst(ARM::R5, ARM::R2, ARM::R8);
+  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
+  emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
   emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R5, 3);
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
   
   emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
+  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
   emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
   emitVSTRArmInst(ARM::D18, ARM::R5);
   
-  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
-  emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
-  emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
-
-  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
   emitBNEArmInst(labeledBlockBeginningOffset);
   
   emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
