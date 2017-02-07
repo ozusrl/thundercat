@@ -137,21 +137,20 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   unsigned long stencilSize = stencil.size();
   if(stencilSize == 0 || popularity == 0) return;
   
-  emitMOVArmInst(ARM::R8, 0x0);
-  emitMOVWArmInst(ARM::R9, (int)popularity * sizeof(int));
+  if (popularity > 1) {
+    emitMOVArmInst(ARM::R8, 0x0);
+    emitMOVWArmInst(ARM::R9, (int)popularity * sizeof(int));
+  }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
-  emitVMOVI32ArmInst(ARM::D16, 0x0);
-  
   if (popularity > 1) {
     emitLDRRegisterArmInst(ARM::R6, ARM::R2, ARM::R8);
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R6, 0x3);
   } else {
     emitADDOffsetArmInst(ARM::R5, ARM::R0, sizeof(double) * rowIndices[0]);
   }
+  emitVMOVI32ArmInst(ARM::D16, 0x0);
   unsigned numShiftings = 0;
   int vPtrPositionRelativeToDiagonal = 0;
-
-  //cout << "-------------------------------------\n";
 
   for (int i = 0; i < stencilSize; i++) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
@@ -159,16 +158,15 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
       numShiftings++;
     }
     if (abs(vPtrPositionRelativeToDiagonal - stencil[i]) >= LDR_IMM_LIMIT) {
-      // re-adjust the pointer
-      int adjustment = stencil[i] - vPtrPositionRelativeToDiagonal + LDR_IMM_LIMIT - 1; // -1 to stay in left-edge of the range
+      // re-adjust the pointer.
+      // -1 to stay in left-edge of the (-1024,1024) range of allowable VLDR offset
+      int adjustment = stencil[i] - vPtrPositionRelativeToDiagonal + LDR_IMM_LIMIT - 1;
       if (adjustment >= 0) {
 	emitADDOffsetArmInst(ARM::R5, ARM::R5, adjustment * sizeof(double));
       } else {
 	emitSUBOffsetArmInst(ARM::R5, ARM::R5, 0 - adjustment * sizeof(double));
       }
-      //cout << vPtrPositionRelativeToDiagonal << " vs. " << stencil[i] << " : " << adjustment << ". New: "; 
       vPtrPositionRelativeToDiagonal += adjustment;
-      //cout << vPtrPositionRelativeToDiagonal << "\n"; 
     }
 
     emitVLDRArmInst(ARM::D18, ARM::R5, (stencil[i] - vPtrPositionRelativeToDiagonal) * sizeof(double));
@@ -179,18 +177,19 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   
   if (popularity > 1) {
     emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R6, 3);
+    emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int));
+    emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
+    emitADDOffsetArmInst(ARM::R7, ARM::R7, (stencilSize - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
+    emitCMPRegisterArmInst(ARM::R8, ARM::R9);
+    emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+    emitVSTRArmInst(ARM::D18, ARM::R5);
+    emitBNEArmInst(labeledBlockBeginningOffset);
+    emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
   } else {
     emitADDOffsetArmInst(ARM::R5, ARM::R1, rowIndices[0] * sizeof(double));
-  }
-  emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
-  emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
-  emitVSTRArmInst(ARM::D18, ARM::R5);
-  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int));
-  emitADDOffsetArmInst(ARM::R7, ARM::R7, (stencilSize - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
-  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
-  emitBNEArmInst(labeledBlockBeginningOffset);
-  
-  if (popularity > 1) {
-    emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
+    emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
+    emitADDOffsetArmInst(ARM::R7, ARM::R7, (stencilSize - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
+    emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+    emitVSTRArmInst(ARM::D18, ARM::R5);
   }
 }
