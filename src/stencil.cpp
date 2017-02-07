@@ -144,31 +144,34 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   
   if (popularity > 1) {
     emitLDRRegisterArmInst(ARM::R6, ARM::R2, ARM::R8);
+    emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R6, 0x3);
+  } else {
+    emitADDOffsetArmInst(ARM::R5, ARM::R0, sizeof(double) * rowIndices[0]);
   }
   unsigned numShiftings = 0;
-  
+  int vPtrPositionRelativeToDiagonal = 0;
+
+  //cout << "-------------------------------------\n";
+
   for (int i = 0; i < stencilSize; i++) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
       emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
       numShiftings++;
     }
-    
-    if (popularity > 1) {
-      if (stencil[i] < 0) {
-        emitSUBOffsetArmInst(ARM::R5, ARM::R6, 0 - stencil[i]);
-        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 0x3);
-      } else if (stencil[i] > 0) {
-        emitADDOffsetArmInst(ARM::R5, ARM::R6, stencil[i]);
-        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 0x3);
+    if (abs(vPtrPositionRelativeToDiagonal - stencil[i]) >= LDR_IMM_LIMIT) {
+      // re-adjust the pointer
+      int adjustment = stencil[i] - vPtrPositionRelativeToDiagonal + LDR_IMM_LIMIT - 1; // -1 to stay in left-edge of the range
+      if (adjustment >= 0) {
+	emitADDOffsetArmInst(ARM::R5, ARM::R5, adjustment * sizeof(double));
       } else {
-        emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R6, 0x3);
+	emitSUBOffsetArmInst(ARM::R5, ARM::R5, 0 - adjustment * sizeof(double));
       }
-    } else {
-      int temp = stencil[i] + rowIndices[0];
-      emitADDOffsetArmInst(ARM::R5, ARM::R0, sizeof(double) * temp);
+      //cout << vPtrPositionRelativeToDiagonal << " vs. " << stencil[i] << " : " << adjustment << ". New: "; 
+      vPtrPositionRelativeToDiagonal += adjustment;
+      //cout << vPtrPositionRelativeToDiagonal << "\n"; 
     }
-    
-    emitVLDRArmInst(ARM::D18, ARM::R5, 0x0);
+
+    emitVLDRArmInst(ARM::D18, ARM::R5, (stencil[i] - vPtrPositionRelativeToDiagonal) * sizeof(double));
     emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
     emitVMULArmInst(ARM::D17, ARM::D17, ARM::D18);
     emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
