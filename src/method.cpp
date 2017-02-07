@@ -819,27 +819,23 @@ unsigned largestPowerOfTwoSmallerThan(int offset) {
 //          vldr    d17, [r2, i*8]
 void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset)
 {
-  if (offset % 4 != 0 || offset >= 1024 || offset < 0) {
+  if (offset % 4 != 0 || offset >= 1024 || offset <= -1024) {
     std::cerr << "Cannot handle offset " << offset << " in VLDR.\n";
     exit(1);
   } 
-  //vldr    d17, [r2, i*8]
-  //edd21b00  //0
-  //edd21b02  //8
-  //edd21b04  //16
-
-  //vldr    d20, [r5]
-  //edd54b00
-  //vldr    d18, [r5]
-  //edd52b00
 
   unsigned char data[4];
   unsigned char *dataPtr = data;
   unsigned base = base_r - ARM::R0;
   unsigned dest = dest_d - ARM::D16;
+
+  unsigned sign = offset < 0 ? 0x50 : 0xd0;
+  if (offset < 0)
+    offset = -offset;
+
   *(dataPtr++) = 0xFF & (offset >> 2);
   *(dataPtr++) = (dest << 4) | 0x0b;
-  *(dataPtr++) = 0xd0 | (base & 0x0f);
+  *(dataPtr++) = sign | (base & 0x0f);
   *(dataPtr++) = 0xed;
   DFOS->append(data, dataPtr);
 }
