@@ -21,7 +21,9 @@ test() {
     local methodName=$2
     local methodParam1=$3
     local methodParam2=$4
-    folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+    folderName=data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+    mkdir -p "$folderName"
+    rm -f "$folderName"/output.txt
     ./build/spMVgen $MATRICES/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
 }
 
@@ -30,9 +32,6 @@ echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"
 while read matrixName
 do
     echo -n $matrixName" "
-    folderName=../data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
-    mkdir -p "$folderName"
-    rm -f "$folderName"/output.txt
     cd ..
     test $matrixName "$methodName" "$methodParam1" "$methodParam2"
     cd - > /dev/null
