@@ -806,16 +806,6 @@ int absoluteValueOf(int value) {
   return (value < 0) ? (-1 * value) : value;
 }
 
-unsigned largestPowerOfTwoSmallerThan(int offset) {
-  if (offset == 0 || offset == 1) 
-    return offset; 
-  unsigned power = 1;
-  while (power * 2 < offset) {
-    power  = power * 2;
-  }
-  return power;
-}
-
 //          vldr    d17, [r2, i*8]
 void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset)
 {
@@ -950,12 +940,19 @@ void SpMVCodeEmitter::emitADDRegisterArmInst(unsigned dest_r, unsigned base1_r, 
 //     add     r5, lr, #offset
 void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 { 
+  if (offset == 0) return;
+
   unsigned encodedOffset = 0;
   if (!encodeAsARMImmediate(offset, encodedOffset)) {
     // Emit more than one instruction to handle this case 
-    unsigned powerOfTwo = largestPowerOfTwoSmallerThan(offset);
-    emitADDOffsetArmInst(dest_r, base_r, powerOfTwo);
-    emitADDOffsetArmInst(dest_r, dest_r, offset - powerOfTwo);
+    unsigned partOne   = offset & 0x000000FF;
+    unsigned partTwo   = offset & 0x0000FF00;
+    unsigned partThree = offset & 0x00FF0000;
+    unsigned partFour  = offset & 0xFF000000;
+    emitADDOffsetArmInst(dest_r, base_r, partOne);
+    emitADDOffsetArmInst(dest_r, dest_r, partTwo);
+    emitADDOffsetArmInst(dest_r, dest_r, partThree);
+    emitADDOffsetArmInst(dest_r, dest_r, partFour);
     return;
   }
 
@@ -974,12 +971,19 @@ void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int
 
 void SpMVCodeEmitter::emitSUBOffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 {
+  if (offset == 0) return;
+
   unsigned encodedOffset = 0;
   if (!encodeAsARMImmediate(offset, encodedOffset)) {
     // Emit more than one instruction to handle this case
-    unsigned powerOfTwo = largestPowerOfTwoSmallerThan(offset);
-    emitSUBOffsetArmInst(dest_r, base_r, powerOfTwo);
-    emitSUBOffsetArmInst(dest_r, dest_r, offset - powerOfTwo);
+    unsigned partOne   = offset & 0x000000FF;
+    unsigned partTwo   = offset & 0x0000FF00;
+    unsigned partThree = offset & 0x00FF0000;
+    unsigned partFour  = offset & 0xFF000000;
+    emitSUBOffsetArmInst(dest_r, base_r, partOne);
+    emitSUBOffsetArmInst(dest_r, dest_r, partTwo);
+    emitSUBOffsetArmInst(dest_r, dest_r, partThree);
+    emitSUBOffsetArmInst(dest_r, dest_r, partFour);
     return;
   }
   
@@ -1066,9 +1070,14 @@ void SpMVCodeEmitter::emitMOVArmInst(unsigned base_r, int value)
       return;
     } else {
       // Emit more than one instruction to handle this case 
-      unsigned powerOfTwo = largestPowerOfTwoSmallerThan(value);
-      emitMOVArmInst(base_r, powerOfTwo);
-      emitADDOffsetArmInst(base_r, base_r, value - powerOfTwo);
+      unsigned partOne   = value & 0x000000FF;
+      unsigned partTwo   = value & 0x0000FF00;
+      unsigned partThree = value & 0x00FF0000;
+      unsigned partFour  = value & 0xFF000000;
+      emitMOVArmInst(base_r, partOne);
+      emitADDOffsetArmInst(base_r, base_r, partTwo);
+      emitADDOffsetArmInst(base_r, base_r, partThree);
+      emitADDOffsetArmInst(base_r, base_r, partFour);
       return;
     }
   }
