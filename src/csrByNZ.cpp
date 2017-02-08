@@ -140,7 +140,6 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   // v is in R0, w is in R1, rows is in R2, cols is in R3, vals is in R7 
   
   emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
-  emitMOVWArmInst(ARM::R9, numRows * sizeof(int)); // loop limit
   
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   emitVMOVI32ArmInst(ARM::D16, 0x0);
@@ -187,7 +186,7 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
   
   emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
-  emitCMPRegisterArmInst(ARM::R8, ARM::R9);
+  emitCMPOffsetArmInst(ARM::R8, numRows * sizeof(int), ARM::R9); // loop limit
   emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
   emitVSTRArmInst(ARM::D18, ARM::R5);
   

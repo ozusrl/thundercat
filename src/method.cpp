@@ -1131,7 +1131,6 @@ void SpMVCodeEmitter::emitVSTRArmInst(unsigned dest_d, unsigned base_r)
   DFOS->append(data, dataPtr);
 }
  
-//e1530006
 void SpMVCodeEmitter::emitCMPRegisterArmInst(unsigned dest_r, unsigned base_r)
 {
   unsigned char data[4];
@@ -1143,6 +1142,27 @@ void SpMVCodeEmitter::emitCMPRegisterArmInst(unsigned dest_r, unsigned base_r)
   *(dataPtr++) = 0x00;
   *(dataPtr++) = 0x50 | (dest&0x0f);
   *(dataPtr++) = 0xe1;
+
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitCMPOffsetArmInst(unsigned dest_r, int value, unsigned backup_r)
+{
+  unsigned encodedOffset = 0;
+  if (!encodeAsARMImmediate(value, encodedOffset)) {
+    emitMOVWArmInst(backup_r, value);
+    emitCMPRegisterArmInst(dest_r, backup_r);
+    return;
+  }
+
+  unsigned char data[4];
+  unsigned char *dataPtr = data;
+  unsigned dest = dest_r - ARM::R0;
+
+  *(dataPtr++) = 0xFF & encodedOffset;
+  *(dataPtr++) = 0x00 | ((encodedOffset >> 8) & 0x0F);
+  *(dataPtr++) = 0x50 | (dest&0x0f);
+  *(dataPtr++) = 0xe3;
 
   DFOS->append(data, dataPtr);
 }
