@@ -147,35 +147,38 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
 
   unsigned numShiftings = 0;
-  for (int i = 0 ; i < rowLength ; i += 2) {
+  int i = 0;
+  for ( ; i < rowLength-1 ; i += 2) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
       emitADDOffsetArmInst(ARM::R3, ARM::R3, LDR_IMM_LIMIT * sizeof(int));
       emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
       numShiftings++;
     }
     emitLDROffsetArmInst(ARM::R5, ARM::R3, (i % LDR_IMM_LIMIT) * sizeof(int));
-    if (i + 1 < rowLength)
-      emitLDROffsetArmInst(ARM::R6, ARM::R3, ((i+1) % LDR_IMM_LIMIT) * sizeof(int));
-
+    emitLDROffsetArmInst(ARM::R6, ARM::R3, ((i+1) % LDR_IMM_LIMIT) * sizeof(int));
     emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
-    if (i + 1 < rowLength)
-      emitVLDRArmInst(ARM::D18, ARM::R7, ((i+1) % LDR_IMM_LIMIT) * sizeof(double));
-
+    emitVLDRArmInst(ARM::D18, ARM::R7, ((i+1) % LDR_IMM_LIMIT) * sizeof(double));
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
-    if (i + 1 < rowLength)
-      emitADDRegisterArmInst(ARM::R6, ARM::R0, ARM::R6, 3);
-
+    emitADDRegisterArmInst(ARM::R6, ARM::R0, ARM::R6, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
-    if (i + 1 < rowLength)
-      emitVLDRArmInst(ARM::D21, ARM::R6, 0x0);
-
+    emitVLDRArmInst(ARM::D21, ARM::R6, 0x0);
     emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
-    if (i + 1 < rowLength)
-      emitVMULArmInst(ARM::D18, ARM::D18, ARM::D21);
-
+    emitVMULArmInst(ARM::D18, ARM::D18, ARM::D21);
     emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
-    if (i + 1 < rowLength)
-      emitVADDArmInst(ARM::D16, ARM::D16, ARM::D18);
+    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D18);
+  }
+  if (i < rowLength) {
+    if (i % LDR_IMM_LIMIT == 0 && i != 0) {
+      emitADDOffsetArmInst(ARM::R3, ARM::R3, LDR_IMM_LIMIT * sizeof(int));
+      emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
+      numShiftings++;
+    }
+    emitLDROffsetArmInst(ARM::R5, ARM::R3, (i % LDR_IMM_LIMIT) * sizeof(int));
+    emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
+    emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
+    emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
+    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
+    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
   }
   
   emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
