@@ -940,19 +940,15 @@ void SpMVCodeEmitter::emitADDRegisterArmInst(unsigned dest_r, unsigned base1_r, 
 //     add     r5, lr, #offset
 void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 { 
-  if (offset == 0) return;
+  if (offset == 0 && dest_r == base_r) return;
 
   unsigned encodedOffset = 0;
   if (!encodeAsARMImmediate(offset, encodedOffset)) {
     // Emit more than one instruction to handle this case 
-    unsigned partOne   = offset & 0x000000FF;
-    unsigned partTwo   = offset & 0x0000FF00;
-    unsigned partThree = offset & 0x00FF0000;
-    unsigned partFour  = offset & 0xFF000000;
-    emitADDOffsetArmInst(dest_r, base_r, partOne);
-    emitADDOffsetArmInst(dest_r, dest_r, partTwo);
-    emitADDOffsetArmInst(dest_r, dest_r, partThree);
-    emitADDOffsetArmInst(dest_r, dest_r, partFour);
+    emitADDOffsetArmInst(dest_r, base_r, offset & 0x000000FF);
+    emitADDOffsetArmInst(dest_r, dest_r, offset & 0x0000FF00);
+    emitADDOffsetArmInst(dest_r, dest_r, offset & 0x00FF0000);
+    emitADDOffsetArmInst(dest_r, dest_r, offset & 0xFF000000);
     return;
   }
 
@@ -971,19 +967,15 @@ void SpMVCodeEmitter::emitADDOffsetArmInst(unsigned dest_r, unsigned base_r, int
 
 void SpMVCodeEmitter::emitSUBOffsetArmInst(unsigned dest_r, unsigned base_r, int offset)
 {
-  if (offset == 0) return;
+  if (offset == 0 && dest_r == base_r) return;
 
   unsigned encodedOffset = 0;
   if (!encodeAsARMImmediate(offset, encodedOffset)) {
     // Emit more than one instruction to handle this case
-    unsigned partOne   = offset & 0x000000FF;
-    unsigned partTwo   = offset & 0x0000FF00;
-    unsigned partThree = offset & 0x00FF0000;
-    unsigned partFour  = offset & 0xFF000000;
-    emitSUBOffsetArmInst(dest_r, base_r, partOne);
-    emitSUBOffsetArmInst(dest_r, dest_r, partTwo);
-    emitSUBOffsetArmInst(dest_r, dest_r, partThree);
-    emitSUBOffsetArmInst(dest_r, dest_r, partFour);
+    emitSUBOffsetArmInst(dest_r, base_r, offset & 0x000000FF);
+    emitSUBOffsetArmInst(dest_r, dest_r, offset & 0x0000FF00);
+    emitSUBOffsetArmInst(dest_r, dest_r, offset & 0x00FF0000);
+    emitSUBOffsetArmInst(dest_r, dest_r, offset & 0xFF000000);
     return;
   }
   
