@@ -139,12 +139,16 @@ void CSRbyNZCodeEmitter::dumpPushPopFooter() {
 void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long rowLength) {
   // v is in R0, w is in R1, rows is in R2, cols is in R3, vals is in R7 
   
-  emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
-  
+  if (numRows > 1) {
+    emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
+  }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   emitVMOVI32ArmInst(ARM::D16, 0x0);
-  emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
-
+  if (numRows > 1) {
+    emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
+  } else {
+    emitLDROffsetArmInst(ARM::R4, ARM::R2, 0);
+  }
   unsigned numShiftings = 0;
   int i = 0;
   for ( ; i < rowLength-1 ; i += 2) {
@@ -180,17 +184,20 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
   }
   
-  emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
-  emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
   emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R4, 3);
-  emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
-  
+  emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
   emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
-  emitCMPOffsetArmInst(ARM::R8, numRows * sizeof(int), ARM::R9); // loop limit
-  emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
-  emitVSTRArmInst(ARM::D18, ARM::R5);
-  
-  emitBNEArmInst(labeledBlockBeginningOffset);
-  
-  emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));  
+  if (numRows > 1) {
+    emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
+    emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+    emitCMPOffsetArmInst(ARM::R8, numRows * sizeof(int), ARM::R9); // loop limit
+    emitVSTRArmInst(ARM::D18, ARM::R5);
+    emitBNEArmInst(labeledBlockBeginningOffset);
+    emitADDRegisterArmInst(ARM::R2, ARM::R2, ARM::R8, 0); // R8's value at this point is "numRows * sizeof(int)"
+  } else {
+    emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+    emitVSTRArmInst(ARM::D18, ARM::R5);
+    emitADDOffsetArmInst(ARM::R2, ARM::R2, sizeof(int));
+  }
 }
