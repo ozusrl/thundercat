@@ -139,7 +139,6 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   
   if (popularity > 1) {
     emitMOVArmInst(ARM::R8, 0x0);
-    emitMOVWArmInst(ARM::R9, (int)popularity * sizeof(int));
   }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   if (popularity > 1) {
@@ -180,7 +179,7 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
     emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int));
     emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
     emitADDOffsetArmInst(ARM::R7, ARM::R7, (stencilSize - numShiftings * LDR_IMM_LIMIT) * sizeof(double));
-    emitCMPRegisterArmInst(ARM::R8, ARM::R9);
+    emitCMPOffsetArmInst(ARM::R8, (int)popularity * sizeof(int), ARM::R9);
     emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
     emitVSTRArmInst(ARM::D18, ARM::R5);
     emitBNEArmInst(labeledBlockBeginningOffset);
