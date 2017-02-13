@@ -165,10 +165,8 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitADDRegisterArmInst(ARM::R6, ARM::R0, ARM::R6, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
     emitVLDRArmInst(ARM::D21, ARM::R6, 0x0);
-    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
-    emitVMULArmInst(ARM::D18, ARM::D18, ARM::D21);
-    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
-    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D18);
+    emitVMLAArmInst(ARM::D16, ARM::D17, ARM::D20);
+    emitVMLAArmInst(ARM::D16, ARM::D18, ARM::D21);
   }
   if (i < rowLength) {
     if (i % LDR_IMM_LIMIT == 0 && i != 0) {
@@ -180,8 +178,7 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
-    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D20);
-    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
+    emitVMLAArmInst(ARM::D16, ARM::D17, ARM::D20);
   }
   
   emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R4, 3);

@@ -170,8 +170,7 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
 
     emitVLDRArmInst(ARM::D18, ARM::R5, (stencil[i] - vPtrPositionRelativeToDiagonal) * sizeof(double));
     emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
-    emitVMULArmInst(ARM::D17, ARM::D17, ARM::D18);
-    emitVADDArmInst(ARM::D16, ARM::D16, ARM::D17);
+    emitVMLAArmInst(ARM::D16, ARM::D17, ARM::D18);
   }
   
   if (popularity > 1) {
