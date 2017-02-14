@@ -50,6 +50,8 @@ namespace spMVgen {
     void emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offset);
     void emitLDROffsetArmInst(unsigned dest_r, unsigned base_r, int offset);
     void emitLDRRegisterArmInst(unsigned dest_r, unsigned base_r, unsigned offset_register);
+    void emitLDMArmInst(unsigned base_r, unsigned dest_first_r, unsigned dest_end_r);
+    void emitVLDMArmInst(unsigned base_r, unsigned dest_first_d, unsigned dest_end_d);
     void emitADDRegisterArmInst(unsigned dest_r, unsigned base1_r, unsigned base2_r, int scaler);
     void emitADDOffsetArmInst(unsigned dest_r, unsigned base1_r, int offset);
     void emitSUBOffsetArmInst(unsigned dest_r, unsigned base1_r, int offset);

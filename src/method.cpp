@@ -16,6 +16,11 @@ extern unsigned int NUM_OF_THREADS;
 using namespace spMVgen;
 using namespace llvm;
 
+const int ldr_register_bits[] = {0x0001, 0x0002, 0x0004, 0x0008,
+				 0x0010, 0x0020, 0x0040, 0x0080,
+				 0x0100, 0x0200, 0x0400, 0x0800,
+				 0x1000, 0x2000, 0x4000, 0x8000};
+
 SpMVMethod::SpMVMethod(Matrix *csrMatrix) {
   this->matrix = NULL;
   this->csrMatrix = csrMatrix;
@@ -1227,3 +1232,51 @@ void SpMVCodeEmitter::emitVMLAArmInst(unsigned dest_d, unsigned base1_d, unsigne
   DFOS->append(data, dataPtr);
 }
 
+void SpMVCodeEmitter::emitLDMArmInst(unsigned base_r, unsigned dest_first_r, unsigned dest_end_r)
+{
+  unsigned char data[4];
+  unsigned char *dataPtr = data;
+  unsigned base = base_r - ARM::R0;
+  unsigned destf = dest_first_r - ARM::R0;
+  unsigned deste = dest_end_r - ARM::R0;
+
+  if (dest_first_r - ARM::R0 < base && base < dest_end_r - ARM::R0) {
+    std::cerr << "LDM base register cannot be in the reg list.\n";
+    exit(1);
+  }
+
+  unsigned reg_list = 0;
+  for (int i = destf; i <= deste; i++) {
+    reg_list |= ldr_register_bits[i];
+  }
+
+  *(dataPtr++) = reg_list & 0xFF;
+  *(dataPtr++) = (reg_list >> 8 ) & 0xFF;
+  *(dataPtr++) = 0xb3;
+  *(dataPtr++) = 0xe8;
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitVLDMArmInst(unsigned base_r, unsigned dest_first_d, unsigned dest_end_d)
+{
+  unsigned char data[4];
+  unsigned char *dataPtr = data;
+  unsigned base = base_r - ARM::R0;
+  unsigned destf = dest_first_d - ARM::D16;
+  unsigned deste = dest_end_d - ARM::D16;
+
+  if (dest_first_d == ARM::D16) {
+    std::cerr << "VLDM reg list should start with D17.\n";
+    exit(1);
+  }
+  if (dest_end_d < dest_first_d) {
+    std::cerr << "VLDM reg list end should be greater than the beginning.\n";
+    exit(1);
+  }
+
+  *(dataPtr++) = (2 + 2 * (deste - destf)) & 0xff;
+  *(dataPtr++) = 0x1b;
+  *(dataPtr++) = 0xf7;
+  *(dataPtr++) = 0xec;
+  DFOS->append(data, dataPtr);
+}

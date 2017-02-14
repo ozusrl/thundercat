@@ -152,15 +152,8 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   unsigned numShiftings = 0;
   int i = 0;
   for ( ; i < rowLength-1 ; i += 2) {
-    if (i % LDR_IMM_LIMIT == 0 && i != 0) {
-      emitADDOffsetArmInst(ARM::R3, ARM::R3, LDR_IMM_LIMIT * sizeof(int));
-      emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
-      numShiftings++;
-    }
-    emitLDROffsetArmInst(ARM::R5, ARM::R3, (i % LDR_IMM_LIMIT) * sizeof(int));
-    emitLDROffsetArmInst(ARM::R6, ARM::R3, ((i+1) % LDR_IMM_LIMIT) * sizeof(int));
-    emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
-    emitVLDRArmInst(ARM::D18, ARM::R7, ((i+1) % LDR_IMM_LIMIT) * sizeof(double));
+    emitLDMArmInst(ARM::R3, ARM::R5 , ARM::R6);
+    emitVLDMArmInst(ARM::R7, ARM::D17, ARM::D18);
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
     emitADDRegisterArmInst(ARM::R6, ARM::R0, ARM::R6, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
@@ -169,22 +162,15 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitVMLAArmInst(ARM::D16, ARM::D18, ARM::D21);
   }
   if (i < rowLength) {
-    if (i % LDR_IMM_LIMIT == 0 && i != 0) {
-      emitADDOffsetArmInst(ARM::R3, ARM::R3, LDR_IMM_LIMIT * sizeof(int));
-      emitADDOffsetArmInst(ARM::R7, ARM::R7, LDR_IMM_LIMIT * sizeof(double));
-      numShiftings++;
-    }
-    emitLDROffsetArmInst(ARM::R5, ARM::R3, (i % LDR_IMM_LIMIT) * sizeof(int));
-    emitVLDRArmInst(ARM::D17, ARM::R7, (i % LDR_IMM_LIMIT) * sizeof(double));
+    emitLDMArmInst(ARM::R3, ARM::R5 , ARM::R5);
+    emitVLDMArmInst(ARM::R7, ARM::D17, ARM::D17);
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3);
     emitVLDRArmInst(ARM::D20, ARM::R5, 0x0);
     emitVMLAArmInst(ARM::D16, ARM::D17, ARM::D20);
   }
   
   emitADDRegisterArmInst(ARM::R5, ARM::R1, ARM::R4, 3);
-  emitADDOffsetArmInst(ARM::R3, ARM::R3, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(int));
   emitVLDRArmInst(ARM::D18, ARM::R5, 0); // load w[row] into D18
-  emitADDOffsetArmInst(ARM::R7, ARM::R7, (rowLength - numShiftings * LDR_IMM_LIMIT) * sizeof(double));  
   if (numRows > 1) {
     emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int)); 
     emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
