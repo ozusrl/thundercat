@@ -1280,3 +1280,18 @@ void SpMVCodeEmitter::emitVLDMArmInst(unsigned base_r, unsigned dest_first_d, un
   *(dataPtr++) = 0xec;
   DFOS->append(data, dataPtr);
 }
+
+void SpMVCodeEmitter::emitEORArmInst(unsigned dest_d, unsigned base1_d, unsigned base2_d)
+{
+  unsigned char data[4];
+  unsigned char *dataPtr = data;
+  unsigned dest = dest_d - ARM::D16;
+  unsigned base1 = base1_d - ARM::D16;
+  unsigned base2 = base2_d - ARM::D16;
+
+  *(dataPtr++) = 0xb0 | (base2 & 0x0f);
+  *(dataPtr++) = 0x01 | ((dest << 4) & 0xf0);
+  *(dataPtr++) = 0x40 | (base1 & 0x0f);
+  *(dataPtr++) = 0xf3;
+  DFOS->append(data, dataPtr);
+}

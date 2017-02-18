@@ -143,7 +143,7 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
     emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
   }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
-  emitVMOVI32ArmInst(ARM::D16, 0x0);
+  emitEORArmInst(ARM::D16, ARM::D16, ARM::D16);
   if (numRows > 1) {
     emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
   } else {
