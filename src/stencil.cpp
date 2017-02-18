@@ -139,6 +139,7 @@ void StencilCodeEmitter::dumpStencilAssemblyText(const StencilPattern &stencil,
   
   if (popularity > 1) {
     emitMOVArmInst(ARM::R8, 0x0);
+    emitARMCodeAlignment(32);
   }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
   if (popularity > 1) {
