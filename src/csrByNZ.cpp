@@ -140,11 +140,11 @@ void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long row
   // v is in R0, w is in R1, rows is in R2, cols is in R3, vals is in R7 
   
   if (numRows > 1) {
-    emitMOVArmInst(ARM::R8, 0x0); // loop counter 'a'
+    emitEORArmInst(ARM::R8, ARM::R8, ARM::R8); // loop counter 'a'
     emitARMCodeAlignment(32);
   }
   unsigned long labeledBlockBeginningOffset = DFOS->size();
-  emitEORArmInst(ARM::D16, ARM::D16, ARM::D16);
+  emitVEORArmInst(ARM::D16, ARM::D16, ARM::D16);
   if (numRows > 1) {
     emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
   } else {
