@@ -157,9 +157,9 @@ void GenOSKICodeEmitter::dumpForLoops() {
     emitARMCodeAlignment(32);
     unsigned long labeledBlockBeginningOffset = DFOS->size();
     
-    emitLDRRegisterArmInst(ARM::R4, ARM::R2, ARM::R8);
+    emitLDMArmInst(ARM::R2, ARM::R4, ARM::R4);
     emitADDRegisterArmInst(ARM::R4, ARM::R1, ARM::R4, 3); //www  
-    emitLDRRegisterArmInst(ARM::R5, ARM::R3, ARM::R8);
+    emitLDMArmInst(ARM::R3, ARM::R5, ARM::R5);
     emitADDRegisterArmInst(ARM::R5, ARM::R0, ARM::R5, 3); //VV
     
     bitset<32> patternBits(pattern.first);
@@ -195,8 +195,6 @@ void GenOSKICodeEmitter::dumpForLoops() {
     emitADDOffsetArmInst(ARM::R8, ARM::R8, sizeof(int));
     emitCMPOffsetArmInst(ARM::R8, numBlocks * sizeof(int), ARM::R9);
     emitBNEArmInst(labeledBlockBeginningOffset);  
-    emitADDOffsetArmInst(ARM::R2, ARM::R2, sizeof(int)*numBlocks);
-    emitADDOffsetArmInst(ARM::R3, ARM::R3, sizeof(int)*numBlocks);
   } 
 }
 

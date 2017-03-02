@@ -1266,7 +1266,7 @@ void SpMVCodeEmitter::emitLDMArmInst(unsigned base_r, unsigned dest_first_r, uns
 
   *(dataPtr++) = reg_list & 0xFF;
   *(dataPtr++) = (reg_list >> 8 ) & 0xFF;
-  *(dataPtr++) = 0xb3;
+  *(dataPtr++) = 0xb0 | (base & 0x0f);
   *(dataPtr++) = 0xe8;
   DFOS->append(data, dataPtr);
 }
