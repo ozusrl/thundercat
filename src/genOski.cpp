@@ -180,23 +180,16 @@ void GenOSKICodeEmitter::dumpForLoops() {
       vector<int> cols = nz.second;
       vector<int>::iterator colsIt = cols.begin(), colsEnd = cols.end();
 
-      emitADDOffsetArmInst(ARM::R6, ARM::R4, (row) * sizeof(double)); 
-      emitVLDRArmInst(ARM::D18, ARM::R6, 0x0);
-      emitVLDRArmInst(ARM::D16, ARM::R5, (*colsIt++) * sizeof(double));
-      emitVLDRArmInst(ARM::D17, ARM::R7, (bb++) * sizeof(double));
-      emitVMULArmInst(ARM::D16, ARM::D16, ARM::D17);
-      emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+      emitVLDRArmInst(ARM::D18, ARM::R4, row * sizeof(double));
 
-      if (cols.size() > 1) {
-        for (; colsIt != colsEnd; ++colsIt) {
-          emitVLDRArmInst(ARM::D16, ARM::R5, (*colsIt) * sizeof(double));
-          emitVLDRArmInst(ARM::D17, ARM::R7, (bb++) * sizeof(double));
-          emitVMULArmInst(ARM::D16, ARM::D16, ARM::D17);
-          emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
-        }
+      while (colsIt != colsEnd) {
+        emitVLDRArmInst(ARM::D16, ARM::R5, (*colsIt++) * sizeof(double));
+        emitVLDRArmInst(ARM::D17, ARM::R7, (bb++) * sizeof(double));
+        emitVMULArmInst(ARM::D16, ARM::D16, ARM::D17);
+        emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
       }
 
-      emitVSTRArmInst(ARM::D18, ARM::R6);
+      emitVSTRArmInst(ARM::D18, ARM::R4, row * sizeof(double));
     }
 
     emitADDOffsetArmInst(ARM::R7, ARM::R7, sizeof(double) * bb);

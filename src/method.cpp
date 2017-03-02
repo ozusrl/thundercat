@@ -835,6 +835,37 @@ void SpMVCodeEmitter::emitVLDRArmInst(unsigned dest_d, unsigned base_r, int offs
   DFOS->append(data, dataPtr);
 }
 
+// vstr d16, [r5]
+void SpMVCodeEmitter::emitVSTRArmInst(unsigned dest_d, unsigned base_r)
+{
+  emitVSTRArmInst(dest_d, base_r, 0);
+}
+
+// vstr d16, [r5, offset]
+void SpMVCodeEmitter::emitVSTRArmInst(unsigned dest_d, unsigned base_r, int offset)
+{
+  if (offset % 4 != 0 || offset >= 1024 || offset <= -1024) {
+    std::cerr << "Cannot handle offset " << offset << " in VSTR.\n";
+    exit(1);
+  } 
+
+  unsigned char data[4];
+  unsigned char *dataPtr = data;
+  unsigned base = base_r - ARM::R0;
+  unsigned dest = dest_d - ARM::D16;
+
+  unsigned sign = offset < 0 ? 0x40 : 0xc0;
+  if (offset < 0)
+    offset = -offset;
+
+  *(dataPtr++) = 0xFF & (offset >> 2);
+  *(dataPtr++) = 0x0b | ((dest<<4) & 0xf0);
+  *(dataPtr++) = sign | (base & 0x0f);
+  *(dataPtr++) = 0xed;
+
+  DFOS->append(data, dataPtr);
+}
+
 //              ldr     r5, [r1, i*4]
 void SpMVCodeEmitter::emitLDRRegisterArmInst(unsigned dest_r, unsigned base_r, unsigned offset_register)
 {
@@ -1111,23 +1142,6 @@ void SpMVCodeEmitter::emitMOVWArmInst(unsigned base_r, int value)
   DFOS->append(data, dataPtr);
 }
 
-//vstr    d16, [r5]
-void SpMVCodeEmitter::emitVSTRArmInst(unsigned dest_d, unsigned base_r)
-{
-  //vstr    d16, [r5]
-  //edc50b00
-  unsigned char data[4];
-  unsigned char *dataPtr = data;
-  unsigned dest = dest_d - ARM::D16;
-  unsigned base = base_r - ARM::R0;
-  *(dataPtr++) = 0x00;
-  *(dataPtr++) = 0x0b | ((dest<<4)&0xf0);
-  *(dataPtr++) = 0xc0 | (base&0x0f);
-  *(dataPtr++) = 0xed;
-
-  DFOS->append(data, dataPtr);
-}
- 
 void SpMVCodeEmitter::emitCMPRegisterArmInst(unsigned dest_r, unsigned base_r)
 {
   unsigned char data[4];

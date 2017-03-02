@@ -62,6 +62,7 @@ namespace spMVgen {
     void emitMOVArmInst(unsigned base_r, int value);
     void emitMOVWArmInst(unsigned base_r, int value);
     void emitVSTRArmInst(unsigned dest_d, unsigned base_r);
+    void emitVSTRArmInst(unsigned dest_d, unsigned base_r, int offset);
     void emitCMPRegisterArmInst(unsigned dest_r, unsigned base_r);
     void emitCMPOffsetArmInst(unsigned dest_r, int value, unsigned backup_r);
     void emitBNEArmInst(long destinationAddress);
