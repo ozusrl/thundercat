@@ -185,8 +185,7 @@ void GenOSKICodeEmitter::dumpForLoops() {
       while (colsIt != colsEnd) {
         emitVLDRArmInst(ARM::D16, ARM::R5, (*colsIt++) * sizeof(double));
         emitVLDRArmInst(ARM::D17, ARM::R7, (bb++) * sizeof(double));
-        emitVMULArmInst(ARM::D16, ARM::D16, ARM::D17);
-        emitVADDArmInst(ARM::D18, ARM::D18, ARM::D16);
+        emitVMLAArmInst(ARM::D18, ARM::D16, ARM::D17);
       }
 
       emitVSTRArmInst(ARM::D18, ARM::R4, row * sizeof(double));
