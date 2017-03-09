@@ -17,7 +17,7 @@ do
     folder1Name=data/"$matrixName"/"$method1Name"
     folder2Name=data/"$matrixName"/"$method2Name"
     cd ..
-    numdiff -q "$folder1Name"/output.txt "$folder2Name"/output.txt numdiff.cfg
+    diff -q "$folder1Name"/output.txt "$folder2Name"/output.txt
     cd tools
 done < matrixNames.txt
 

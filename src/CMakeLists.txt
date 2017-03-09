@@ -24,7 +24,7 @@ if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -O3 -fno-rtti -std=c++11" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fno-rtti -std=c++14" )
 
 message(STATUS "CXX Flags: " ${CMAKE_CXX_FLAGS})
 message(STATUS "Linker Flags: " ${CMAKE_EXE_LINKER_FLAGS})

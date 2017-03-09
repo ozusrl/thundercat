@@ -41,17 +41,26 @@ Once you have LLVM, use `cmake` to build. E.g.:
 ~ $ cd thundercat
 ~/thundercat $ mkdir build
 ~/thundercat $ cd build
-~/thundercat/build $ cmake -G Ninja ../src
+~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../src
 ~/thundercat/build $ ninja
 ```
 
 This will produce a main executable file, named `spMVgen`.
 The library runs on Mac OS X and Linux. 
 
+Depending on your taste and environment, instead of `Ninja`,
+you may generate build files for `"Unix Makefiles"` or `Xcode`,
+among other options.
+
+Setting the `CMAKE_BUILD_TYPE` variable to `Debug` is a good idea
+for a build that you will use for debugging purposes.
+All the benchmarkings, however, should be done using a build
+configured as `Release`.
+
 To force a particular compiler, e.g. icc, do the following:
 
 ```
-~/thundercat/build $ cmake -G Ninja -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
+~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
 ```
 
 ## How to Run
@@ -81,7 +90,19 @@ Also, the output can be separately linked to a main file.
 * `-matrix_stats`: Prints the `svmAnalyzer`'s results for the current matrix.
 
 ### Examples
-Run for the lhr71 matrix (assuming `lhr71.mtx` exists in the current directory), using the stencil method with 6 threads:
+Run for the `rajat22` matrix (assuming `rajat22.mtx` exists in the current directory), using the stencil method with 6 threads:
 ```
-./spMVgen lhr71 stencil -num_threads 6
+./spMVgen rajat22 stencil -num_threads 6
 ```
+
+### Sample Matrices
+
+There is a small set of matrices at
+
+<http://srl.ozyegin.edu.tr/matrices_debug.tar.gz>
+
+Matrices used in the [GPCE 2014 paper](http://dx.doi.org/10.1145/2658761.2658773)
+are available at
+
+<http://srl.ozyegin.edu.tr/matrices_gpce.tar.gz>
+
