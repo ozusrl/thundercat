@@ -21,53 +21,6 @@ bool PLAINCSR_ENABLED = false;
 unsigned int NUM_OF_THREADS = 1;
 int nthreads = 0;
 
-// Caller of this method is responsible for destructing the 
-// returned matrix. 
-Matrix* readMatrixFromFile(string fileName) {
-  ifstream mmFile(fileName.c_str());
-  if (!mmFile.is_open()) {
-    std::cerr << "Problem with file " << fileName << ".\n";
-    exit(1);
-  }
-  string headerLine;
-  // consume the comments until we reach the size info
-  while (mmFile.good()) {
-    getline (mmFile, headerLine);
-    if (headerLine[0] != '%') break;
-  }
-  
-  // Read N, M, NZ
-  stringstream header(headerLine, ios_base::in);
-  int n, m, nz;
-  header >> n >> m >> nz;
-  if (n != m) {
-    std::cerr << "Only square matrices are accepted.\n";
-    exit(1);
-  }
-  
-  // Read rows, cols, vals
-  MMMatrix matrix(n);
-  int row; int col; double val;
-
-  string line;
-  for (int i = 0; i < nz; ++i) {
-    getline(mmFile, line);
-    stringstream linestream(line, ios_base::in);
-    linestream >> row >> col;
-    // pattern matrices do not contain val entry.
-    // Such matrices are filled in with consecutive numbers.
-    linestream >> val;
-    if (linestream.fail()) 
-      val = i+1;
-    // adjust to zero index
-    matrix.add(row-1, col-1, val);
-  }
-  mmFile.close();
-  matrix.normalize();
-  Matrix *csrMatrix = matrix.toCSRMatrix();
-  return csrMatrix;
-}
-
 int main(int argc, const char *argv[]) {
   // Usage: spMVgen <matrixName> <specializerName> {-debug|-dump_object|-dump_matrix|-num_threads|-matrix_stats}
   // E.g: spMVgen matrices/fidap037 unfolding 
@@ -92,7 +45,7 @@ int main(int argc, const char *argv[]) {
   string matrixStatsFlag("-matrix_stats");
 
   string matrixName(argv[1]);
-  Matrix *csrMatrix = readMatrixFromFile(matrixName + ".mtx");
+  Matrix *csrMatrix = Matrix::readMatrixFromFile(matrixName + ".mtx");
   
   char **argptr = (char**)&argv[2];
 
@@ -220,8 +173,14 @@ int main(int argc, const char *argv[]) {
     ITERS = 1000;
   } else if (nz < 3000000) {
     ITERS = 500;
-  } else {
+  } else if (nz < 5000000) {
     ITERS = 200;
+  } else if (nz < 8000000) {
+    ITERS = 100;
+  } else if (nz < 12000000) {
+    ITERS = 50;
+  } else {
+    ITERS = 100;
   }
   
   if (__DEBUG__) {

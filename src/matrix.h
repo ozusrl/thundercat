@@ -17,8 +17,8 @@ namespace spMVgen {
   
   class Matrix final {
   public:
-    int *cols;
     int *rows;
+    int *cols;
     double *vals;
     unsigned long n;
     unsigned long nz;
@@ -33,6 +33,9 @@ namespace spMVgen {
     std::vector<MatrixStripeInfo> &getStripeInfos();
     
     void print();
+      
+    static Matrix* readMatrixFromFile(std::string fileName);
+
   private:
     std::vector<MatrixStripeInfo> stripeInfos;
   };

@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include "profiler.h"
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -9,10 +10,7 @@
 extern unsigned int NUM_OF_THREADS;
 
 using namespace spMVgen;
-using std::vector;
-using std::map;
-using std::pair;
-using std::cout;
+using namespace std;
 
 #ifdef PROF
 #include <sys/time.h>
@@ -32,6 +30,54 @@ Matrix::~Matrix() {
   delete[] cols;
   delete[] vals;
 }
+
+// Caller of this method is responsible for destructing the
+// returned matrix.
+Matrix* Matrix::readMatrixFromFile(string fileName) {
+  ifstream mmFile(fileName.c_str());
+  if (!mmFile.is_open()) {
+    std::cerr << "Problem with file " << fileName << ".\n";
+    exit(1);
+  }
+  string headerLine;
+  // consume the comments until we reach the size info
+  while (mmFile.good()) {
+    getline (mmFile, headerLine);
+    if (headerLine[0] != '%') break;
+  }
+  
+  // Read N, M, NZ
+  stringstream header(headerLine, ios_base::in);
+  int n, m, nz;
+  header >> n >> m >> nz;
+  if (n != m) {
+    std::cerr << "Only square matrices are accepted.\n";
+    exit(1);
+  }
+  
+  // Read rows, cols, vals
+  MMMatrix matrix(n);
+  int row; int col; double val;
+  
+  string line;
+  for (int i = 0; i < nz; ++i) {
+    getline(mmFile, line);
+    stringstream linestream(line, ios_base::in);
+    linestream >> row >> col;
+    // Pattern (i.e. connectivity) matrices do not contain val entry.
+    // Such matrices are filled in with 1.0
+    linestream >> val;
+    if (linestream.fail())
+      val = 1.0;
+    // adjust to zero index
+    matrix.add(row-1, col-1, val);
+  }
+  mmFile.close();
+  matrix.normalize();
+  Matrix *csrMatrix = matrix.toCSRMatrix();
+  return csrMatrix;
+}
+
 
 vector<MatrixStripeInfo> &Matrix::getStripeInfos() {
   if (stripeInfos.size() == 0) {
@@ -124,8 +170,7 @@ void MMMatrix::sort() {
 }
 
 void MMMatrix::add(int row, int col, double val) {
-  if(val != 0)
-    elts.push_back(MMElement(row, col, val));
+  elts.push_back(MMElement(row, col, val));
 }
 
 void MMMatrix::normalize() {
