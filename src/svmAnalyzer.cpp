@@ -163,6 +163,16 @@ void SVMAnalyzer::printFeatures() {
   
   cout << "svmAnalysisTime: " << (time_svmAnalysis_Diff.tv_sec*1000000)+time_svmAnalysis_Diff.tv_usec << "\n";
   
+  cout << "Matrix N NZ NonEmptyRows CSRbyNZGroups SumOfRowLengths RowPerNZGroup "
+       << "LengthPerNZGroup numSingleRowStencils numMultiRowStencils "
+       << "sumOfSingleRowStencilLengths sumOfMultiRowStencilLengths RowPerMultirowStencil "
+       << "RowPerSinglerowStencil LengthPerMultirowStencil NumElementsPerStencil "
+       << "NumDistinctValues "
+       << "Num44Patterns sumOfPatternLengths44 numBlocks44 "
+       << "numBlocksPerPattern44 LengthsPerPattern44 NumElementsPerPattern44 "
+       << "Num55Patterns sumOfPatternLengths55 numBlocks55 "
+       << "numBlocksPerPattern55 LengthsPerPattern55 NumElementsPerPattern55 "
+       << "NZPerRow\n";
   // General
   cout << (stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " ";
   cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) << " ";
