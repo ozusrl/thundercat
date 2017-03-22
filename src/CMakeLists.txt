@@ -48,7 +48,10 @@ set(SOURCE_FILES csrByNZ.cpp
                  unfolding.cpp
                  unfoldingAnalyzer.cpp
                  unrollingWithGOTO.cpp
-                 unrollingWithGOTOAnalyzer.cpp)
+                 unrollingWithGOTOAnalyzer.cpp
+                 csrWithGOTO.cpp
+                 csrWithGOTOAnalyzer.cpp
+)
 
 set(HEADER_FILES codeEmitter.h
                  csrByNZAnalyzer.h
@@ -60,7 +63,9 @@ set(HEADER_FILES codeEmitter.h
                  stencilAnalyzer.h
                  svmAnalyzer.h
                  unfoldingAnalyzer.h
-                 unrollingWithGOTOAnalyzer.h)
+                 unrollingWithGOTOAnalyzer.h
+                 csrWithGOTOAnalyzer.h
+)
 
 add_executable(spMVgen ${SOURCE_FILES} ${HEADER_FILES})
 

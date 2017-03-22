@@ -8,6 +8,7 @@
 #include "csrByNZAnalyzer.h"
 #include "unfoldingAnalyzer.h"
 #include "unrollingWithGOTOAnalyzer.h"
+#include "csrWithGOTOAnalyzer.h"
 #include "genOskiAnalyzer.h"
 #include "codeEmitter.h"
 
@@ -114,6 +115,19 @@ namespace spMVgen {
   protected:
     Matrix* getMatrixForGeneration();
     UnrollingWithGOTOAnalyzer analyzer;
+  };
+  
+  ///
+  /// CSRWithGOTO
+  ///
+  class CSRWithGOTO: public SpMVMethod {
+  public:
+    CSRWithGOTO(Matrix *csrMatrix);
+    
+    virtual void dumpAssemblyText();
+  protected:
+    Matrix* getMatrixForGeneration();
+    CSRWithGOTOAnalyzer analyzer;
   };
   
   ///

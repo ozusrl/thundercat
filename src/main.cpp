@@ -35,6 +35,7 @@ int main(int argc, const char *argv[]) {
   string unfolding("unfolding");
   string stencil("stencil");
   string unrollingWithGOTO("unrollingWithGOTO");
+  string csrWithGOTO("CSRWithGOTO");
   string mkl("MKL");
   string plainCSR("PlainCSR");
 
@@ -69,6 +70,8 @@ int main(int argc, const char *argv[]) {
     method = new Stencil(csrMatrix);
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
     method = new UnrollingWithGOTO(csrMatrix);
+  } else if(csrWithGOTO.compare(*argptr) == 0) {
+    method = new CSRWithGOTO(csrMatrix);
   } else if(mkl.compare(*argptr) == 0) {
     method = new MKL(csrMatrix);
     MKL_ENABLED = true;
