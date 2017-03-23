@@ -278,7 +278,8 @@ void SpMVCodeEmitter::emitLEAQ_RIP(unsigned toRegister, int memOffset) {
   unsigned char data[7];
   unsigned char *dataPtr = data;
   
-  if (!(toRegister == X86::R8 || toRegister == X86::RAX || toRegister == X86::RDX)) {
+  if (!(toRegister == X86::R8  || toRegister == X86::RAX ||
+        toRegister == X86::RDX || toRegister == X86::R10)) {
     std::cerr << "Unsupported toRegister in emitLEAQ_RIP.\n";
     exit(1);
   }
@@ -294,6 +295,7 @@ void SpMVCodeEmitter::emitLEAQ_RIP(unsigned toRegister, int memOffset) {
     case X86::RAX: *(dataPtr++) = 0x05; break;
     case X86::RDX: *(dataPtr++) = 0x15; break;
     case X86::R8:  *(dataPtr++) = 0x05; break;
+    case X86::R10: *(dataPtr++) = 0x15; break;
     default: std::cerr << "Unsupported toRegister in emitLEAQ_RIP.\n"; exit(1);
   }
   *(dataPtr++) = (unsigned char)(memOffset >>  0);
@@ -318,6 +320,28 @@ void SpMVCodeEmitter::emitPushPopInst(unsigned opCode, unsigned baseRegister){
   }
   
   dataPtr++;
+  
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitADDQrrInst(unsigned long leftRegister, unsigned long rightRegister){
+  unsigned char data[3];
+  unsigned char *dataPtr = data;
+  
+  *(dataPtr++) = 0x48 | (isR8R15Register(leftRegister) << 2) | isR8R15Register(rightRegister);
+  *(dataPtr++) = 0x01;
+  *(dataPtr++) = 0xc0 | (registerCode(leftRegister) << 3) | registerCode(rightRegister);
+  
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitSUBQrrInst(unsigned long leftRegister, unsigned long rightRegister){
+  unsigned char data[3];
+  unsigned char *dataPtr = data;
+  
+  *(dataPtr++) = 0x48 | (isR8R15Register(leftRegister) << 2) | isR8R15Register(rightRegister);
+  *(dataPtr++) = 0x29;
+  *(dataPtr++) = 0xc0 | (registerCode(leftRegister) << 3) | registerCode(rightRegister);
   
   DFOS->append(data, dataPtr);
 }
@@ -355,6 +379,32 @@ void SpMVCodeEmitter::emitADDQInst(unsigned long offset, unsigned long baseRegis
     *(dataPtr++) = (unsigned char) (offset >> 24);
   }
 
+  DFOS->append(data, dataPtr);
+}
+
+void SpMVCodeEmitter::emitIMULInst(int imm, unsigned long baseRegister){
+  if (baseRegister != X86::RCX) {
+    std::cerr << "Only RCX is handled in IMUL.\n";
+    exit(-1);
+  }
+  unsigned char data[7];
+  unsigned char *dataPtr = data;
+    
+  *(dataPtr++) = 0x48;
+  *(dataPtr++) = 0x6b;
+  *(dataPtr++) = 0xc9;
+  
+  // immediate
+  if (imm != 0) {
+    *(dataPtr++) = (unsigned char) imm;
+  }
+  
+  if (imm >= 128 || imm < -128) {
+    *(dataPtr++) = (unsigned char) (imm >> 8);
+    *(dataPtr++) = (unsigned char) (imm >> 16);
+    *(dataPtr++) = (unsigned char) (imm >> 24);
+  }
+  
   DFOS->append(data, dataPtr);
 }
 
@@ -417,6 +467,29 @@ void SpMVCodeEmitter::emitJNEInst(long destinationAddress){
   DFOS->append(data, dataPtr);
 }
 
+void SpMVCodeEmitter::emitJGInst(long numBytesToJump){
+  if (numBytesToJump < 0) {
+    std::cerr << "Only forward jumps are handled in emitJEInst.\n";
+    exit(-1);
+  }
+  
+  unsigned char data[6];
+  unsigned char *dataPtr = data;
+  if (numBytesToJump < 128 && numBytesToJump >= -128) {
+    *(dataPtr++) = 0x7F;
+    *(dataPtr++) = (unsigned char) numBytesToJump;
+  } else {
+    *(dataPtr++) = 0x0f;
+    *(dataPtr++) = 0x8f;
+    *(dataPtr++) = (unsigned char) numBytesToJump;
+    *(dataPtr++) = (unsigned char) (numBytesToJump >> 8);
+    *(dataPtr++) = (unsigned char) (numBytesToJump >> 16);
+    *(dataPtr++) = (unsigned char) (numBytesToJump >> 24);
+  }
+  
+  DFOS->append(data, dataPtr);
+}
+
 void SpMVCodeEmitter::emitJMPInst(long numBytesToJump){
   if (numBytesToJump < 0) {
     std::cerr << "Only forward jumps are handled in emitJMPInst.\n";
@@ -440,15 +513,13 @@ void SpMVCodeEmitter::emitJMPInst(long numBytesToJump){
 }
 
 void SpMVCodeEmitter::emitDynamicJMPInst(unsigned baseRegister){
-  if (baseRegister != X86::RDX) {
-    std::cerr << "Only RDX is supported in emitDynamicJMPInst.\n";
-    exit(-1);
-  }
-  
-  unsigned char data[2];
+  unsigned char data[3];
   unsigned char *dataPtr = data;
+  if (isR8R15Register(baseRegister)) {
+    *(dataPtr++) = 0x41;
+  }
   *(dataPtr++) = 0xff;
-  *(dataPtr++) = 0xe2;
+  *(dataPtr++) = 0xe0 | registerCode(baseRegister);
   
   DFOS->append(data, dataPtr);
 }
@@ -471,8 +542,11 @@ void SpMVCodeEmitter::emitXOR32rrInst(unsigned registerFrom, unsigned registerTo
     case X86::EAX: *(dataPtr++) = 0xc0; break;
     case X86::EBX: *(dataPtr++) = 0xdb; break;
     case X86::ECX: *(dataPtr++) = 0xc9; break;
+    case X86::EDX: *(dataPtr++) = 0xd2; break;
     case X86::R9D: *(dataPtr++) = 0xc9; break;
+    case X86::R10D: *(dataPtr++) = 0xd2; break;
     case X86::R11D: *(dataPtr++) = 0xdb; break;
+    case X86::R13D: *(dataPtr++) = 0xed; break;
     default: std::cerr << "Unhandled register in emitXOR32rr.\n"; exit(-1);
   }  
   
@@ -482,12 +556,14 @@ void SpMVCodeEmitter::emitXOR32rrInst(unsigned registerFrom, unsigned registerTo
 void SpMVCodeEmitter::emitCMP32riInst(unsigned registerTo, int imm) {
   unsigned char data[7];
   unsigned char *dataPtr = data;
-  if (registerTo == X86::R11D) {
+  if (registerTo == X86::R11D || registerTo == X86::R13D) {
     *(dataPtr++) = 0x41;
   }
   *(dataPtr++) = 0x81;
   if (registerTo == X86::R11D) {
     *(dataPtr++) = 0xfb;
+  } else if (registerTo == X86::R13D) {
+    *(dataPtr++) = 0xfd;
   } else {
     *(dataPtr++) = 0xf8 + registerCode(registerTo);
   }

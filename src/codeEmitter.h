@@ -18,10 +18,14 @@ namespace spMVgen {
                         int memOffset);
     void emitMOVSLQInst(unsigned destinationRegister, unsigned baseRegister,
                         int memOffset);
+    void emitADDQrrInst(unsigned long leftRegister, unsigned long rightRegister);
+    void emitSUBQrrInst(unsigned long leftRegister, unsigned long rightRegister);
     void emitADDQInst(unsigned long offset, unsigned long baseRegister);
+    void emitIMULInst(int imm, unsigned long baseRegister);
     void emitMOVQInst(unsigned baseRegisterTo, unsigned baseRegisterFrom);
     void emitJNEInst(long destinationAddress);
-    void emitJMPInst(long destinationAddress);
+    void emitJGInst(long numBytesToJump);
+    void emitJMPInst(long numBytesToJump);
     void emitDynamicJMPInst(unsigned baseRegister);
     void emitXOR32rrInst(unsigned registerFrom, unsigned registerTo);
     void emitCMP32riInst(unsigned registerTo, int imm);
