@@ -19,6 +19,9 @@ include_directories(${LLVM_INCLUDE_DIRS}
 link_directories(${MKL_LIBRARIES})
 add_definitions(${LLVM_DEFINITIONS})
 
+include_directories(${CMAKE_SOURCE_DIR}/../asmjit/src)
+link_directories(${CMAKE_SOURCE_DIR}/../asmjit/build)
+
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -72,10 +75,10 @@ add_executable(spMVgen ${SOURCE_FILES} ${HEADER_FILES})
 llvm_map_components_to_libnames(llvm_libs all)
 
 if (MKL_FOUND)
-    target_link_libraries(spMVgen ${llvm_libs}
+    target_link_libraries(spMVgen ${llvm_libs} asmjit
                           mkl_intel_lp64
                           mkl_sequential
                           mkl_core)
 else()
-    target_link_libraries(spMVgen ${llvm_libs})
+    target_link_libraries(spMVgen ${llvm_libs} asmjit)
 endif()
