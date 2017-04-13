@@ -44,7 +44,6 @@ int main(int argc, const char *argv[]) {
   dumpMatrixIfRequested();
   doSVMAnalysisIfRequested();
   generateFunctions();
-  dumpObjectIfRequested();
   populateInputOutputVectors();
   benchmark();
   cleanup();
@@ -179,20 +178,6 @@ void generateFunctions() {
   END_TIME_PROFILE(getMultByMFunctions);
 }
 
-void dumpObjectIfRequested() {
-  if (DUMP_OBJECT) {
-    if (method->isSpecializer()) {
-      Specializer *specializer = (Specializer*)method;
-      std::vector<asmjit::CodeHolder*> *codeHolders = specializer->getCodeHolders();
-      for (CodeHolder *codeHolder : *codeHolders) {
-        CodeBuffer &buf = codeHolder->getSectionEntry(0)->getBuffer();
-        fwrite(buf.getData(), 1, buf.getLength(), stdout);
-      }
-      exit(0);
-    }
-  }
-}
-
 void populateInputOutputVectors() {
   unsigned long n = csrMatrix->n;
   unsigned long nz = csrMatrix->nz;
@@ -207,6 +192,9 @@ void populateInputOutputVectors() {
 unsigned int getNumIterations() {
   if (__DEBUG__) {
     return 1;
+  }
+  if (DUMP_OBJECT) {
+    return 0;
   }
 
   unsigned long nz = csrMatrix->nz;
