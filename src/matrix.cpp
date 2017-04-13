@@ -1,5 +1,4 @@
 #include "matrix.h"
-#include "profiler.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -11,12 +10,6 @@ extern unsigned int NUM_OF_THREADS;
 
 using namespace spMVgen;
 using namespace std;
-
-#ifdef PROF
-#include <sys/time.h>
-int timediff(struct timeval *res, struct timeval *x, struct timeval *y);
-extern int timingLevel;
-#endif
 
 Matrix::Matrix(int *rows, int *cols, double *vals, unsigned long n, unsigned long nz):
   rows(rows), cols(cols), vals(vals), n(n), nz(nz) { 
@@ -79,9 +72,8 @@ Matrix* Matrix::readMatrixFromFile(string fileName) {
 }
 
 
-vector<MatrixStripeInfo> &Matrix::getStripeInfos() {
+vector<MatrixStripeInfo> *Matrix::getStripeInfos() {
   if (stripeInfos.size() == 0) {
-    START_OPTIONAL_TIME_PROFILE(matrixPartition);
     // Split the matrix
     unsigned long chunkSize = this->numVals / NUM_OF_THREADS;
     unsigned int rowIndex = 0;
@@ -107,9 +99,8 @@ vector<MatrixStripeInfo> &Matrix::getStripeInfos() {
       stripeInfo.valIndexEnd = valIndex;
       stripeInfos.push_back(stripeInfo);
     }
-    END_OPTIONAL_TIME_PROFILE(matrixPartition);
   }
-  return stripeInfos;
+  return &stripeInfos;
 }
 
 void Matrix::print() {

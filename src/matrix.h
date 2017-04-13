@@ -30,7 +30,7 @@ namespace spMVgen {
 
     ~Matrix();
     
-    std::vector<MatrixStripeInfo> &getStripeInfos();
+    std::vector<MatrixStripeInfo> *getStripeInfos();
     
     void print();
       

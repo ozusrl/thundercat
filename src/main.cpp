@@ -1,25 +1,25 @@
 #include "profiler.h"
-#include "spMVgen.h"
 #include "svmAnalyzer.h"
+#include "method.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#ifdef __linux__
+#include <stdio.h>
+#ifdef OPENMP_EXISTS
 #include "omp.h"
 #endif
 
 using namespace spMVgen;
 using namespace std;
+using namespace asmjit;
 
 bool __DEBUG__ = false;
 bool DUMP_OBJECT = false;
 bool DUMP_MATRIX = false;
 bool MATRIX_STATS = false;
-bool MKL_ENABLED = false;
-bool PLAINCSR_ENABLED = false;
+bool MKL_ENABLED = false; // TODO: Get rid of this
 unsigned int NUM_OF_THREADS = 1;
-int nthreads = 0;
 Matrix *csrMatrix;
 SpMVMethod *method;
 vector<MultByMFun> fptrs;
@@ -30,8 +30,9 @@ double *wVector;
 void parseCommandLineArguments(int argc, const char *argv[]);
 void dumpMatrixIfRequested();
 void doSVMAnalysisIfRequested();
-void setupMKL();
+void setupParallelism();
 void generateFunctions();
+void dumpObjectIfRequested();
 void populateInputOutputVectors();
 void benchmark();
 void cleanup();
@@ -40,8 +41,9 @@ int main(int argc, const char *argv[]) {
   parseCommandLineArguments(argc, argv);
   dumpMatrixIfRequested();
   doSVMAnalysisIfRequested();
-  setupMKL();
+  setupParallelism();
   generateFunctions();
+  dumpObjectIfRequested();
   populateInputOutputVectors();
   benchmark();
   cleanup();
@@ -81,29 +83,28 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   if(genOSKI.compare(*argptr) == 0) {
     int b_r = atoi(*(++argptr));
     int b_c = atoi(*(++argptr));
-    method = new GenOSKI(csrMatrix, b_r, b_c);
+    //method = new GenOSKI(csrMatrix, b_r, b_c);
   } else if(genOSKI33.compare(*argptr) == 0) {
-    method = new GenOSKI(csrMatrix, 3, 3);
+    //method = new GenOSKI(csrMatrix, 3, 3);
   } else if(genOSKI44.compare(*argptr) == 0) {
-    method = new GenOSKI(csrMatrix, 4, 4);
+    //method = new GenOSKI(csrMatrix, 4, 4);
   } else if(genOSKI55.compare(*argptr) == 0) {
-    method = new GenOSKI(csrMatrix, 5, 5);
+    //method = new GenOSKI(csrMatrix, 5, 5);
   } else if(unfolding.compare(*argptr) == 0) {
-    method = new Unfolding(csrMatrix);
+    //method = new Unfolding(csrMatrix);
   } else if(csrByNZ.compare(*argptr) == 0) {
     method = new CSRbyNZ(csrMatrix);
   } else if(stencil.compare(*argptr) == 0) {
-    method = new Stencil(csrMatrix);
+    //method = new Stencil(csrMatrix);
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
-    method = new UnrollingWithGOTO(csrMatrix);
+    //method = new UnrollingWithGOTO(csrMatrix);
   } else if(csrWithGOTO.compare(*argptr) == 0) {
-    method = new CSRWithGOTO(csrMatrix);
+    //method = new CSRWithGOTO(csrMatrix);
   } else if(mkl.compare(*argptr) == 0) {
     method = new MKL(csrMatrix);
     MKL_ENABLED = true;
   } else if(plainCSR.compare(*argptr) == 0) {
     method = new PlainCSR(csrMatrix);
-    PLAINCSR_ENABLED = true;
   } else {
     std::cout << "Method " << *argptr << " not found.\n";
     exit(1);
@@ -135,7 +136,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
 
 void dumpMatrixIfRequested() {
   if (DUMP_MATRIX) {
-    Matrix *matrix = method->getMatrix();
+    Matrix *matrix = method->getCustomMatrix();
     matrix->print();
     exit(0);
   }
@@ -149,10 +150,11 @@ void doSVMAnalysisIfRequested() {
   }
 }
 
-void setupMKL() {
-#ifdef __linux__
+void setupParallelism() {
+#ifdef OPENMP_EXISTS
   if (!MKL_ENABLED) {
     omp_set_num_threads(NUM_OF_THREADS);
+    int nthreads = -1;
 #pragma omp parallel
     {
 #pragma omp master
@@ -167,20 +169,29 @@ void setupMKL() {
 }
 
 void generateFunctions() {
-  START_TIME_PROFILE(codeGeneration);
-  if (MKL_ENABLED) {
-    MKL *mklMethod = (MKL*)method;
-    mklMethod->setNumOfThreads(NUM_OF_THREADS);
-    fptrs = mklMethod->getMultByMFunctions();
-  } else if (PLAINCSR_ENABLED) {
-    fptrs = ((PlainCSR*)method)->getMultByMFunctions();
-  } else {
-    // Generate and run the specialized code
-    SpMVSpecializer specializer(method);
-    specializer.specialize();
-    fptrs = specializer.getMultByMFunctions();
+  START_TIME_PROFILE(processMatrix);
+  method->processMatrix();
+  END_TIME_PROFILE(processMatrix);
+  START_TIME_PROFILE(emitCode);
+  method->emitCode();
+  END_TIME_PROFILE(emitCode);
+  START_TIME_PROFILE(getMultByMFunctions);
+  fptrs = method->getMultByMFunctions();
+  END_TIME_PROFILE(getMultByMFunctions);
+}
+
+void dumpObjectIfRequested() {
+  if (DUMP_OBJECT) {
+    if (method->isSpecializer()) {
+      Specializer *specializer = (Specializer*)method;
+      std::vector<asmjit::CodeHolder*> *codeHolders = specializer->getCodeHolders();
+      for (CodeHolder *codeHolder : *codeHolders) {
+        CodeBuffer &buf = codeHolder->getSectionEntry(0)->getBuffer();
+        fwrite(buf.getData(), 1, buf.getLength(), stdout);
+      }
+      exit(0);
+    }
   }
-  END_TIME_PROFILE(codeGeneration);
 }
 
 void populateInputOutputVectors() {
@@ -232,7 +243,7 @@ void benchmark() {
   unsigned int ITERS = getNumIterations();
   unsigned long n = csrMatrix->n;
   
-  Matrix *matrix = method->getMatrix();
+  Matrix *matrix = method->getCustomMatrix();
   START_TIME_PROFILE(multByM);
   if (fptrs.size() == 1) {
     for (int i=0; i < ITERS; i++) {

@@ -4,15 +4,7 @@
 #include "matrix.h"
 #include <unordered_map>
 #include <iostream>
-#include "stencilAnalyzer.h"
-#include "csrByNZAnalyzer.h"
-#include "unfoldingAnalyzer.h"
-#include "unrollingWithGOTOAnalyzer.h"
-#include "csrWithGOTOAnalyzer.h"
-#include "genOskiAnalyzer.h"
-#include "codeEmitter.h"
-
-#define MAIN_FUNCTION_NAME "multByM"
+#include "asmjit/asmjit.h"
 
 namespace spMVgen {
   // multByM(v, w, rows, cols, vals)
@@ -24,110 +16,23 @@ namespace spMVgen {
 
     virtual ~SpMVMethod();
     
-    Matrix* getMatrix();
-
-    Matrix* getCSRMatrix();
+    virtual bool isSpecializer();
     
-    bool hasNonEmptyMatrix();
-
-    void setMCStreamer(llvm::MCStreamer *Str);
-
-    virtual void dumpAssemblyText() = 0;
-
-    void dumpMultByMFunctions();
-
+    virtual void emitCode();
+    
+    virtual std::vector<MultByMFun> getMultByMFunctions() = 0;
+    
+    virtual Matrix* getCustomMatrix() final;
+    
+    virtual void processMatrix() final;
+  
   protected:
-    virtual Matrix* getMatrixForGeneration() = 0;
-
-    llvm::MCStreamer *Str;
+    virtual void analyzeMatrix() = 0;
+    virtual void convertMatrix() = 0;
+    
+    std::vector<MatrixStripeInfo> *stripeInfos;
     Matrix *csrMatrix;
     Matrix *matrix;
-  };
-  
-  ///
-  /// Gen OSKI
-  ///
-  class GenOSKI: public SpMVMethod {
-  private:
-    unsigned int b_r, b_c;
-
-  public:
-    GenOSKI(Matrix *csrMatrix, unsigned b_r, unsigned b_c);
-    
-    virtual void dumpAssemblyText();
-    
-  protected:
-    Matrix* getMatrixForGeneration();
-    GenOSKIAnalyzer analyzer;
-  };
-
-  ///
-  /// CSRbyNZ
-  ///
-  class CSRbyNZ: public SpMVMethod {
-  public:
-    CSRbyNZ(Matrix *csrMatrix);
-
-    virtual void dumpAssemblyText();
-
-  protected:
-    Matrix* getMatrixForGeneration();
-    CSRbyNZAnalyzer analyzer;
-  };
-  
-  ///
-  /// Stencil
-  ///
-  class Stencil: public SpMVMethod {
-  public:
-    Stencil(Matrix *csrMatrix);
-
-    virtual void dumpAssemblyText();
-
-  protected:
-    Matrix* getMatrixForGeneration();
-    StencilAnalyzer analyzer;
-  };
-  
-
-  ///
-  /// Unfolding
-  ///
-  class Unfolding: public SpMVMethod {
-  public:
-    Unfolding(Matrix *csrMatrix);
-
-    virtual void dumpAssemblyText();
-  protected:
-    Matrix* getMatrixForGeneration();
-    
-    UnfoldingAnalyzer analyzer;
-  };
-
-  ///
-  /// UnrollingWithGOTO
-  ///
-  class UnrollingWithGOTO: public SpMVMethod {
-  public:
-    UnrollingWithGOTO(Matrix *csrMatrix);
-
-    virtual void dumpAssemblyText();
-  protected:
-    Matrix* getMatrixForGeneration();
-    UnrollingWithGOTOAnalyzer analyzer;
-  };
-  
-  ///
-  /// CSRWithGOTO
-  ///
-  class CSRWithGOTO: public SpMVMethod {
-  public:
-    CSRWithGOTO(Matrix *csrMatrix);
-    
-    virtual void dumpAssemblyText();
-  protected:
-    Matrix* getMatrixForGeneration();
-    CSRWithGOTOAnalyzer analyzer;
   };
   
   ///
@@ -136,18 +41,14 @@ namespace spMVgen {
   class MKL: public SpMVMethod {
   public:
     MKL(Matrix *csrMatrix);
-    
-    virtual void dumpAssemblyText();
-    
-    void setNumOfThreads(unsigned int num);
-    
-    std::vector<MultByMFun> getMultByMFunctions();
-    
+
+    virtual std::vector<MultByMFun> getMultByMFunctions();
+
   protected:
-    Matrix* getMatrixForGeneration();
+    virtual void analyzeMatrix();
+    virtual void convertMatrix();
   };
-
-
+  
   ///
   /// PlainCSR
   ///
@@ -155,13 +56,136 @@ namespace spMVgen {
   public:
     PlainCSR(Matrix *csrMatrix);
     
-    virtual void dumpAssemblyText();
-    
-    std::vector<MultByMFun> getMultByMFunctions();
+    virtual std::vector<MultByMFun> getMultByMFunctions();
     
   protected:
-    Matrix* getMatrixForGeneration();
+    virtual void analyzeMatrix();
+    virtual void convertMatrix();
   };
+
+
+  ///
+  /// Specializer
+  ///
+  class Specializer : public SpMVMethod {
+  public:
+    Specializer(Matrix *csrMatrix);
+    
+    virtual bool isSpecializer() final;
+    
+    virtual void emitCode() final;
+  
+    virtual std::vector<MultByMFun> getMultByMFunctions() final;
+
+    std::vector<asmjit::CodeHolder*> *getCodeHolders();
+    
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) = 0;
+    
+    std::vector<asmjit::CodeHolder*> codeHolders;
+    
+  private:
+    void emitConstData();
+    asmjit::JitRuntime rt;
+  };
+
+  ///
+  /// CSRbyNZ
+  ///
+  class RowByNZ {
+  public:
+    std::vector<int> *getRowIndices();
+    void addRowIndex(int index);
+    
+  private:
+    std::vector<int> rowIndices;
+  };
+  
+  // To keep the map keys in ascending order, using the "greater" comparator.
+  typedef std::map<unsigned long, RowByNZ, std::greater<unsigned long> > NZtoRowMap;
+  
+  class CSRbyNZ: public Specializer {
+  public:
+    CSRbyNZ(Matrix *csrMatrix);
+    
+    virtual void emitMultByMFunction(unsigned int index);
+    
+  protected:
+    virtual void analyzeMatrix();
+    virtual void convertMatrix();
+
+  private:
+    std::vector<NZtoRowMap> rowByNZLists;
+  };
+  
+//  ///
+//  /// Gen OSKI
+//  ///
+//  class GenOSKI: public Specializer {
+//  private:
+//    unsigned int b_r, b_c;
+//
+//  public:
+//    GenOSKI(Matrix *csrMatrix, unsigned b_r, unsigned b_c);
+//    
+//    virtual void emitMultByMFunction(unsigned int index);
+//    
+//  protected:
+//    GenOSKIAnalyzer analyzer;
+//  };
+//
+//  ///
+//  /// Stencil
+//  ///
+//  class Stencil: public Specializer {
+//  public:
+//    Stencil(Matrix *csrMatrix);
+//
+//    virtual void emitMultByMFunction(unsigned int index);
+//
+//  protected:
+//    StencilAnalyzer analyzer;
+//  };
+//  
+//
+//  ///
+//  /// Unfolding
+//  ///
+//  class Unfolding: public Specializer {
+//  public:
+//    Unfolding(Matrix *csrMatrix);
+//
+//    virtual void emitMultByMFunction(unsigned int index);
+//
+//  protected:
+//    UnfoldingAnalyzer analyzer;
+//  };
+//
+//  ///
+//  /// UnrollingWithGOTO
+//  ///
+//  class UnrollingWithGOTO: public Specializer {
+//  public:
+//    UnrollingWithGOTO(Matrix *csrMatrix);
+//
+//    virtual void emitMultByMFunction(unsigned int index);
+//
+//  protected:
+//    UnrollingWithGOTOAnalyzer analyzer;
+//  };
+//  
+//  ///
+//  /// CSRWithGOTO
+//  ///
+//  class CSRWithGOTO: public Specializer {
+//  public:
+//    CSRWithGOTO(Matrix *csrMatrix);
+//    
+//    virtual void emitMultByMFunction(unsigned int index);
+//
+//  protected:
+//    CSRWithGOTOAnalyzer analyzer;
+//  };
 }
 
 #endif

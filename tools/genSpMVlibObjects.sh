@@ -24,9 +24,9 @@ test() {
 
     folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
-    rm -f "$folderName"/output.txt
+    rm -f "$folderName"/object.o
 
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
+    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/object.o
 }
 
 echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"

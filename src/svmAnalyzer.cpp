@@ -37,15 +37,15 @@ void SVMAnalyzer::printFeatures() {
   unsigned long numElementsAnalyzedForGenOSKI55 = 0;
   
   // Find the matrix partition that covers the most elements
-  const vector<MatrixStripeInfo> &stripeInfos = matrix->getStripeInfos();
+  const vector<MatrixStripeInfo> *stripeInfos = matrix->getStripeInfos();
   unsigned int stripeIndexWithMaxCoverage = 0;
-  for (unsigned int i = 0; i < stripeInfos.size(); ++i) {
-    unsigned long maxCoverage = (stripeInfos[stripeIndexWithMaxCoverage].valIndexEnd - stripeInfos[stripeIndexWithMaxCoverage].valIndexBegin);
-    if ((stripeInfos[i].valIndexEnd - stripeInfos[i].valIndexBegin) > maxCoverage) {
+  for (unsigned int i = 0; i < stripeInfos->size(); ++i) {
+    unsigned long maxCoverage = (stripeInfos->at(stripeIndexWithMaxCoverage).valIndexEnd - stripeInfos->at(stripeIndexWithMaxCoverage).valIndexBegin);
+    if ((stripeInfos->at(i).valIndexEnd - stripeInfos->at(i).valIndexBegin) > maxCoverage) {
       stripeIndexWithMaxCoverage = i;
     }
   }
-  const MatrixStripeInfo *stripeInfo = &(stripeInfos[stripeIndexWithMaxCoverage]);
+  const MatrixStripeInfo *stripeInfo = &(stripeInfos->at(stripeIndexWithMaxCoverage));
   
   for (unsigned i = stripeInfo->rowIndexBegin; i < stripeInfo->rowIndexEnd; ++i) {
     int rowStart = matrix->rows[i];

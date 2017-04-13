@@ -1,43 +1,49 @@
 #include "method.h"
 #include "profiler.h"
-#include "csrByNZAnalyzer.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "lib/Target/X86/MCTargetDesc/X86BaseInfo.h"
-#include "llvm/MC/MCContext.h"
-#include "llvm/MC/MCExpr.h"
-#include "llvm/MC/MCInstBuilder.h"
-#include "llvm/MC/MCStreamer.h"
-#include "llvm/MC/MCObjectFileInfo.h"
 
-using namespace llvm;
 using namespace spMVgen;
 using namespace std;
+using namespace asmjit;
+using namespace x86;
 
 extern unsigned int NUM_OF_THREADS;
 
-class CSRbyNZCodeEmitter : public SpMVCodeEmitter {
-private:
-  NZtoRowMap *rowByNZs;
-  unsigned long baseValsIndex, baseRowsIndex;
-  
-  void dumpSingleLoop(unsigned long numRows, unsigned long rowLength);
-  
-protected:
-  virtual void dumpPushPopHeader();
-  virtual void dumpPushPopFooter();
-  
-public:
-  CSRbyNZCodeEmitter(NZtoRowMap *rowByNZs, unsigned long baseValsIndex,
-                     unsigned long baseRowsIndex, llvm::MCStreamer *Str, unsigned int partitionIndex);
-  
-  void emit();
-};
+///
+/// CSRbyNZAnalyzer
+///
+vector<int> *RowByNZ::getRowIndices() {
+  return &rowIndices;
+}
 
+void RowByNZ::addRowIndex(int index) {
+  rowIndices.push_back(index);
+}
 
+void CSRbyNZ::analyzeMatrix() {
+  rowByNZLists.resize(NUM_OF_THREADS);
+  
+#pragma omp parallel for
+  for (int threadIndex = 0; threadIndex < NUM_OF_THREADS; ++threadIndex) {
+    auto &stripeInfo = stripeInfos->at(threadIndex);
+    for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
+      int rowStart = csrMatrix->rows[rowIndex];
+      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowLength = rowEnd - rowStart;
+      if (rowLength > 0) {
+        rowByNZLists[threadIndex][rowLength].addRowIndex(rowIndex);
+      }
+    }
+  }
+}
+
+///
+/// CSRbyNZ
+///
 CSRbyNZ::CSRbyNZ(Matrix *csrMatrix):
-  SpMVMethod(csrMatrix), analyzer(csrMatrix) {
+  Specializer(csrMatrix) {
   // do nothing
 }
 
@@ -47,24 +53,17 @@ CSRbyNZ::CSRbyNZ(Matrix *csrMatrix):
 //       sorted according to the order used in rows array
 // vals: values as usual,
 //       sorted according to the order used in rows array
-Matrix* CSRbyNZ::getMatrixForGeneration() {
-  START_OPTIONAL_TIME_PROFILE(getCSRbyNZInfo);
-  vector<NZtoRowMap> *rowByNZLists = analyzer.getRowByNZLists();
-  END_OPTIONAL_TIME_PROFILE(getCSRbyNZInfo);
-  
-  START_OPTIONAL_TIME_PROFILE(matrixConversion);
+void CSRbyNZ::convertMatrix() {
   int *rows = new int[csrMatrix->n];
   int *cols = new int[csrMatrix->nz];
   double *vals = new double[csrMatrix->nz];
 
-  vector<MatrixStripeInfo> &stripeInfos = csrMatrix->getStripeInfos();
-
 #pragma omp parallel for
   for (int t = 0; t < NUM_OF_THREADS; ++t) {
-    auto &rowByNZList = rowByNZLists->at(t);
-    int *rowsPtr = rows + stripeInfos[t].rowIndexBegin;
-    int *colsPtr = cols + stripeInfos[t].valIndexBegin;
-    double *valsPtr = vals + stripeInfos[t].valIndexBegin;
+    auto &rowByNZList = rowByNZLists.at(t);
+    int *rowsPtr = rows + stripeInfos->at(t).rowIndexBegin;
+    int *colsPtr = cols + stripeInfos->at(t).valIndexBegin;
+    double *valsPtr = vals + stripeInfos->at(t).valIndexBegin;
     
     for (auto &rowByNZ : rowByNZList) {
       unsigned long rowLength = rowByNZ.first;
@@ -78,132 +77,134 @@ Matrix* CSRbyNZ::getMatrixForGeneration() {
       }
     }
   }
-  END_OPTIONAL_TIME_PROFILE(matrixConversion);
 
-  return new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
 }
 
-void CSRbyNZ::dumpAssemblyText() {
-  START_OPTIONAL_TIME_PROFILE(getMatrix);
-  this->getMatrix(); // this is done to measure the cost of matrix prep.
-  vector<NZtoRowMap> *rowByNZLists = analyzer.getRowByNZLists(); // this has zero cost, because already calculated by getMatrix()
-  vector<MatrixStripeInfo> &stripeInfos = csrMatrix->getStripeInfos();
-  END_OPTIONAL_TIME_PROFILE(getMatrix);
-
-  START_OPTIONAL_TIME_PROFILE(emitCode);
-  // Set up code emitters
-  vector<CSRbyNZCodeEmitter> codeEmitters;
-  for (unsigned i = 0; i < rowByNZLists->size(); i++) {
-    NZtoRowMap &rowByNZs = rowByNZLists->at(i);
-    codeEmitters.push_back(CSRbyNZCodeEmitter(&rowByNZs, stripeInfos[i].valIndexBegin, stripeInfos[i].rowIndexBegin, Str, i));
+///
+/// CSRbyNZCodeEmitter:
+/// Helper class to avoid having to pass several parameters
+///
+class CSRbyNZCodeEmitter {
+public:
+  CSRbyNZCodeEmitter(X86Assembler *assembler,
+                     NZtoRowMap *rowByNZs,
+                     unsigned long baseValsIndex,
+                     unsigned long baseRowsIndex) {
+    this->assembler = assembler;
+    this->rowByNZs = rowByNZs;
+    this->baseValsIndex = baseValsIndex;
+    this->baseRowsIndex = baseRowsIndex;
   }
+
+  void emit();
   
-#pragma omp parallel for
-  for (int threadIndex = 0; threadIndex < NUM_OF_THREADS; ++threadIndex) {
-    codeEmitters[threadIndex].emit();
-  }
-  END_OPTIONAL_TIME_PROFILE(emitCode);
+private:
+  X86Assembler *assembler;
+  NZtoRowMap *rowByNZs;
+  unsigned long baseValsIndex;
+  unsigned long baseRowsIndex;
+  
+  void emitHeader();
+  
+  void emitFooter();
+  
+  void emitSingleLoop(unsigned long numRows, unsigned long rowLength);
+};
+
+void CSRbyNZ::emitMultByMFunction(unsigned int index) {
+  X86Assembler assembler(codeHolders[index]);
+  NZtoRowMap &rowByNZs = rowByNZLists.at(index);
+  CSRbyNZCodeEmitter emitter(&assembler,
+                             &rowByNZs,
+                             stripeInfos->at(index).valIndexBegin,
+                             stripeInfos->at(index).rowIndexBegin);
+  emitter.emit();
 }
 
-
-CSRbyNZCodeEmitter::CSRbyNZCodeEmitter(NZtoRowMap *rowByNZs, unsigned long baseValsIndex,
-                                       unsigned long baseRowsIndex, llvm::MCStreamer *Str, unsigned int partitionIndex):
-rowByNZs(rowByNZs), baseValsIndex(baseValsIndex), baseRowsIndex(baseRowsIndex) {
-  this->DFOS = createNewDFOS(Str, partitionIndex);
-}
 
 void CSRbyNZCodeEmitter::emit() {
-  dumpPushPopHeader();
+  emitHeader();
   
   for (auto &rowByNZ : *rowByNZs) {
     unsigned long rowLength = rowByNZ.first;
-    dumpSingleLoop(rowByNZ.second.getRowIndices()->size(), rowLength);
+    emitSingleLoop(rowByNZ.second.getRowIndices()->size(), rowLength);
   }
   
-  dumpPushPopFooter();
-  emitRETInst();
+  emitFooter();
 }
   
-void CSRbyNZCodeEmitter::dumpPushPopHeader() {
+void CSRbyNZCodeEmitter::emitHeader() {
   // rows is in %rdx, cols is in %rcx, vals is in %r8
-  emitPushPopInst(X86::PUSH64r,X86::R8);
-  emitPushPopInst(X86::PUSH64r,X86::R9);
-  emitPushPopInst(X86::PUSH64r,X86::R10);
-  emitPushPopInst(X86::PUSH64r,X86::R11);
-  emitPushPopInst(X86::PUSH64r,X86::RAX);
-  emitPushPopInst(X86::PUSH64r,X86::RBX);
-  emitPushPopInst(X86::PUSH64r,X86::RCX);
-  emitPushPopInst(X86::PUSH64r,X86::RDX);
-  
-  emitLEAQInst(X86::RDX, X86::RDX, (int)(sizeof(int) * baseRowsIndex));
-  emitLEAQInst(X86::RCX, X86::RCX, (int)(sizeof(int) * baseValsIndex));
-  emitLEAQInst(X86::R8, X86::R8, (int)(sizeof(double) * baseValsIndex));
+  assembler->push(r8);
+  assembler->push(r9);
+  assembler->push(r10);
+  assembler->push(r11);
+  assembler->push(rax);
+  assembler->push(rbx);
+  assembler->push(rcx);
+  assembler->push(rdx);
+
+  assembler->lea(rdx, ptr(rdx, (int)(sizeof(int) * baseRowsIndex)));
+  assembler->lea(rcx, ptr(rcx, (int)(sizeof(int) * baseValsIndex)));
+  assembler->lea(r8, ptr(r8, (int)(sizeof(double) * baseValsIndex)));
 }
 
-void CSRbyNZCodeEmitter::dumpPushPopFooter() {
-  emitPushPopInst(X86::POP64r, X86::RDX);
-  emitPushPopInst(X86::POP64r, X86::RCX);
-  emitPushPopInst(X86::POP64r, X86::RBX);
-  emitPushPopInst(X86::POP64r, X86::RAX);
-  emitPushPopInst(X86::POP64r, X86::R11);
-  emitPushPopInst(X86::POP64r, X86::R10);
-  emitPushPopInst(X86::POP64r, X86::R9);
-  emitPushPopInst(X86::POP64r, X86::R8);
+void CSRbyNZCodeEmitter::emitFooter() {
+  assembler->pop(rdx);
+  assembler->pop(rcx);
+  assembler->pop(rbx);
+  assembler->pop(rax);
+  assembler->pop(r11);
+  assembler->pop(r10);
+  assembler->pop(r9);
+  assembler->pop(r8);
+  assembler->ret();
 }
 
-void CSRbyNZCodeEmitter::dumpSingleLoop(unsigned long numRows, unsigned long rowLength) {
-  unsigned long labeledBlockBeginningOffset = 0;
-  
-  // xorl %r9d, %r9d
-  emitXOR32rrInst(X86::R9D, X86::R9D);
-  // xorl %ebx, %ebx
-  emitXOR32rrInst(X86::EBX, X86::EBX);
-  
-  //.align 16, 0x90
-  emitCodeAlignment(16);
-  //.LBB0_1:
-  labeledBlockBeginningOffset = DFOS->size();
+void CSRbyNZCodeEmitter::emitSingleLoop(unsigned long numRows,
+                                        unsigned long rowLength) {
+  assembler->xor_(r9d, r9d);
+  assembler->xor_(ebx, ebx);
+
+  assembler->align(kAlignCode, 16);
+  Label loopBegin = assembler->newLabel();
+  assembler->bind(loopBegin);
   
   //xorps %xmm0, %xmm0
-  emitRegInst(X86::XORPSrr, 0, 0);
+  assembler->xorps(xmm0, xmm0);
   
   // done for a single row
   for(int i = 0 ; i < rowLength ; i++){
     //movslq "i*4"(%rcx,%r9,4), %rax
-    emitMOVSLQInst(X86::RAX, X86::RCX, X86::R9, 4, i*4);
+    assembler->movsxd(rax, ptr(rcx, r9, 2, i * sizeof(int)));
     //movsd "i*8"(%r8,%r9,8), %xmm1
-    emitMOVSDrmInst(i*8, X86::R8, X86::R9, 8, 1);
+    assembler->movsd(xmm1, ptr(r8, r9, 3, i * sizeof(double)));
     //mulsd (%rdi,%rax,8), %xmm1
-    emitMULSDrmInst(0, X86::RDI, X86::RAX, 8, 1);
+    assembler->mulsd(xmm1, ptr(rdi, rax, 3));
     //addsd %xmm1, %xmm0
-    emitRegInst(X86::ADDSDrr, 1, 0);
+    assembler->addsd(xmm0, xmm1);
   }
   
   // movslq (%rdx,%rbx,4), %rax
-  emitMOVSLQInst(X86::RAX, X86::RDX, X86::RBX, 4, 0);
-  
+  assembler->movsxd(rax, ptr(rdx, rbx, 2));
   //addq $rowLength, %r9
-  emitADDQInst(rowLength, X86::R9);
-  
+  assembler->add(r9, (unsigned int)rowLength);
   //addq $1, %rbx
-  emitADDQInst(1, X86::RBX);
-  
+  assembler->inc(rbx);
   //addsd (%rsi,%rax,8), %xmm0
-  emitADDSDrmInst(0, X86::RSI, X86::RAX, 8, 0);
-  
+  assembler->addsd(xmm0, ptr(rsi, rax, 3));
   //cmpl numRows, %ebx
-  emitCMP32riInst(X86::EBX, numRows);
-  
+  assembler->cmp(ebx, (unsigned int)numRows);
   //movsd %xmm0, (%rsi,%rax,8)
-  emitMOVSDmrInst(0, 0, X86::RSI, X86::RAX, 8);
+  assembler->movsd(ptr(rsi, rax, 3), xmm0);
   //jne .LBB0_1
-  emitJNEInst(labeledBlockBeginningOffset);
+  assembler->jne(loopBegin);
   
   //addq $numRows*4, %rdx
-  emitADDQInst(numRows*4, X86::RDX);
-  
+  assembler->add(rdx, (unsigned int)(numRows * sizeof(int)));
   //addq $numRows*rowLength*4, %rcx
-  emitADDQInst(numRows*rowLength*4, X86::RCX);
+  assembler->add(rcx, (unsigned int)(numRows * rowLength * sizeof(int)));
   //addq $numRows*rowLength*8, %r8
-  emitADDQInst(numRows*rowLength*8, X86::R8);
+  assembler->add(r8, (unsigned int)(numRows * rowLength * sizeof(double)));
 }
