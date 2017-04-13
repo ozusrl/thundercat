@@ -9,8 +9,6 @@ using namespace std;
 using namespace asmjit;
 using namespace x86;
 
-extern unsigned int NUM_OF_THREADS;
-
 ///
 /// CSRbyNZAnalyzer
 ///
@@ -23,10 +21,10 @@ void RowByNZ::addRowIndex(int index) {
 }
 
 void CSRbyNZ::analyzeMatrix() {
-  rowByNZLists.resize(NUM_OF_THREADS);
+  rowByNZLists.resize(stripeInfos->size());
   
 #pragma omp parallel for
-  for (int threadIndex = 0; threadIndex < NUM_OF_THREADS; ++threadIndex) {
+  for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
       int rowStart = csrMatrix->rows[rowIndex];
@@ -42,10 +40,6 @@ void CSRbyNZ::analyzeMatrix() {
 ///
 /// CSRbyNZ
 ///
-CSRbyNZ::CSRbyNZ(Matrix *csrMatrix):
-  Specializer(csrMatrix) {
-  // do nothing
-}
 
 // Return a matrix to be used by CSRbyNZ
 // rows: row indices, sorted by row lengths
@@ -59,7 +53,7 @@ void CSRbyNZ::convertMatrix() {
   double *vals = new double[csrMatrix->nz];
 
 #pragma omp parallel for
-  for (int t = 0; t < NUM_OF_THREADS; ++t) {
+  for (int t = 0; t < rowByNZLists.size(); ++t) {
     auto &rowByNZList = rowByNZLists.at(t);
     int *rowsPtr = rows + stripeInfos->at(t).rowIndexBegin;
     int *colsPtr = cols + stripeInfos->at(t).valIndexBegin;

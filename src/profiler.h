@@ -1,8 +1,6 @@
 #ifndef _PROFILING_H_
 #define _PROFILING_H_
 
-#define OPTIONAL_PROFILING
-
 #include <sys/time.h>
 #include <vector>
 #include <string>
@@ -32,13 +30,5 @@ namespace spMVgen {
   Profiler::timediff(&time_##profileName##_Diff, &time_##profileName##_End, &time_##profileName##_Start);\
   Profiler::addNewTiming(#profileName, time_##profileName##_Diff);	\
   Profiler::decreaseTimingLevel();
-
-#ifdef OPTIONAL_PROFILING
-#define START_OPTIONAL_TIME_PROFILE(profileName) START_TIME_PROFILE(profileName)
-#define END_OPTIONAL_TIME_PROFILE(profileName) END_TIME_PROFILE(profileName)
-#else
-#define START_OPTIONAL_TIME_PROFILE(profileName)
-#define END_OPTIONAL_TIME_PROFILE(profileName) 
-#endif
 
 #endif

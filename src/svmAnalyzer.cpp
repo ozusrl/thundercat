@@ -8,6 +8,8 @@
 using namespace spMVgen;
 using namespace std;
 
+extern unsigned int NUM_OF_THREADS;
+
 SVMAnalyzer::SVMAnalyzer(Matrix *matrix): matrix(matrix) {
   
 }
@@ -37,7 +39,7 @@ void SVMAnalyzer::printFeatures() {
   unsigned long numElementsAnalyzedForGenOSKI55 = 0;
   
   // Find the matrix partition that covers the most elements
-  const vector<MatrixStripeInfo> *stripeInfos = matrix->getStripeInfos();
+  const vector<MatrixStripeInfo> *stripeInfos = matrix->getStripeInfos(NUM_OF_THREADS);
   unsigned int stripeIndexWithMaxCoverage = 0;
   for (unsigned int i = 0; i < stripeInfos->size(); ++i) {
     unsigned long maxCoverage = (stripeInfos->at(stripeIndexWithMaxCoverage).valIndexEnd - stripeInfos->at(stripeIndexWithMaxCoverage).valIndexBegin);

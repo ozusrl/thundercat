@@ -9,8 +9,6 @@ int mkl_n = 0;
 
 #include <mkl.h>
 
-extern unsigned int NUM_OF_THREADS;
-
 void mkl_multByM(double *v, double *w, int *rows, int *cols, double *vals) {
   double alpha = 1.0;
   double beta = 1.0;
@@ -21,28 +19,30 @@ void mkl_multByM(double *v, double *w, int *rows, int *cols, double *vals) {
   mkl_dcsrmv(trans, &mkl_n, &mkl_n, &alpha, matdescra, vals, cols, ptrb, ptre, v, &beta, w);
 }
 
-MKL::MKL(Matrix *csrMatrix):
-SpMVMethod(csrMatrix) {
-  mkl_set_num_threads_local(NUM_OF_THREADS);
-}
-
 std::vector<MultByMFun> MKL::getMultByMFunctions() {
   std::vector<MultByMFun> fptrs;
   fptrs.push_back(&mkl_multByM);
   return fptrs;
 }
 
-#else
 
-MKL::MKL(Matrix *csrMatrix):
-SpMVMethod(csrMatrix) {
-  cerr << "MKL is not supported on this platform.\n";
-  exit(1);
+void MKL::init(Matrix *csrMatrix, unsigned int numThreads) {
+  this->csrMatrix = csrMatrix;
+  this->matrix = csrMatrix;
+  
+  mkl_set_num_threads_local(numThreads);
 }
+
+#else
 
 std::vector<MultByMFun> MKL::getMultByMFunctions() {
   std::vector<MultByMFun> fptrs;
   return fptrs;
+}
+
+void MKL::init(Matrix *csrMatrix, unsigned int numThreads) {
+  cerr << "MKL is not supported on this platform.\n";
+  exit(1);
 }
 
 #endif

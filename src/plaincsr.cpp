@@ -6,32 +6,27 @@
 using namespace spMVgen;
 using namespace std;
 
-extern unsigned int NUM_OF_THREADS;
-
-vector<MatrixStripeInfo> stripes;
+static vector<MatrixStripeInfo> *stripes;
+static unsigned int numThreads = 1;
 
 void plainCSR_multByM(double *v, double *w, int *rows, int *cols, double *vals) {
-  
-#ifdef OMP_EXISTS
-  int thread_id = omp_get_thread_num();
-#else
-  int thread_id = 0;
-#endif
-  for (int i = stripes[thread_id].rowIndexBegin; i < stripes[thread_id].rowIndexEnd; i++) {
-    double ww = 0.0;
-    for (int k = rows[i]; k < rows[i+1]; k++) {
-      ww += vals[k] * v[cols[k]];
+#pragma omp parallel for
+  for (unsigned int threadIndex = 0; threadIndex < numThreads; threadIndex++) {
+    int rowIndexBegin = stripes->at(threadIndex).rowIndexBegin;
+    int rowIndexEnd = stripes->at(threadIndex).rowIndexEnd;
+    for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
+      double ww = 0.0;
+      for (int k = rows[i]; k < rows[i+1]; k++) {
+        ww += vals[k] * v[cols[k]];
+      }
+      w[i] += ww;
     }
-    w[i] += ww;
   }
 }
 
-PlainCSR::PlainCSR(Matrix *csrMatrix):
-  SpMVMethod(csrMatrix) {
-}
-
 void PlainCSR::analyzeMatrix() {
-  this->stripeInfos = csrMatrix->getStripeInfos();
+  stripes = this->stripeInfos;
+  numThreads = this->numPartitions;
 }
 
 void PlainCSR::convertMatrix() {
@@ -40,9 +35,7 @@ void PlainCSR::convertMatrix() {
 
 std::vector<MultByMFun> PlainCSR::getMultByMFunctions() {
   std::vector<MultByMFun> fptrs;
-  for (unsigned int i = 0; i < NUM_OF_THREADS; ++i) {
-    fptrs.push_back(&plainCSR_multByM);
-  }
+  fptrs.push_back(&plainCSR_multByM);
   return fptrs;
 }
 

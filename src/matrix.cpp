@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <iomanip>
 
-extern unsigned int NUM_OF_THREADS;
-
 using namespace spMVgen;
 using namespace std;
 
@@ -72,33 +70,34 @@ Matrix* Matrix::readMatrixFromFile(string fileName) {
 }
 
 
-vector<MatrixStripeInfo> *Matrix::getStripeInfos() {
-  if (stripeInfos.size() == 0) {
-    // Split the matrix
-    unsigned long chunkSize = this->numVals / NUM_OF_THREADS;
-    unsigned int rowIndex = 0;
-    unsigned long valIndex = 0;
-    for (int partitionIndex = 0; partitionIndex < NUM_OF_THREADS; ++partitionIndex) {
-      unsigned int rowIndexStart = rowIndex;
-      unsigned long valIndexStart = valIndex;
-      unsigned long numElementsCovered = 0;
-      while(numElementsCovered < chunkSize && rowIndex < this->n) {
-        numElementsCovered += this->rows[rowIndex+1] - this->rows[rowIndex];
-        rowIndex++;
-      }
-      valIndex += numElementsCovered;
-      if (partitionIndex == NUM_OF_THREADS - 1) {
-        rowIndex = this->n;
-        valIndex = this->nz;
-      }
-      
-      MatrixStripeInfo stripeInfo;
-      stripeInfo.rowIndexBegin = rowIndexStart;
-      stripeInfo.rowIndexEnd = rowIndex;
-      stripeInfo.valIndexBegin = valIndexStart;
-      stripeInfo.valIndexEnd = valIndex;
-      stripeInfos.push_back(stripeInfo);
+vector<MatrixStripeInfo> *Matrix::getStripeInfos(unsigned int numPartitions) {
+  if (stripeInfos.size() != 0) {
+    cout << "I was not expecting getStripeInfos to be called multiple times.\n";
+  }
+  // Split the matrix
+  unsigned long chunkSize = this->numVals / numPartitions;
+  unsigned int rowIndex = 0;
+  unsigned long valIndex = 0;
+  for (int partitionIndex = 0; partitionIndex < numPartitions; ++partitionIndex) {
+    unsigned int rowIndexStart = rowIndex;
+    unsigned long valIndexStart = valIndex;
+    unsigned long numElementsCovered = 0;
+    while(numElementsCovered < chunkSize && rowIndex < this->n) {
+      numElementsCovered += this->rows[rowIndex+1] - this->rows[rowIndex];
+      rowIndex++;
     }
+    valIndex += numElementsCovered;
+    if (partitionIndex == numPartitions - 1) {
+      rowIndex = this->n;
+      valIndex = this->nz;
+    }
+    
+    MatrixStripeInfo stripeInfo;
+    stripeInfo.rowIndexBegin = rowIndexStart;
+    stripeInfo.rowIndexEnd = rowIndex;
+    stripeInfo.valIndexBegin = valIndexStart;
+    stripeInfo.valIndexEnd = valIndex;
+    stripeInfos.push_back(stripeInfo);
   }
   return &stripeInfos;
 }

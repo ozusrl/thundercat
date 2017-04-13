@@ -12,7 +12,7 @@ namespace spMVgen {
   
   class SpMVMethod {
   public:
-    SpMVMethod(Matrix *csrMatrix);
+    virtual void init(Matrix *csrMatrix, unsigned int numThreads);
 
     virtual ~SpMVMethod();
     
@@ -22,7 +22,7 @@ namespace spMVgen {
     
     virtual std::vector<MultByMFun> getMultByMFunctions() = 0;
     
-    virtual Matrix* getCustomMatrix() final;
+    virtual Matrix* getMethodSpecificMatrix() final;
     
     virtual void processMatrix() final;
   
@@ -33,6 +33,7 @@ namespace spMVgen {
     std::vector<MatrixStripeInfo> *stripeInfos;
     Matrix *csrMatrix;
     Matrix *matrix;
+    unsigned int numPartitions;
   };
   
   ///
@@ -40,8 +41,8 @@ namespace spMVgen {
   ///
   class MKL: public SpMVMethod {
   public:
-    MKL(Matrix *csrMatrix);
-
+    virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
+    
     virtual std::vector<MultByMFun> getMultByMFunctions();
 
   protected:
@@ -54,8 +55,6 @@ namespace spMVgen {
   ///
   class PlainCSR: public SpMVMethod {
   public:
-    PlainCSR(Matrix *csrMatrix);
-    
     virtual std::vector<MultByMFun> getMultByMFunctions();
     
   protected:
@@ -69,7 +68,7 @@ namespace spMVgen {
   ///
   class Specializer : public SpMVMethod {
   public:
-    Specializer(Matrix *csrMatrix);
+    virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
     
     virtual bool isSpecializer() final;
     
@@ -77,8 +76,8 @@ namespace spMVgen {
   
     virtual std::vector<MultByMFun> getMultByMFunctions() final;
 
-    std::vector<asmjit::CodeHolder*> *getCodeHolders();
-    
+    virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
+
   protected:
     virtual void emitMultByMFunction(unsigned int index) = 0;
     
@@ -105,14 +104,10 @@ namespace spMVgen {
   typedef std::map<unsigned long, RowByNZ, std::greater<unsigned long> > NZtoRowMap;
   
   class CSRbyNZ: public Specializer {
-  public:
-    CSRbyNZ(Matrix *csrMatrix);
-    
-    virtual void emitMultByMFunction(unsigned int index);
-    
   protected:
-    virtual void analyzeMatrix();
-    virtual void convertMatrix();
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
 
   private:
     std::vector<NZtoRowMap> rowByNZLists;

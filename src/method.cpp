@@ -3,18 +3,16 @@
 #include <iostream>
 #include <sstream>
 
-extern unsigned int NUM_OF_THREADS;
-
 using namespace spMVgen;
 using namespace asmjit;
 
-SpMVMethod::SpMVMethod(Matrix *csrMatrix) {
-  this->csrMatrix = csrMatrix;
-  this->matrix = csrMatrix;
+SpMVMethod::~SpMVMethod() {
 }
 
-SpMVMethod::~SpMVMethod() {
-  
+void SpMVMethod::init(Matrix *csrMatrix, unsigned int numThreads) {
+  this->csrMatrix = csrMatrix;
+  this->matrix = csrMatrix;
+  this->numPartitions = numThreads;
 }
 
 bool SpMVMethod::isSpecializer() {
@@ -25,13 +23,13 @@ void SpMVMethod::emitCode() {
   // By default, do nothing
 }
 
-Matrix* SpMVMethod::getCustomMatrix() {
+Matrix* SpMVMethod::getMethodSpecificMatrix() {
   return matrix;
 }
 
 void SpMVMethod::processMatrix() {
   START_TIME_PROFILE(getStripeInfos);
-  stripeInfos = csrMatrix->getStripeInfos();
+  stripeInfos = csrMatrix->getStripeInfos(numPartitions);
   END_TIME_PROFILE(getStripeInfos);
   START_TIME_PROFILE(analyzeMatrix);
   analyzeMatrix();
@@ -41,8 +39,14 @@ void SpMVMethod::processMatrix() {
   END_TIME_PROFILE(convertMatrix);
 }
 
-Specializer::Specializer(Matrix *csrMatrix):
-SpMVMethod(csrMatrix) {
+void Specializer::init(Matrix *csrMatrix, unsigned int numThreads) {
+  SpMVMethod::init(csrMatrix, numThreads);
+  
+  codeHolders.clear();
+  for (int i = 0; i < numThreads; i++) {
+    codeHolders.push_back(new CodeHolder);
+    codeHolders[i]->init(rt.getCodeInfo());
+  }
 }
 
 bool Specializer::isSpecializer() {
@@ -50,13 +54,8 @@ bool Specializer::isSpecializer() {
 }
 
 void Specializer::emitCode() {
-  codeHolders.clear();
-  for (int i = 0; i < NUM_OF_THREADS; i++) {
-    codeHolders.push_back(new CodeHolder);
-    codeHolders[i]->init(rt.getCodeInfo());
-  }
 #pragma omp parallel for
-  for (unsigned int i = 0; i < NUM_OF_THREADS; i++) {
+  for (unsigned int i = 0; i < codeHolders.size(); i++) {
     emitMultByMFunction(i);
     codeHolders[i]->sync();
   }
@@ -64,7 +63,7 @@ void Specializer::emitCode() {
 
 std::vector<MultByMFun> Specializer::getMultByMFunctions() {
   std::vector<MultByMFun> fptrs;
-  for (int i = 0; i < NUM_OF_THREADS; i++) {
+  for (int i = 0; i < codeHolders.size(); i++) {
     MultByMFun fn;
     asmjit::Error err = rt.add(&fn, codeHolders[i]);
     if (err) {
@@ -79,11 +78,4 @@ std::vector<MultByMFun> Specializer::getMultByMFunctions() {
 
 std::vector<CodeHolder*> *Specializer::getCodeHolders() {
   return &codeHolders;
-}
-
-static std::string newName(const std::string &str, int i) {
-  std::ostringstream oss;
-  oss << i;
-  std::string name(str);
-  return name + oss.str();
 }

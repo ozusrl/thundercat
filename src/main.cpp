@@ -28,9 +28,9 @@ double *wVector;
 
 
 void parseCommandLineArguments(int argc, const char *argv[]);
+void setParallelism();
 void dumpMatrixIfRequested();
 void doSVMAnalysisIfRequested();
-void setupParallelism();
 void generateFunctions();
 void dumpObjectIfRequested();
 void populateInputOutputVectors();
@@ -39,9 +39,10 @@ void cleanup();
 
 int main(int argc, const char *argv[]) {
   parseCommandLineArguments(argc, argv);
+  setParallelism();
+  method->init(csrMatrix, NUM_OF_THREADS);
   dumpMatrixIfRequested();
   doSVMAnalysisIfRequested();
-  setupParallelism();
   generateFunctions();
   dumpObjectIfRequested();
   populateInputOutputVectors();
@@ -93,7 +94,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(unfolding.compare(*argptr) == 0) {
     //method = new Unfolding(csrMatrix);
   } else if(csrByNZ.compare(*argptr) == 0) {
-    method = new CSRbyNZ(csrMatrix);
+    method = new CSRbyNZ();
   } else if(stencil.compare(*argptr) == 0) {
     //method = new Stencil(csrMatrix);
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
@@ -101,10 +102,10 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(csrWithGOTO.compare(*argptr) == 0) {
     //method = new CSRWithGOTO(csrMatrix);
   } else if(mkl.compare(*argptr) == 0) {
-    method = new MKL(csrMatrix);
+    method = new MKL();
     MKL_ENABLED = true;
   } else if(plainCSR.compare(*argptr) == 0) {
-    method = new PlainCSR(csrMatrix);
+    method = new PlainCSR();
   } else {
     std::cout << "Method " << *argptr << " not found.\n";
     exit(1);
@@ -134,9 +135,25 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   }
 }
 
+void setParallelism() {
+#ifdef OPENMP_EXISTS
+  omp_set_num_threads(NUM_OF_THREADS);
+  int nthreads = -1;
+#pragma omp parallel
+  {
+#pragma omp master
+    {
+      nthreads = omp_get_num_threads();
+    }
+  }
+  if (!__DEBUG__ && !DUMP_OBJECT)
+    cout << "Num threads = " << nthreads << "\n";
+#endif
+}
+
 void dumpMatrixIfRequested() {
   if (DUMP_MATRIX) {
-    Matrix *matrix = method->getCustomMatrix();
+    Matrix *matrix = method->getMethodSpecificMatrix();
     matrix->print();
     exit(0);
   }
@@ -148,24 +165,6 @@ void doSVMAnalysisIfRequested() {
     svmAnalyzer.printFeatures();
     exit(0);
   }
-}
-
-void setupParallelism() {
-#ifdef OPENMP_EXISTS
-  if (!MKL_ENABLED) {
-    omp_set_num_threads(NUM_OF_THREADS);
-    int nthreads = -1;
-#pragma omp parallel
-    {
-#pragma omp master
-      {
-        nthreads = omp_get_num_threads();
-      }
-    }
-    if (!__DEBUG__ && !DUMP_OBJECT)
-      cout << "Num threads = " << nthreads << "\n";
-  }
-#endif
 }
 
 void generateFunctions() {
@@ -243,7 +242,7 @@ void benchmark() {
   unsigned int ITERS = getNumIterations();
   unsigned long n = csrMatrix->n;
   
-  Matrix *matrix = method->getCustomMatrix();
+  Matrix *matrix = method->getMethodSpecificMatrix();
   START_TIME_PROFILE(multByM);
   if (fptrs.size() == 1) {
     for (int i=0; i < ITERS; i++) {
