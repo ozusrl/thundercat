@@ -43,10 +43,6 @@ void SpMVMethod::processMatrix() {
 
 Specializer::Specializer(Matrix *csrMatrix):
 SpMVMethod(csrMatrix) {
-  for (int i = 0; i < NUM_OF_THREADS; i++) {
-    codeHolders.push_back(new CodeHolder);
-    codeHolders[i]->init(rt.getCodeInfo());
-  }
 }
 
 bool Specializer::isSpecializer() {
@@ -54,6 +50,11 @@ bool Specializer::isSpecializer() {
 }
 
 void Specializer::emitCode() {
+  codeHolders.clear();
+  for (int i = 0; i < NUM_OF_THREADS; i++) {
+    codeHolders.push_back(new CodeHolder);
+    codeHolders[i]->init(rt.getCodeInfo());
+  }
 #pragma omp parallel for
   for (unsigned int i = 0; i < NUM_OF_THREADS; i++) {
     emitMultByMFunction(i);
