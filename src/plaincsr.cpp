@@ -3,7 +3,7 @@
 #include "omp.h"
 #endif
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 
 static vector<MatrixStripeInfo> *stripes;

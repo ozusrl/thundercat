@@ -6,7 +6,7 @@
 #include <iostream>
 #include "asmjit/asmjit.h"
 
-namespace spMVgen {
+namespace thundercat {
   // multByM(v, w, rows, cols, vals)
   typedef void(*MultByMFun)(double*, double*, int*, int*, double*);
   

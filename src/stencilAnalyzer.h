@@ -4,7 +4,7 @@
 #include "matrix.h"
 #include <iostream>
 
-namespace spMVgen {
+namespace thundercat {
 
   typedef std::vector<int> StencilPattern;
   typedef std::vector<int> RowIndices;

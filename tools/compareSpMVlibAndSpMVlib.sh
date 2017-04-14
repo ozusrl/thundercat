@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 '<spMVgen parameters>'" >&2
+  echo "Usage: $0 '<thundercat parameters>'" >&2
   exit 1
 fi
 

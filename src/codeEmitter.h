@@ -5,7 +5,7 @@
 #include "llvm/MC/MCObjectStreamer.h"
 #include <string>
 
-namespace spMVgen {
+namespace thundercat {
   class SpMVCodeEmitter {
   protected:
     void emitRegInst(unsigned opCode, int XMMfrom, int XMMto);

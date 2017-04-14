@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 using namespace asmjit;
 using namespace x86;

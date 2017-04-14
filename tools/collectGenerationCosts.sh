@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 '<spMVgen parameters>'" >&2
+  echo "Usage: $0 '<thundercat parameters>'" >&2
   exit 1
 fi
 
@@ -24,9 +24,9 @@ runTests() {
         mkdir -p "$folderName"
         
         cd ..
-        ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
-        ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
-        ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
+        ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats1.txt
+        ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats2.txt
+        ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 > tools/"$folderName"/stats3.txt
         cd tools
         
     done < matrixNames.txt
@@ -35,7 +35,7 @@ runTests() {
 }
     
 findMins() {
-    local fileName=$HOSTNAME.spMVgen.gencost."$methodName""$methodParam1""$methodParam2".csv 
+    local fileName=$HOSTNAME.thundercat.gencost."$methodName""$methodParam1""$methodParam2".csv 
     rm -f $fileName
     while read matrixName
     do

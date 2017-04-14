@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <bitset>
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 
 extern unsigned int NUM_OF_THREADS;

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdio.h>
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace asmjit;
 
 extern bool DUMP_OBJECT;

@@ -1,6 +1,6 @@
 #include "method.h"
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 
 int mkl_n = 0;

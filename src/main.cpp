@@ -10,7 +10,7 @@
 #include "omp.h"
 #endif
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 using namespace asmjit;
 
@@ -53,11 +53,11 @@ int main(int argc, const char *argv[]) {
 }
 
 void parseCommandLineArguments(int argc, const char *argv[]) {
-  // Usage: spMVgen <matrixName> <specializerName> {-debug|-dump_object|-dump_matrix|-num_threads|-matrix_stats}
-  // E.g: spMVgen matrices/fidap037 unfolding
-  // E.g: spMVgen matrices/fidap037 unfolding -debug
-  // E.g: spMVgen matrices/fidap037 unfolding -dump_object
-  // E.g: spMVgen matrices/fidap037 unfolding -num_threads 6
+  // Usage: thundercat <matrixName> <specializerName> {-debug|-dump_object|-dump_matrix|-num_threads|-matrix_stats}
+  // E.g: thundercat matrices/fidap037 unfolding
+  // E.g: thundercat matrices/fidap037 unfolding -debug
+  // E.g: thundercat matrices/fidap037 unfolding -dump_object
+  // E.g: thundercat matrices/fidap037 unfolding -num_threads 6
   string genOSKI("genOSKI");
   string genOSKI33("genOSKI33");
   string genOSKI44("genOSKI44");

@@ -6,7 +6,7 @@
 
 #define DISTINCT_VALUE_COUNT_LIMIT 5000
 
-namespace spMVgen {
+namespace thundercat {
   
   class UnfoldingAnalyzer {
   private:

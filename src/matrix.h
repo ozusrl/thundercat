@@ -7,7 +7,7 @@
 #include <set>
 #include <utility>
 
-namespace spMVgen {
+namespace thundercat {
   typedef struct {
     unsigned int rowIndexBegin;
     unsigned int rowIndexEnd;

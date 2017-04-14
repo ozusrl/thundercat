@@ -63,11 +63,11 @@ set(HEADER_FILES
 #                 csrWithGOTOAnalyzer.h
 )
 
-add_executable(spMVgen ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(spMVgen asmjit)
+add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(thundercat asmjit)
 
 if (MKL_FOUND)
-    target_link_libraries(spMVgen asmjit
+    target_link_libraries(thundercat asmjit
                           mkl_intel_lp64
                           mkl_sequential
                           mkl_core)

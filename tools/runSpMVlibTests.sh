@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 '<spMVgen parameters>'" >&2
+  echo "Usage: $0 '<thundercat parameters>'" >&2
   exit 1
 fi
 
@@ -28,11 +28,11 @@ do
     rm -f "$folderName"/runtime.txt
     rm -f "$folderName"/matrixPrepTime.txt
 
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
 
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
     cd tools
 
 done < matrixNames.txt
@@ -40,7 +40,7 @@ done < matrixNames.txt
 echo " "
 
 findMins() {
-    local fileName=../data/$HOSTNAME.spMVgen.dynamic."$methodName""$methodParam1""$methodParam2".csv 
+    local fileName=../data/$HOSTNAME.thundercat.dynamic."$methodName""$methodParam1""$methodParam2".csv 
     rm -f $fileName
     while read matrixName
     do

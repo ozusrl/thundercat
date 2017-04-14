@@ -8,5 +8,5 @@ fi
 while read matrixName
 do
     echo -n $matrixName" "
-    ../build/spMVgen $MATRICES/$matrixName/$matrixName PlainCSR -matrix_stats | tail -n 1
+    ../build/thundercat $MATRICES/$matrixName/$matrixName PlainCSR -matrix_stats | tail -n 1
 done < matrixNames.txt

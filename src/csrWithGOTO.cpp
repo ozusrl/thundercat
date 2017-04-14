@@ -9,7 +9,7 @@
 #include "llvm/MC/MCInstBuilder.h"
 #include "llvm/MC/MCStreamer.h"
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 using namespace llvm;
 

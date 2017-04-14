@@ -2,7 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-using namespace spMVgen;
+using namespace thundercat;
 
 int Profiler::timingLevel = 0;
 std::vector<TimingInfo> Profiler::timingInfos;

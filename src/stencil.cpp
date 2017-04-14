@@ -10,7 +10,7 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 using namespace llvm;
 

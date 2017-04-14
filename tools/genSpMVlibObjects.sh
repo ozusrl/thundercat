@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 '<spMVgen parameters>'" >&2
+  echo "Usage: $0 '<thundercat parameters>'" >&2
   exit 1
 fi
 
@@ -26,7 +26,7 @@ test() {
     mkdir -p "$folderName"
     rm -f "$folderName"/object.o
 
-    ./build/spMVgen $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/object.o
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/object.o
 }
 
 echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"

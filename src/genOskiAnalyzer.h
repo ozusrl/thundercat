@@ -5,7 +5,7 @@
 #include <iostream>
 #include <bitset>
 
-namespace spMVgen {
+namespace thundercat {
   // This is a map from pattern to block indices and values
   typedef std::map<unsigned long, std::pair<std::vector<std::pair<int, int> >, std::vector<double> > > GroupByBlockPatternMap;
 

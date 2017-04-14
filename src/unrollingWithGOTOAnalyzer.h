@@ -5,7 +5,7 @@
 #include "csrByNZAnalyzer.h"
 #include <iostream>
 
-namespace spMVgen {
+namespace thundercat {
   
   class UnrollingWithGOTOAnalyzer : public CSRbyNZAnalyzer {
   private:

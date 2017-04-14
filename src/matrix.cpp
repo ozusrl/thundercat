@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <iomanip>
 
-using namespace spMVgen;
+using namespace thundercat;
 using namespace std;
 
 Matrix::Matrix(int *rows, int *cols, double *vals, unsigned long n, unsigned long nz):

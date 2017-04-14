@@ -6,7 +6,7 @@
 #include <string>
 #include <functional>
 
-namespace spMVgen {
+namespace thundercat {
   struct TimingInfo {
     long long duration;
     int level;

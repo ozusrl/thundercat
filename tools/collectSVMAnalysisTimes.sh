@@ -9,7 +9,7 @@ while read matrixName
 do
     echo -n $matrixName" "
     cd ..
-    ./build/spMVgen $MATRICES/$matrixName PlainCSR -matrix_stats
+    ./build/thundercat $MATRICES/$matrixName PlainCSR -matrix_stats
     cd tools
     
 done < matrixNames.txt

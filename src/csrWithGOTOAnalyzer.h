@@ -4,7 +4,7 @@
 #include "matrix.h"
 #include <iostream>
 
-namespace spMVgen {
+namespace thundercat {
   
   class CSRWithGOTOAnalyzer {
   private:

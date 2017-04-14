@@ -16,6 +16,6 @@ testMultiThread 6
 
 rm -rf "$HOSTNAME"_dynamic_spMVlib_all
 mkdir "$HOSTNAME"_dynamic_spMVlib_all
-$(mv "$HOSTNAME".spMVgen.dynamic.*csv "$HOSTNAME"_dynamic_spMVlib_all)
+$(mv "$HOSTNAME".thundercat.dynamic.*csv "$HOSTNAME"_dynamic_spMVlib_all)
 
 echo "Test on $HOSTNAME has finished." | mail -s "Test on $HOSTNAME" baris.aktemur@ozyegin.edu.tr
