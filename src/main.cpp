@@ -101,7 +101,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
     //method = new UnrollingWithGOTO(csrMatrix);
   } else if(csrWithGOTO.compare(*argptr) == 0) {
-    //method = new CSRWithGOTO(csrMatrix);
+    method = new CSRWithGOTO();
   } else if(mkl.compare(*argptr) == 0) {
     method = new MKL();
     MKL_ENABLED = true;

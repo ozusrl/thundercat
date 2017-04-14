@@ -176,19 +176,19 @@ namespace thundercat {
 //  protected:
 //    UnrollingWithGOTOAnalyzer analyzer;
 //  };
-//  
-//  ///
-//  /// CSRWithGOTO
-//  ///
-//  class CSRWithGOTO: public Specializer {
-//  public:
-//    CSRWithGOTO(Matrix *csrMatrix);
-//    
-//    virtual void emitMultByMFunction(unsigned int index);
-//
-//  protected:
-//    CSRWithGOTOAnalyzer analyzer;
-//  };
+  
+  ///
+  /// CSRWithGOTO
+  ///
+  class CSRWithGOTO: public Specializer {
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+    
+  private:
+    std::vector<unsigned long> maxRowLengths;
+  };
 }
 
 #endif

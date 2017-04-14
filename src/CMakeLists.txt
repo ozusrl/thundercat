@@ -46,8 +46,7 @@ set(SOURCE_FILES
 #                 unfoldingAnalyzer.cpp
 #                 unrollingWithGOTO.cpp
 #                 unrollingWithGOTOAnalyzer.cpp
-#                 csrWithGOTO.cpp
-#                 csrWithGOTOAnalyzer.cpp
+                 csrWithGOTO.cpp
 )
 
 set(HEADER_FILES
