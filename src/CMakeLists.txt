@@ -40,8 +40,7 @@ set(SOURCE_FILES
                  mkl.cpp
                  plaincsr.cpp
                  profiler.cpp
-#                 stencil.cpp
-#                 stencilAnalyzer.cpp
+                 rowPattern.cpp
                  svmAnalyzer.cpp
 #                 unfolding.cpp
 #                 unfoldingAnalyzer.cpp
@@ -55,11 +54,7 @@ set(HEADER_FILES
                  matrix.h
                  method.h
                  profiler.h
-#                 stencilAnalyzer.h
                  svmAnalyzer.h
-#                 unfoldingAnalyzer.h
-#                 unrollingWithGOTOAnalyzer.h
-#                 csrWithGOTOAnalyzer.h
 )
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})

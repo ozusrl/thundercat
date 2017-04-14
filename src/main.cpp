@@ -54,18 +54,18 @@ int main(int argc, const char *argv[]) {
 
 void parseCommandLineArguments(int argc, const char *argv[]) {
   // Usage: thundercat <matrixName> <specializerName> {-debug|-dump_object|-dump_matrix|-num_threads|-matrix_stats}
-  // E.g: thundercat matrices/fidap037 unfolding
-  // E.g: thundercat matrices/fidap037 unfolding -debug
-  // E.g: thundercat matrices/fidap037 unfolding -dump_object
-  // E.g: thundercat matrices/fidap037 unfolding -num_threads 6
-  string genOSKI("genOSKI");
-  string genOSKI33("genOSKI33");
-  string genOSKI44("genOSKI44");
-  string genOSKI55("genOSKI55");
+  // E.g: thundercat matrices/fidap037 CSRbyNZ
+  // E.g: thundercat matrices/fidap037 RowPattern -debug
+  // E.g: thundercat matrices/fidap037 GenOSKI44 -dump_object
+  // E.g: thundercat matrices/fidap037 PlainCSR -num_threads 6
+  string genOSKI("GenOSKI");
+  string genOSKI33("GenOSKI33");
+  string genOSKI44("GenOSKI44");
+  string genOSKI55("GenOSKI55");
   string csrByNZ("CSRbyNZ");
-  string unfolding("unfolding");
-  string stencil("stencil");
-  string unrollingWithGOTO("unrollingWithGOTO");
+  string unfolding("Unfolding");
+  string rowPattern("RowPattern");
+  string unrollingWithGOTO("UnrollingWithGOTO");
   string csrWithGOTO("CSRWithGOTO");
   string mkl("MKL");
   string plainCSR("PlainCSR");
@@ -96,8 +96,8 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     //method = new Unfolding(csrMatrix);
   } else if(csrByNZ.compare(*argptr) == 0) {
     method = new CSRbyNZ();
-  } else if(stencil.compare(*argptr) == 0) {
-    //method = new Stencil(csrMatrix);
+  } else if(rowPattern.compare(*argptr) == 0) {
+    method = new RowPattern();
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
     //method = new UnrollingWithGOTO(csrMatrix);
   } else if(csrWithGOTO.compare(*argptr) == 0) {
@@ -108,7 +108,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(plainCSR.compare(*argptr) == 0) {
     method = new PlainCSR();
   } else {
-    std::cout << "Method " << *argptr << " not found.\n";
+    std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);
   }
   argptr++;
@@ -125,11 +125,11 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     else if (numThreadsFlag.compare(*argptr) == 0) {
       NUM_OF_THREADS = atoi(*(++argptr));
       if (NUM_OF_THREADS < 1) {
-        std::cout << "Number of threads must be >= 1.\n";
+        std::cerr << "Number of threads must be >= 1.\n";
         exit(1);
       }
     } else {
-      std::cout << "Unrecognized flag: " << *argptr << "\n";
+      std::cerr << "Unrecognized flag: " << *argptr << "\n";
       exit(1);
     }
     argptr++;

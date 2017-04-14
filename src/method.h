@@ -134,20 +134,23 @@ namespace thundercat {
     std::vector<unsigned int> numBlocks;
   };
 
-//  ///
-//  /// Stencil
-//  ///
-//  class Stencil: public Specializer {
-//  public:
-//    Stencil(Matrix *csrMatrix);
-//
-//    virtual void emitMultByMFunction(unsigned int index);
-//
-//  protected:
-//    StencilAnalyzer analyzer;
-//  };
-//  
-//
+  ///
+  /// RowPattern
+  ///
+  // Map row patterns to row indices
+  typedef std::map<std::vector<int>, std::vector<int> > RowPatternInfo;
+  
+  class RowPattern: public Specializer {
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+    
+  private:
+    std::vector<RowPatternInfo> patternInfos;
+  };
+  
+
 //  ///
 //  /// Unfolding
 //  ///
