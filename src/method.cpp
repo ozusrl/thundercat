@@ -46,20 +46,9 @@ void Specializer::init(Matrix *csrMatrix, unsigned int numThreads) {
   SpMVMethod::init(csrMatrix, numThreads);
   
   codeHolders.clear();
-  codeLoggers.clear();
   for (int i = 0; i < numThreads; i++) {
     codeHolders.push_back(new CodeHolder);
     codeHolders[i]->init(rt.getCodeInfo());
-    if (DUMP_OBJECT) {
-      FileLogger *logger = new FileLogger();
-      codeLoggers.push_back(logger);
-      std::string fileName("generated_");
-      fileName.append(std::to_string(i));
-      logger->setStream(fopen(fileName.c_str(), "w"));
-      logger->addOptions(Logger::kOptionBinaryForm);
-      
-      codeHolders[i]->setLogger(logger);
-    }
   }
 }
 

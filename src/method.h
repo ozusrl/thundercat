@@ -87,7 +87,6 @@ namespace spMVgen {
     void emitConstData();
     
     asmjit::JitRuntime rt;
-    std::vector<asmjit::FileLogger*> codeLoggers;
   };
 
   ///

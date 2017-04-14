@@ -31,6 +31,7 @@ void parseCommandLineArguments(int argc, const char *argv[]);
 void setParallelism();
 void dumpMatrixIfRequested();
 void doSVMAnalysisIfRequested();
+void registerLoggersIfRequested();
 void generateFunctions();
 void dumpObjectIfRequested();
 void populateInputOutputVectors();
@@ -43,6 +44,7 @@ int main(int argc, const char *argv[]) {
   method->init(csrMatrix, NUM_OF_THREADS);
   dumpMatrixIfRequested();
   doSVMAnalysisIfRequested();
+  registerLoggersIfRequested();
   generateFunctions();
   populateInputOutputVectors();
   benchmark();
@@ -163,6 +165,23 @@ void doSVMAnalysisIfRequested() {
     SVMAnalyzer svmAnalyzer(csrMatrix);
     svmAnalyzer.printFeatures();
     exit(0);
+  }
+}
+
+void registerLoggersIfRequested() {
+  if (DUMP_OBJECT && method->isSpecializer()) {
+    Specializer *specializer = (Specializer*)method;
+    auto codeHolders = specializer->getCodeHolders();
+    for (int i = 0; i < codeHolders->size(); i++) {
+      auto codeHolder = codeHolders->at(i);
+      FileLogger *logger = new FileLogger();
+      //codeLoggers.push_back(logger);
+      std::string fileName("generated_");
+      fileName.append(std::to_string(i));
+      logger->setStream(fopen(fileName.c_str(), "w"));
+      logger->addOptions(Logger::kOptionBinaryForm);
+      codeHolder->setLogger(logger);
+    }
   }
 }
 
