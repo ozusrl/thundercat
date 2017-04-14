@@ -1,56 +1,75 @@
 #include "method.h"
-#include "profiler.h"
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include "lib/Target/X86/MCTargetDesc/X86BaseInfo.h"
-#include "llvm/MC/MCContext.h"
-#include "llvm/MC/MCExpr.h"
-#include "llvm/MC/MCInstBuilder.h"
-#include "llvm/MC/MCStreamer.h"
-#include "llvm/MC/MCObjectFileInfo.h"
 
 using namespace thundercat;
 using namespace std;
-using namespace llvm;
+using namespace asmjit;
+using namespace x86;
 
-extern unsigned int NUM_OF_THREADS;
-
-class GenOSKICodeEmitter : public SpMVCodeEmitter {
-private:
-  GroupByBlockPatternMap *patternMap;
-  unsigned int b_r, b_c;
-  unsigned long baseValsIndex, baseBlockIndex;
-  
-  void dumpForLoops();
-  
-protected:
-  virtual void dumpPushPopHeader();
-  virtual void dumpPushPopFooter();
-  
-public:
-  GenOSKICodeEmitter(GroupByBlockPatternMap *patternMap,
-                     unsigned long baseValsIndex,
-                     unsigned long baseBlockIndex,
-                     unsigned int b_r,
-                     unsigned int b_c,
-                     llvm::MCStreamer *Str, unsigned int partitionIndex);
-  void emit();
+///
+/// Analysis
+///
+struct BlockInfo {
+  bitset<32> pattern;
+  vector<double> vals;
 };
 
-
-GenOSKI::GenOSKI(Matrix *csrMatrix, unsigned b_r, unsigned b_c):
-  SpMVMethod(csrMatrix), b_r(b_r), b_c(b_c), analyzer(csrMatrix, b_r, b_c)
-{
+void GenOSKI::analyzeMatrix() {
+  groupByBlockPatternMaps.resize(stripeInfos->size());
+  numBlocks.resize(stripeInfos->size());
+  
+#pragma omp parallel for
+  for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
+    auto &stripeInfo = stripeInfos->at(threadIndex);
+    map<int, BlockInfo> currentBlockRowPatternsAndElements;
+    vector<BlockInfo> blockPatterns;
+    blockPatterns.resize(csrMatrix->n / b_c + 1);
+    vector<int> indicesOfDetectedBlockColumns;
+    
+    for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
+      int rowStart = csrMatrix->rows[rowIndex];
+      int rowEnd = csrMatrix->rows[rowIndex+1];
+      
+      for (int k = rowStart; k < rowEnd; ++k) {
+        int col = csrMatrix->cols[k];
+        int row = rowIndex;
+        int blockCol = col/b_c;
+        unsigned int elementPosition = (row % b_r) * b_c + (col % b_c);
+        blockPatterns[blockCol].pattern.set(elementPosition);
+        blockPatterns[blockCol].vals.reserve(b_r * b_c);
+        blockPatterns[blockCol].vals.push_back(csrMatrix->vals[k]);
+        indicesOfDetectedBlockColumns.push_back(blockCol);
+      }
+      if ((rowIndex % b_r) == b_r - 1 || rowIndex == stripeInfo.rowIndexEnd - 1) {
+        for (auto &blockIndex : indicesOfDetectedBlockColumns) {
+          if (blockPatterns[blockIndex].pattern.count() > 0) {
+            auto patternInfo = &(groupByBlockPatternMaps[threadIndex][blockPatterns[blockIndex].pattern.to_ulong()]);
+            blockPatterns[blockIndex].pattern.reset();
+            
+            patternInfo->first.push_back(pair<int,int>(rowIndex/b_r, blockIndex));
+            vector<double> &vals = patternInfo->second;
+            vals.insert(vals.end(), blockPatterns[blockIndex].vals.begin(), blockPatterns[blockIndex].vals.end());
+            blockPatterns[blockIndex].vals.clear();
+            numBlocks[threadIndex] += 1;
+          }
+        }
+        indicesOfDetectedBlockColumns.clear();
+      }
+    }
+  }
 }
 
-Matrix* GenOSKI::getMatrixForGeneration() {
-  START_OPTIONAL_TIME_PROFILE(getGenOSKIInfo);
-  vector<GroupByBlockPatternMap> *blockPatternLists = analyzer.getGroupByBlockPatternMaps();
-  END_OPTIONAL_TIME_PROFILE(getGenOSKIInfo);
 
-  START_OPTIONAL_TIME_PROFILE(matrixConversion);
-  vector<unsigned int> &numBlocks = analyzer.getNumBlocks();
+///
+/// GenOSKI
+///
+
+GenOSKI::GenOSKI(unsigned int b_r, unsigned int b_c) {
+  this->b_r = b_r;
+  this->b_c = b_c;
+}
+
+void GenOSKI::convertMatrix() {
   unsigned int numTotalBlocks = 0;
   vector<unsigned int> blockBaseIndices;
   for (auto n : numBlocks) {
@@ -62,14 +81,12 @@ Matrix* GenOSKI::getMatrixForGeneration() {
   int *cols = new int[numTotalBlocks];
   double *vals = new double[csrMatrix->nz];
   
-  vector<MatrixStripeInfo> &stripeInfos = csrMatrix->getStripeInfos();
-  
 #pragma omp parallel for
-  for (int t = 0; t < NUM_OF_THREADS; ++t) {
-    auto &blockPatterns = blockPatternLists->at(t);
+  for (int t = 0; t < stripeInfos->size(); ++t) {
+    auto &blockPatterns = groupByBlockPatternMaps.at(t);
     int *rowsPtr = rows + blockBaseIndices[t];
     int *colsPtr = cols + blockBaseIndices[t];
-    double *valsPtr = vals + stripeInfos[t].valIndexBegin;
+    double *valsPtr = vals + stripeInfos->at(t).valIndexBegin;
     
     //Build rows cols vals for the new Matrix
     for (auto &patternInfo : blockPatterns) {
@@ -82,24 +99,51 @@ Matrix* GenOSKI::getMatrixForGeneration() {
       }
     }
   }
-  END_OPTIONAL_TIME_PROFILE(matrixConversion);
 
-  Matrix *result = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
-  result->numRows = numTotalBlocks;
-  result->numCols = numTotalBlocks;
-  result->numVals = csrMatrix->nz;
-  return result;
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix->numRows = numTotalBlocks;
+  matrix->numCols = numTotalBlocks;
+  matrix->numVals = csrMatrix->nz;
 }
 
-void GenOSKI::dumpAssemblyText() {
-  START_OPTIONAL_TIME_PROFILE(getMatrix);
-  this->getMatrix(); // Only for benchmarking purposes.
-  vector<GroupByBlockPatternMap> *patternMaps = analyzer.getGroupByBlockPatternMaps();
-  vector<MatrixStripeInfo> &stripeInfos = csrMatrix->getStripeInfos();
-  END_OPTIONAL_TIME_PROFILE(getMatrix);
+///
+/// GenOSKICodeEmitter:
+/// Helper class to avoid having to pass several parameters
+///
+class GenOSKICodeEmitter {
+public:
+  GenOSKICodeEmitter(X86Assembler *assembler,
+                     GroupByBlockPatternMap *patternMap,
+                     unsigned long baseValsIndex,
+                     unsigned long baseBlockIndex,
+                     unsigned int b_r,
+                     unsigned int b_c) {
+    this->assembler = assembler;
+    this->patternMap = patternMap;
+    this->baseValsIndex = baseValsIndex;
+    this->baseBlockIndex = baseBlockIndex;
+    this->b_r = b_r;
+    this->b_c = b_c;
+  }
+  
+  void emit();
+  
+private:
+  X86Assembler *assembler;
+  GroupByBlockPatternMap *patternMap;
+  unsigned long baseValsIndex;
+  unsigned long baseBlockIndex;
+  unsigned int b_r;
+  unsigned int b_c;
+  
+  void emitHeader();
+  
+  void emitFooter();
+  
+  void emitSingleLoop(bitset<32> &patternBits, unsigned int numBlocks);
+};
 
-  START_OPTIONAL_TIME_PROFILE(emitCode);
-  vector<unsigned int> &numBlocks = analyzer.getNumBlocks();
+void GenOSKI::emitMultByMFunction(unsigned int index) {
   unsigned int numTotalBlocks = 0;
   vector<unsigned int> blockBaseIndices;
   for (auto n : numBlocks) {
@@ -107,140 +151,120 @@ void GenOSKI::dumpAssemblyText() {
     numTotalBlocks += n;
   }
   
-  // Set up code emitters
-  vector<GenOSKICodeEmitter> codeEmitters;
-  for (unsigned i = 0; i < patternMaps->size(); i++) {
-    auto &patternMap = patternMaps->at(i);
-    codeEmitters.push_back(GenOSKICodeEmitter(&patternMap, stripeInfos[i].valIndexBegin, blockBaseIndices[i], b_r, b_c, Str, i));
-  }
-  
-#pragma omp parallel for
-  for (int threadIndex = 0; threadIndex < NUM_OF_THREADS; ++threadIndex) {
-    codeEmitters[threadIndex].emit();
-  }
-  END_OPTIONAL_TIME_PROFILE(emitCode);
-}
-
-GenOSKICodeEmitter::GenOSKICodeEmitter(GroupByBlockPatternMap *patternMap,
-                                       unsigned long baseValsIndex,
-                                       unsigned long baseBlockIndex,
-                                       unsigned int b_r,
-                                       unsigned int b_c,
-                                       llvm::MCStreamer *Str, unsigned int partitionIndex):
-patternMap(patternMap), baseValsIndex(baseValsIndex), baseBlockIndex(baseBlockIndex), b_r(b_r), b_c(b_c) {
-  this->DFOS = createNewDFOS(Str, partitionIndex);
+  X86Assembler assembler(codeHolders[index]);
+  GroupByBlockPatternMap &patternMap = groupByBlockPatternMaps.at(index);
+  GenOSKICodeEmitter emitter(&assembler,
+                             &patternMap,
+                             stripeInfos->at(index).valIndexBegin,
+                             blockBaseIndices[index],
+                             b_r,
+                             b_c);
+  emitter.emit();
 }
 
 void GenOSKICodeEmitter::emit() {
-  dumpPushPopHeader();
+  emitHeader();
   
-  dumpForLoops();
-  
-  dumpPushPopFooter();
-  emitRETInst();
-}
-
-void GenOSKICodeEmitter::dumpPushPopHeader() {
-  // rows is in %rdx, cols is in %rcx, vals is in %r8
-  emitPushPopInst(X86::PUSH64r,X86::R11);
-  emitLEAQInst(X86::R8, X86::R11, (int)(sizeof(double) * baseValsIndex)); // using %r11 for vals
-  
-  emitPushPopInst(X86::PUSH64r,X86::R8);
-  emitLEAQInst(X86::RDX, X86::R8, (int)(sizeof(int) * baseBlockIndex)); // using %r8 for rows
-  
-  emitPushPopInst(X86::PUSH64r,X86::R9);
-  emitLEAQInst(X86::RCX, X86::R9, (int)(sizeof(int) * baseBlockIndex)); // using %r9 for cols
-  
-  emitPushPopInst(X86::PUSH64r,X86::RAX);
-  emitPushPopInst(X86::PUSH64r,X86::RCX);
-  emitPushPopInst(X86::PUSH64r,X86::RDX);
-  emitPushPopInst(X86::PUSH64r,X86::RBX);
-}
-
-void GenOSKICodeEmitter::dumpPushPopFooter() {
-  emitPushPopInst(X86::POP64r,X86::RBX);
-  emitPushPopInst(X86::POP64r,X86::RDX);
-  emitPushPopInst(X86::POP64r,X86::RCX);
-  emitPushPopInst(X86::POP64r,X86::RAX);
-  emitPushPopInst(X86::POP64r,X86::R11);
-  emitPushPopInst(X86::POP64r,X86::R9);
-  emitPushPopInst(X86::POP64r,X86::R8);
-}
-
-void GenOSKICodeEmitter::dumpForLoops() {
-  // xorl %ecx, %ecx
-  emitXOR32rrInst(X86::ECX, X86::ECX);
-  
-  int size = b_r * b_c;
   for (auto &pattern : *patternMap) {
-    // xorl %eax, %eax
-    emitXOR32rrInst(X86::EAX, X86::EAX);
-    // xorl %ebx, %ebx
-    emitXOR32rrInst(X86::EBX, X86::EBX);
-    //.align 16, 0x90
-    emitCodeAlignment(16);
-    
-    //Create label for each pattern
-    unsigned long labeledBlockBeginningOffset = DFOS->size();
-    
-    //xorps %xmm0, %xmm0
-    emitRegInst(X86::XORPSrr, 0, 0);
-    
-    // movslq (%r9,%rax,4), %rcx ## cols1[a]
-    emitMOVSLQInst(X86::RCX, X86::R9, X86::RAX, 4, 0);
-    // movslq (%r8,%rax,4), %rdx ## rows1[a]
-    emitMOVSLQInst(X86::RDX, X86::R8, X86::RAX, 4, 0);
-    
-    
     bitset<32> patternBits(pattern.first);
     unsigned int numBlocks = pattern.second.first.size();
-    int nz = patternBits.count(); // nz elements per pattern
-    
-    //startingMMElements simulation <row, Cols>
-    map<int, vector<int> > patternLocs;
-    for (int j = 0; j < size; ++j) {
-      if (patternBits[j] == 1) {
-        patternLocs[j / b_c].push_back(j % b_c);
-      }
-    }
-    
-    int bb = 0;
-    for (auto &nz : patternLocs) {
-      int row = nz.first;
-      vector<int> cols = nz.second;
-      vector<int>::iterator colsIt = cols.begin(), colsEnd = cols.end();
-      // movsd "col*8"(%rdi,%rcx,8), %xmm0 ## v + cols1[a] + col = vv[col]
-      emitMOVSDrmInst((*colsIt++)*sizeof(double), X86::RDI, X86::RCX, 8, 0);
-      // mulsd "b*8"(%r11,%rbx,8), %xmm0      ## vv[col] * mvalues1[b + some k]
-      emitMULSDrmInst((bb++)*sizeof(double), X86::R11, 0);
-      
-      if (cols.size() > 1) {
-        for (; colsIt != colsEnd; ++colsIt) {
-          // movsd "col*8"(%rdi,%rcx,8), %xmm1 ## v + cols1[a] + col = vv[col]
-          emitMOVSDrmInst((*colsIt)*sizeof(double), X86::RDI, X86::RCX, 8, 1);
-          // mulsd "b*8"(%r11,%rbx, 8), %xmm1      ## vv[col] * mvalues1[b + some k]
-          emitMULSDrmInst((bb++)*sizeof(double), X86::R11, 1);
-          // addsd %xmm1, %xmm0
-          emitRegInst(X86::ADDSDrr, 1, 0);
-        }
-      }
-      
-      // addsd "row*8"(%rsi,%rdx,8), %xmm0
-      emitADDSDrmInst(row*8, X86::RSI, X86::RDX, 8, 0);
-      // movsd %xmm0, "row*8"(%rsi, %rdx, 8)
-      emitMOVSDmrInst(0, row*8, X86::RSI, X86::RDX, 8);
-    }
-    emitLEAQInst(X86::R11, X86::R11, sizeof(double)*bb);
-    
-    // addq $1, %rax
-    emitADDQInst(1, X86::RAX);
-    // cmpl $"numBlocks", %eax
-    emitCMP32riInst(X86::EAX, numBlocks);
-    // jne LBB*_*
-    emitJNEInst(labeledBlockBeginningOffset);
-    
-    emitLEAQInst(X86::R8, X86::R8, sizeof(int)*numBlocks);
-    emitLEAQInst(X86::R9, X86::R9, sizeof(int)*numBlocks);
+    emitSingleLoop(patternBits, numBlocks);
   }
+  
+  emitFooter();
+}
+
+void GenOSKICodeEmitter::emitHeader() {
+  // rows is in %rdx, cols is in %rcx, vals is in %r8
+  assembler->push(r11);
+  assembler->lea(r11, ptr(r8, (int)(sizeof(double) * baseValsIndex))); // using %r11 for vals
+  assembler->push(r8);
+  assembler->lea(r8, ptr(rdx, (int)(sizeof(int) * baseBlockIndex))); // using %r8 for rows
+  assembler->push(r9);
+  assembler->lea(r9, ptr(rcx, (int)(sizeof(int) * baseBlockIndex))); // using %r9 for cols
+  
+  assembler->push(rax);
+  assembler->push(rcx);
+  assembler->push(rdx);
+  assembler->push(rbx);
+
+  // xorl %ecx, %ecx
+  assembler->xor_(ecx, ecx);
+}
+
+void GenOSKICodeEmitter::emitFooter() {
+  assembler->pop(rbx);
+  assembler->pop(rdx);
+  assembler->pop(rcx);
+  assembler->pop(rax);
+  assembler->pop(r11);
+  assembler->pop(r9);
+  assembler->pop(r8);
+  assembler->ret();
+}
+
+void GenOSKICodeEmitter::emitSingleLoop(bitset<32> &patternBits, unsigned int numBlocks) {
+  int size = b_r * b_c;
+  // xorl %eax, %eax
+  assembler->xor_(eax, eax);
+  // xorl %ebx, %ebx
+  assembler->xor_(ebx, ebx);
+  //.align 16, 0x90
+  assembler->align(kAlignCode, 16);
+    
+  //Create label for each pattern
+  Label loopStart = assembler->newLabel();
+  assembler->bind(loopStart);
+  
+  //xorps %xmm0, %xmm0
+  assembler->xorps(xmm0, xmm0);
+  // movslq (%r9,%rax,4), %rcx ## cols1[a]
+  assembler->movsxd(rcx, ptr(r9, rax, 2));
+  // movslq (%r8,%rax,4), %rdx ## rows1[a]
+  assembler->movsxd(rdx, ptr(r8, rax, 2));
+  
+  int nz = patternBits.count(); // nz elements per pattern
+  //startingMMElements simulation <row, Cols>
+  map<int, vector<int> > patternLocs;
+  for (int j = 0; j < size; ++j)
+    if (patternBits[j] == 1)
+      patternLocs[j / b_c].push_back(j % b_c);
+  
+  int bb = 0;
+  for (auto &nz : patternLocs) {
+    int row = nz.first;
+    vector<int> cols = nz.second;
+    vector<int>::iterator colsIt = cols.begin(), colsEnd = cols.end();
+    // movsd "col*8"(%rdi,%rcx,8), %xmm0 ## v + cols1[a] + col = vv[col]
+    assembler->movsd(xmm0, ptr(rdi, rcx, 3, (*colsIt++) * sizeof(double)));
+    // mulsd "b*8"(%r11,%rbx,8), %xmm0      ## vv[col] * mvalues1[b + some k]
+    assembler->mulsd(xmm0, ptr(r11, (bb++) * sizeof(double)));
+      
+    if (cols.size() > 1) {
+      for (; colsIt != colsEnd; ++colsIt) {
+        // movsd "col*8"(%rdi,%rcx,8), %xmm1 ## v + cols1[a] + col = vv[col]
+        assembler->movsd(xmm1, ptr(rdi, rcx, 3, (*colsIt) * sizeof(double)));
+        // mulsd "b*8"(%r11,%rbx, 8), %xmm1      ## vv[col] * mvalues1[b + some k]
+        assembler->mulsd(xmm1, ptr(r11, (bb++) * sizeof(double)));
+        // addsd %xmm1, %xmm0
+        assembler->addsd(xmm0, xmm1);
+      }
+    }
+      
+    // addsd "row*8"(%rsi,%rdx,8), %xmm0
+    assembler->addsd(xmm0, ptr(rsi, rdx, 3, row * 8));
+    // movsd %xmm0, "row*8"(%rsi, %rdx, 8)
+    assembler->movsd(ptr(rsi, rdx, 3, row * 8), xmm0);
+  }
+  assembler->lea(r11, ptr(r11, sizeof(double) * bb));
+  // addq $1, %rax
+  assembler->inc(rax);
+  // cmpl $"numBlocks", %eax
+  assembler->cmp(eax, numBlocks);
+  // jne LBB*_*
+  assembler->jne(loopStart);
+  
+  assembler->lea(r8, ptr(r8, sizeof(int) * numBlocks));
+  assembler->lea(r9, ptr(r9, sizeof(int) * numBlocks));
 }
 

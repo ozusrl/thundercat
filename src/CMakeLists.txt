@@ -31,9 +31,9 @@ message(STATUS "Linker Flags: " ${CMAKE_EXE_LINKER_FLAGS})
 set(dir ${CMAKE_CURRENT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
-set(SOURCE_FILES csrByNZ.cpp
-#                 genOski.cpp
-#                 genOskiAnalyzer.cpp
+set(SOURCE_FILES
+                 csrByNZ.cpp
+                 genOski.cpp
                  main.cpp
                  matrix.cpp
                  method.cpp
@@ -52,7 +52,6 @@ set(SOURCE_FILES csrByNZ.cpp
 )
 
 set(HEADER_FILES
-#                 genOskiAnalyzer.h
                  matrix.h
                  method.h
                  profiler.h

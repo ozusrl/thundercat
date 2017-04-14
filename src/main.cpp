@@ -85,13 +85,13 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   if(genOSKI.compare(*argptr) == 0) {
     int b_r = atoi(*(++argptr));
     int b_c = atoi(*(++argptr));
-    //method = new GenOSKI(csrMatrix, b_r, b_c);
+    method = new GenOSKI(b_r, b_c);
   } else if(genOSKI33.compare(*argptr) == 0) {
-    //method = new GenOSKI(csrMatrix, 3, 3);
+    method = new GenOSKI(3, 3);
   } else if(genOSKI44.compare(*argptr) == 0) {
-    //method = new GenOSKI(csrMatrix, 4, 4);
+    method = new GenOSKI(4, 4);
   } else if(genOSKI55.compare(*argptr) == 0) {
-    //method = new GenOSKI(csrMatrix, 5, 5);
+    method = new GenOSKI(5, 5);
   } else if(unfolding.compare(*argptr) == 0) {
     //method = new Unfolding(csrMatrix);
   } else if(csrByNZ.compare(*argptr) == 0) {

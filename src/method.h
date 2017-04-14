@@ -114,22 +114,26 @@ namespace thundercat {
     std::vector<NZtoRowMap> rowByNZLists;
   };
   
-//  ///
-//  /// Gen OSKI
-//  ///
-//  class GenOSKI: public Specializer {
-//  private:
-//    unsigned int b_r, b_c;
-//
-//  public:
-//    GenOSKI(Matrix *csrMatrix, unsigned b_r, unsigned b_c);
-//    
-//    virtual void emitMultByMFunction(unsigned int index);
-//    
-//  protected:
-//    GenOSKIAnalyzer analyzer;
-//  };
-//
+  ///
+  /// Gen OSKI
+  ///
+  typedef std::map<unsigned long, std::pair<std::vector<std::pair<int, int> >, std::vector<double> > > GroupByBlockPatternMap;
+  
+  class GenOSKI: public Specializer {
+  public:
+    GenOSKI(unsigned int b_r, unsigned int b_c);
+    
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+
+  private:
+    unsigned int b_r, b_c;
+    std::vector<GroupByBlockPatternMap> groupByBlockPatternMaps;
+    std::vector<unsigned int> numBlocks;
+  };
+
 //  ///
 //  /// Stencil
 //  ///
