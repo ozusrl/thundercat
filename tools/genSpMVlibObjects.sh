@@ -24,9 +24,11 @@ test() {
 
     folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
-    rm -f "$folderName"/object.o
+    rm -f "$folderName"/generated_*
+    rm -f ./build/generated_* ./generated_*
 
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/object.o
+    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -dump_object > /dev/null
+    mv ./generated_* "$folderName"/
 }
 
 echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"
