@@ -16,7 +16,6 @@ For technical details see:
 * `main.cpp`
 * `matrix.*`: Matrix class that keeps matrix information in CSR format.
 * `method.*`: Specialization methods.
-* `spMVgen.*`: Object stream management via LLVM.
 * `profiler.*`: Time measurement support.
 * `svmAnalyzer.*`: Feature extration from the matrices. Features are used for autotuning (done separately, not integrated here).
 * `plaincsr.*`: SpMV implementation using the CSR format.
@@ -24,33 +23,54 @@ For technical details see:
 
 ## Runtime Specialization Methods
  
-* CSRbyNZ
-* Stencil (Called RowPattern in the TACO paper)
-* GenOSKI (Similar to [PBR](http://dl.acm.org/citation.cfm?id=1542294). GenOSKI44 is for 4x4 block size, GenOSKI55 is for 5x5.)
-* Unfolding
+* `CSRbyNZ`
+* `RowPattern`
+* `GenOSKI <r> <c>` (Similar to [PBR](http://dl.acm.org/citation.cfm?id=1542294). `GenOSKI44` is for 4x4 block size, `GenOSKI55` is for 5x5.)
+* `Unfolding`
+* `CSRWithGOTO`
+* `UnrollingWithGOTO`
 
-See the papers for details. For each method, there exist two files. One is for method-related matrix analysis, 
-the other is for code generation. E.g. `csrByNZAnalyzer.h/cpp` and `csrByNZ.cpp` for CSRbyNZ.
+See the papers for details. For each method, there exist a corresponding `.cpp` file.
 
 ## How to Compile
-You should have a slightly modified version of LLVM 3.5.0.
-See the [scripts](scripts/) folder to see how to install LLVM.
-Once you have LLVM, use `cmake` to build. E.g.:
+Thundercat uses [asmjit](http://github.com/asmjit/asmjit) for
+assembling executable code at runtime.
+It should be placed under the main `thundercat` folder.
+Below are the steps.
+In these steps, we use `cmake` to generate build files for [Ninja](https://ninja-build.org).
+You may generate build files for other targets as well.
+In particular, if you don't have Ninja installed, replace `-G Ninja`
+below with `-G "Unix Makefiles"`, and replace `ninja` with `make`.
 
-```
-~ $ cd thundercat
-~/thundercat $ mkdir build
-~/thundercat $ cd build
-~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../src
-~/thundercat/build $ ninja
-```
 
-This will produce a main executable file, named `spMVgen`.
+1.  Clone this git repository.
+    ```
+    ~ $ git clone https://github.com/ozusrl/thundercat.git
+    ```
+2.  Clone asmjit under thundercat
+    ```
+    ~ $ cd thundercat
+    ~/thundercat $ git clone https://github.com/asmjit/asmjit.git
+    ```
+3.  Build asmjit.
+    ```
+    ~/thundercat $ cd asmjit
+    ~/thundercat/asmjit $ mkdir build
+    ~/thundercat/asmjit $ cd build
+    ~/thundercat/asmjit/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+    ~/thundercat/asmjit/build $ ninja
+    ~/thundercat/asmjit/build $ cd ../..
+    ```
+4.  Build thundercat.
+    ```
+    ~/thundercat $ mkdir build
+    ~/thundercat $ cd build
+    ~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../src
+    ~/thundercat/build $ ninja
+    ```
+
+This will produce a main executable file, named `thundercat`.
 The library runs on Mac OS X and Linux. 
-
-Depending on your taste and environment, instead of `Ninja`,
-you may generate build files for `"Unix Makefiles"` or `Xcode`,
-among other options.
 
 Setting the `CMAKE_BUILD_TYPE` variable to `Debug` is a good idea
 for a build that you will use for debugging purposes.
@@ -60,39 +80,35 @@ configured as `Release`.
 To force a particular compiler, e.g. icc, do the following:
 
 ```
-~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src/
+~/thundercat/build $ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=`which icc` -DCMAKE_CXX_COMPILER=`which icc` ../src
 ```
 
 ## How to Run
 ```
-./spMVgen <matrixName> <methodName> -num_threads <numOfThreads>
-                                    -debug
-                                    -dump_matrix
-                                    -dump_object
-                                    -matrix_stats
+./thundercat <matrixName> <methodName> [optional flags]
 ```
-
-The following are recognized as `<methodName>`:
-* Specialization methods: `CSRbyNZ`, `stencil`, `unfolding`, `genOSKI33`, `genOSKI44`, `genOSKI55`, `unrollingWithGOTO`
-* Non-generative methods: `MKL` and `PlainCSR`
 
 `<matrixName>` is the path to the `.mtx` file
 (i.e. the matrix file as downloaded from the Matrix Market or the U. of Florida collection).
 The name should be provided without the `.mtx` extention.
  
+The following are recognized as `<methodName>`:
+ 
+* Specialization methods: `CSRbyNZ`, `RowPattern`, `Unfolding`, `GenOSKI33`, `GenOSKI44`, `GenOSKI55`, `UnrollingWithGOTO`, `CSRWithGOTO`
+* Non-generative methods: `MKL` and `PlainCSR`
+
 ### Optional flags
-* `-num_threads`: Number of threads to be used
+* `-num_threads <num_threads>`: Number of threads to be used. By default, a single thread is used.
 * `-debug`: Output vector is printed.
-* `-dump_matrix`: Dumps matrix's rows, cols and vals array (in CSR format)
-* `-dump_object`: Dumps the generated object code to **std out**. The output
-can be diassembled using a disassembler (e.g. `llvm-objdump`) to examine the code.
-Also, the output can be separately linked to a main file.
+* `-dump_matrix`: Prints matrix's rows, cols and vals array (in the format required by the chosen method).
+* `-dump_object`: Dumps the generated object code to current folder into files named `generated_X`
+  where `X` is a number from 0 up to the thread count.
 * `-matrix_stats`: Prints the `svmAnalyzer`'s results for the current matrix.
 
 ### Examples
-Run for the `rajat22` matrix (assuming `rajat22.mtx` exists in the current directory), using the stencil method with 6 threads:
+Run for the `rajat22` matrix (assuming `rajat22.mtx` exists in the current directory), using the `RowPattern` method with 6 threads:
 ```
-./spMVgen rajat22 stencil -num_threads 6
+./thundercat rajat22 stencil -num_threads 6
 ```
 
 ### Sample Matrices
