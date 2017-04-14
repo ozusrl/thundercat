@@ -21,7 +21,6 @@ void SVMAnalyzer::printFeatures() {
   vector<bitset<32> > blockPatterns55;
   blockPatterns44.resize(matrix->n / 4 + 1);
   blockPatterns55.resize(matrix->n / 5 + 1);
-  START_TIME_PROFILE(svmAnalysis)
   unsigned long numNonEmptyRows = 0;
   set<unsigned int> nzGroups;
   unordered_set<double> distinctValues;
@@ -161,9 +160,6 @@ void SVMAnalyzer::printFeatures() {
     }
   }
   
-  END_TIME_PROFILE(svmAnalysis)
-  
-  cout << "svmAnalysisTime: " << (time_svmAnalysis_Diff.tv_sec*1000000)+time_svmAnalysis_Diff.tv_usec << "\n";
   
   cout << "Matrix N NZ NonEmptyRows CSRbyNZGroups SumOfRowLengths RowPerNZGroup "
        << "LengthPerNZGroup numSingleRowStencils numMultiRowStencils "

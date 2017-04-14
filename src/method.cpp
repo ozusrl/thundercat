@@ -31,15 +31,15 @@ Matrix* SpMVMethod::getMethodSpecificMatrix() {
 }
 
 void SpMVMethod::processMatrix() {
-  START_TIME_PROFILE(getStripeInfos);
-  stripeInfos = csrMatrix->getStripeInfos(numPartitions);
-  END_TIME_PROFILE(getStripeInfos);
-  START_TIME_PROFILE(analyzeMatrix);
-  analyzeMatrix();
-  END_TIME_PROFILE(analyzeMatrix);
-  START_TIME_PROFILE(convertMatrix);
-  convertMatrix();
-  END_TIME_PROFILE(convertMatrix);
+  Profiler::recordTime("getStripeInfos", [this]() {
+    stripeInfos = csrMatrix->getStripeInfos(numPartitions);
+  });
+  Profiler::recordTime("analyzeMatrix", [this]() {
+    analyzeMatrix();
+  });
+  Profiler::recordTime("convertMatrix", [this]() {
+    convertMatrix();
+  });
 }
 
 void Specializer::init(Matrix *csrMatrix, unsigned int numThreads) {

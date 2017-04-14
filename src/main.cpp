@@ -186,15 +186,15 @@ void registerLoggersIfRequested() {
 }
 
 void generateFunctions() {
-  START_TIME_PROFILE(processMatrix);
-  method->processMatrix();
-  END_TIME_PROFILE(processMatrix);
-  START_TIME_PROFILE(emitCode);
-  method->emitCode();
-  END_TIME_PROFILE(emitCode);
-  START_TIME_PROFILE(getMultByMFunctions);
-  fptrs = method->getMultByMFunctions();
-  END_TIME_PROFILE(getMultByMFunctions);
+  Profiler::recordTime("processMatrix", []() {
+    method->processMatrix();
+  });
+  Profiler::recordTime("emitCode", []() {
+    method->emitCode();
+  });
+  Profiler::recordTime("getMultByMFunctions", []() {
+    fptrs = method->getMultByMFunctions();
+  });
 }
 
 void populateInputOutputVectors() {
@@ -250,27 +250,26 @@ void benchmark() {
   unsigned long n = csrMatrix->n;
   
   Matrix *matrix = method->getMethodSpecificMatrix();
-  START_TIME_PROFILE(multByM);
-  if (fptrs.size() == 1) {
-    for (int i=0; i < ITERS; i++) {
-      fptrs[0](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
-    }
-  } else {
-    for (unsigned i=0; i < ITERS; i++) {
+  Profiler::recordTime("multByM", [ITERS, matrix]() {
+    if (fptrs.size() == 1) {
+      for (int i=0; i < ITERS; i++) {
+        fptrs[0](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
+      }
+    } else {
+      for (unsigned i=0; i < ITERS; i++) {
 #pragma omp parallel for
-      for (unsigned j = 0; j < fptrs.size(); j++) {
-        fptrs[j](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
+        for (unsigned j = 0; j < fptrs.size(); j++) {
+          fptrs[j](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
+        }
       }
     }
-  }
-  END_TIME_PROFILE(multByM);
+  });
   
   if (__DEBUG__) {
     for(int i = 0; i < n; ++i)
       printf("%g\n", wVector[i]);
   } else {
     Profiler::print(ITERS);
-    std::cout << "0" << std::setw(10) << ITERS << " times    iterated\n";
   }
 }
 
