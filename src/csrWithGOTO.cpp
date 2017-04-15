@@ -91,18 +91,24 @@ void CSRWithGOTOCodeEmitter::emit() {
 
 void CSRWithGOTOCodeEmitter::emitHeader() {
   // rows is in %rdx, cols is in %rcx, vals is in %r8
+  assembler->push(r8);
   assembler->push(r9);
   assembler->push(r10);
   assembler->push(r11);
-  assembler->lea(r9, ptr(rcx)); // using %r9 for cols
-  assembler->lea(r11, ptr(rdx)); // using %r11 for rows
   assembler->push(rax);
   assembler->push(rcx);
   assembler->push(rdx);
   assembler->push(rbx);
+  assembler->push(rsi);
+
+  assembler->lea(r8, ptr(r8, (int)baseValsIndex * sizeof(double)));
+  assembler->lea(r9, ptr(rcx, (int)baseValsIndex * sizeof(int))); // using %r9 for cols
+  assembler->lea(r11, ptr(rdx, (int)baseRowsIndex * sizeof(int))); // using %r11 for rows
+  assembler->lea(rsi, ptr(rsi, (int)baseRowsIndex * sizeof(double)));
 }
 
 void CSRWithGOTOCodeEmitter::emitFooter() {
+  assembler->pop(rsi);
   assembler->pop(rbx);
   assembler->pop(rdx);
   assembler->pop(rcx);
@@ -110,19 +116,11 @@ void CSRWithGOTOCodeEmitter::emitFooter() {
   assembler->pop(r11);
   assembler->pop(r10);
   assembler->pop(r9);
+  assembler->pop(r8);
   assembler->ret();
 }
 
 void CSRWithGOTOCodeEmitter::emitMainLoop() {
-  // leaq "4*numPreviousRows"(%r11), %r11
-  assembler->lea(r11, ptr(r11, (int)baseRowsIndex * sizeof(int)));
-  // leaq "8*numPreviousRows"(%rsi), %rsi
-  assembler->lea(r8, ptr(r8, (int)baseRowsIndex * sizeof(double)));
-  // leaq "numPreviousElements"(%r9), %r9
-  assembler->lea(r9, ptr(r9, (int)baseValsIndex * sizeof(int)));
-  // leaq "numPreviousElements"(%r8), %r8
-  assembler->lea(r8, ptr(r8, (int)baseValsIndex * sizeof(double)));
-  
   // xorl %eax, %eax
   assembler->xor_(eax, eax);
   // Keep rows[i] in rcx, rows[i+1] in rdx. Index through %rbx.
