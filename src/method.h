@@ -160,18 +160,21 @@ namespace thundercat {
   };
   
 
-//  ///
-//  /// Unfolding
-//  ///
-//  class Unfolding: public Specializer {
-//  public:
-//    Unfolding(Matrix *csrMatrix);
-//
-//    virtual void emitMultByMFunction(unsigned int index);
-//
-//  protected:
-//    UnfoldingAnalyzer analyzer;
-//  };
+  ///
+  /// Unfolding
+  ///
+  class Unfolding: public Specializer {
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+
+  private:
+    std::vector<std::map<double, unsigned long> > valToIndexMaps;
+    std::vector<std::vector<double> > distinctValueLists;
+    
+    bool hasFewDistinctValues();
+  };
 
   ///
   /// CSRWithGOTO

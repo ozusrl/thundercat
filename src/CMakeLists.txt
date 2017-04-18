@@ -42,8 +42,7 @@ set(SOURCE_FILES
                  profiler.cpp
                  rowPattern.cpp
                  svmAnalyzer.cpp
-#                 unfolding.cpp
-#                 unfoldingAnalyzer.cpp
+                 unfolding.cpp
                  unrollingWithGOTO.cpp
                  csrWithGOTO.cpp
 )

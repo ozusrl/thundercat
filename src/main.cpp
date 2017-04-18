@@ -93,7 +93,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(genOSKI55.compare(*argptr) == 0) {
     method = new GenOSKI(5, 5);
   } else if(unfolding.compare(*argptr) == 0) {
-    //method = new Unfolding(csrMatrix);
+    method = new Unfolding();
   } else if(csrByNZ.compare(*argptr) == 0) {
     method = new CSRbyNZ();
   } else if(rowPattern.compare(*argptr) == 0) {
