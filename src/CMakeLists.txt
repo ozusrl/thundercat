@@ -44,8 +44,7 @@ set(SOURCE_FILES
                  svmAnalyzer.cpp
 #                 unfolding.cpp
 #                 unfoldingAnalyzer.cpp
-#                 unrollingWithGOTO.cpp
-#                 unrollingWithGOTOAnalyzer.cpp
+                 unrollingWithGOTO.cpp
                  csrWithGOTO.cpp
 )
 

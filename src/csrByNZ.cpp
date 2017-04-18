@@ -10,7 +10,7 @@ using namespace asmjit;
 using namespace x86;
 
 ///
-/// CSRbyNZAnalyzer
+/// Analysis
 ///
 vector<int> *RowByNZ::getRowIndices() {
   return &rowIndices;

@@ -99,7 +99,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(rowPattern.compare(*argptr) == 0) {
     method = new RowPattern();
   } else if(unrollingWithGOTO.compare(*argptr) == 0) {
-    //method = new UnrollingWithGOTO(csrMatrix);
+    method = new UnrollingWithGOTO();
   } else if(csrWithGOTO.compare(*argptr) == 0) {
     method = new CSRWithGOTO();
   } else if(mkl.compare(*argptr) == 0) {

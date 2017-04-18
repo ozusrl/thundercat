@@ -106,12 +106,21 @@ namespace thundercat {
   
   class CSRbyNZ: public Specializer {
   protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void emitMultByMFunction(unsigned int index);
     virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
+    virtual void convertMatrix();
 
-  private:
+  protected:
     std::vector<NZtoRowMap> rowByNZLists;
+  };
+  
+  ///
+  /// UnrollingWithGOTO
+  ///
+  class UnrollingWithGOTO: public CSRbyNZ {
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void convertMatrix() final;
   };
   
   ///
@@ -163,20 +172,7 @@ namespace thundercat {
 //  protected:
 //    UnfoldingAnalyzer analyzer;
 //  };
-//
-//  ///
-//  /// UnrollingWithGOTO
-//  ///
-//  class UnrollingWithGOTO: public Specializer {
-//  public:
-//    UnrollingWithGOTO(Matrix *csrMatrix);
-//
-//    virtual void emitMultByMFunction(unsigned int index);
-//
-//  protected:
-//    UnrollingWithGOTOAnalyzer analyzer;
-//  };
-  
+
   ///
   /// CSRWithGOTO
   ///
