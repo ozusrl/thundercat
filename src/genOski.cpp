@@ -1,5 +1,6 @@
 #include "method.h"
 #include <iostream>
+#include <bitset>
 
 using namespace thundercat;
 using namespace std;
