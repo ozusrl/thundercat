@@ -59,7 +59,7 @@ void Specializer::init(Matrix *csrMatrix, unsigned int numThreads) {
     codeHolders[i]->init(rt.getCodeInfo());
   }
   
-  functions.reserve(numThreads);
+  functions.resize(numThreads);
 }
 
 bool Specializer::isSpecializer() {
