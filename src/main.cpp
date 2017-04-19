@@ -192,9 +192,6 @@ void generateFunctions() {
   Profiler::recordTime("emitCode", []() {
     method->emitCode();
   });
-  Profiler::recordTime("getMultByMFunctions", []() {
-    fptrs = method->getMultByMFunctions();
-  });
 }
 
 void populateInputOutputVectors() {
@@ -249,19 +246,9 @@ void benchmark() {
   unsigned int ITERS = getNumIterations();
   unsigned long n = csrMatrix->n;
   
-  Matrix *matrix = method->getMethodSpecificMatrix();
-  Profiler::recordTime("multByM", [ITERS, matrix]() {
-    if (fptrs.size() == 1) {
-      for (int i=0; i < ITERS; i++) {
-        fptrs[0](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
-      }
-    } else {
-      for (unsigned i=0; i < ITERS; i++) {
-#pragma omp parallel for
-        for (unsigned j = 0; j < fptrs.size(); j++) {
-          fptrs[j](vVector, wVector, matrix->rows, matrix->cols, matrix->vals);
-        }
-      }
+  Profiler::recordTime("multByM", [ITERS]() {
+    for (unsigned i=0; i < ITERS; i++) {
+      method->spmv(vVector, wVector);
     }
   });
   

@@ -20,15 +20,15 @@ namespace thundercat {
     
     virtual void emitCode();
     
-    virtual std::vector<MultByMFun> getMultByMFunctions() = 0;
-    
     virtual Matrix* getMethodSpecificMatrix() final;
     
     virtual void processMatrix() final;
   
+    virtual void spmv(double *v, double *w) = 0;
+    
   protected:
-    virtual void analyzeMatrix() = 0;
-    virtual void convertMatrix() = 0;
+    virtual void analyzeMatrix();
+    virtual void convertMatrix();
     
     std::vector<MatrixStripeInfo> *stripeInfos;
     Matrix *csrMatrix;
@@ -43,11 +43,7 @@ namespace thundercat {
   public:
     virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
     
-    virtual std::vector<MultByMFun> getMultByMFunctions();
-
-  protected:
-    virtual void analyzeMatrix();
-    virtual void convertMatrix();
+    virtual void spmv(double *v, double *w) final;
   };
   
   ///
@@ -55,11 +51,7 @@ namespace thundercat {
   ///
   class PlainCSR: public SpMVMethod {
   public:
-    virtual std::vector<MultByMFun> getMultByMFunctions();
-    
-  protected:
-    virtual void analyzeMatrix();
-    virtual void convertMatrix();
+    virtual void spmv(double *v, double *w) final;
   };
 
 
@@ -74,14 +66,16 @@ namespace thundercat {
     
     virtual void emitCode() final;
   
-    virtual std::vector<MultByMFun> getMultByMFunctions() final;
-
     virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
 
+    virtual void spmv(double *v, double *w) final;
+    
   protected:
     virtual void emitMultByMFunction(unsigned int index) = 0;
     
     std::vector<asmjit::CodeHolder*> codeHolders;
+    
+    std::vector<MultByMFun> functions;
     
   private:
     void emitConstData();
