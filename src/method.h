@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <iostream>
 #include "asmjit/asmjit.h"
+#ifdef OPENMP_EXISTS
+#include "omp.h"
+#endif
 
 namespace thundercat {
   // multByM(v, w, rows, cols, vals)
@@ -69,6 +72,29 @@ namespace thundercat {
     virtual void spmv(double *v, double *w) final;
   };
 
+
+  ///
+  /// Duff's Device
+  ///
+  class DuffsDevice4: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
+  class DuffsDevice6: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
+  class DuffsDevice8: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
+  class DuffsDevice12: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
 
   ///
   /// Specializer

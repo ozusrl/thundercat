@@ -6,9 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdio.h>
-#ifdef OPENMP_EXISTS
-#include "omp.h"
-#endif
 
 using namespace thundercat;
 using namespace std;
@@ -72,6 +69,10 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string plainCSR2("PlainCSR2");
   string plainCSR4("PlainCSR4");
   string plainCSR8("PlainCSR8");
+  string duffsDevice4("DuffsDevice4");
+  string duffsDevice6("DuffsDevice6");
+  string duffsDevice8("DuffsDevice8");
+  string duffsDevice12("DuffsDevice12");
   
   string debugFlag("-debug");
   string dumpObjFlag("-dump_object");
@@ -116,6 +117,14 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new PlainCSR4();
   } else if(plainCSR8.compare(*argptr) == 0) {
     method = new PlainCSR8();
+  } else if(duffsDevice4.compare(*argptr) == 0) {
+    method = new DuffsDevice4();
+  } else if(duffsDevice6.compare(*argptr) == 0) {
+    method = new DuffsDevice6();
+  } else if(duffsDevice8.compare(*argptr) == 0) {
+    method = new DuffsDevice8();
+  } else if(duffsDevice12.compare(*argptr) == 0) {
+    method = new DuffsDevice12();
   } else {
     std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);

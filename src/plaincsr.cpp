@@ -1,7 +1,4 @@
 #include "method.h"
-#ifdef OMP_EXISTS
-#include "omp.h"
-#endif
 
 using namespace thundercat;
 using namespace std;

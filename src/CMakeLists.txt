@@ -33,6 +33,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 set(SOURCE_FILES
                  csrByNZ.cpp
+                 csrWithGOTO.cpp
+                 duffsDevice.cpp
                  genOski.cpp
                  main.cpp
                  matrix.cpp
@@ -44,7 +46,6 @@ set(SOURCE_FILES
                  svmAnalyzer.cpp
                  unfolding.cpp
                  unrollingWithGOTO.cpp
-                 csrWithGOTO.cpp
 )
 
 set(HEADER_FILES
