@@ -6,3 +6,5 @@ spMVgen
 matrices
 data
 tools/matrixNames.txt
+
+tools/batch.sh

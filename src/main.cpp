@@ -69,6 +69,9 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string csrWithGOTO("CSRWithGOTO");
   string mkl("MKL");
   string plainCSR("PlainCSR");
+  string plainCSR2("PlainCSR2");
+  string plainCSR4("PlainCSR4");
+  string plainCSR8("PlainCSR8");
   
   string debugFlag("-debug");
   string dumpObjFlag("-dump_object");
@@ -107,6 +110,12 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     MKL_ENABLED = true;
   } else if(plainCSR.compare(*argptr) == 0) {
     method = new PlainCSR();
+  } else if(plainCSR2.compare(*argptr) == 0) {
+    method = new PlainCSR2();
+  } else if(plainCSR4.compare(*argptr) == 0) {
+    method = new PlainCSR4();
+  } else if(plainCSR8.compare(*argptr) == 0) {
+    method = new PlainCSR8();
   } else {
     std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);

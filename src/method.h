@@ -54,6 +54,21 @@ namespace thundercat {
     virtual void spmv(double *v, double *w) final;
   };
 
+  class PlainCSR2: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
+  class PlainCSR4: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
+  class PlainCSR8: public SpMVMethod {
+  public:
+    virtual void spmv(double *v, double *w) final;
+  };
+
 
   ///
   /// Specializer
