@@ -21,18 +21,13 @@ do
     echo -n $matrixName" "
 
     cd ..
-    folderName=data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+    folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
-    rm -f "$folderName"/output.txt
-    rm -f "$folderName"/genCost.txt
     rm -f "$folderName"/runtime.txt
-    rm -f "$folderName"/matrixPrepTime.txt
 
     ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
     ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
     ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
-
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
     cd tools
 
 done < matrixNames.txt
@@ -40,11 +35,12 @@ done < matrixNames.txt
 echo " "
 
 findMins() {
-    local fileName=../data/$HOSTNAME.thundercat.dynamic."$methodName""$methodParam1""$methodParam2".csv 
+    currentTime=`date +%Y.%m.%d_%H.%M`
+    local fileName=../data/$HOSTNAME.thundercat."$methodName""$methodParam1""$methodParam2".$currentTime.csv 
     rm -f $fileName
     while read matrixName
     do
-	cd ../data/"$matrixName"/dynamic_"$methodName""$methodParam1""$methodParam2"
+	cd ../data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
 	runTimes=`cat runtime.txt`
 	cd - > /dev/null
 	echo -n $matrixName" "  >> $fileName

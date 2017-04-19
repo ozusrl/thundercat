@@ -18,7 +18,7 @@ do
     folder2Name=data/"$matrixName"/"$method2Name"
     cd ..
     diff -q "$folder1Name"/output.txt "$folder2Name"/output.txt
+    echo ""
     cd tools
 done < matrixNames.txt
 
-echo " "
