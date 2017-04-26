@@ -15,8 +15,8 @@ bool __DEBUG__ = false;
 bool DUMP_OBJECT = false;
 bool DUMP_MATRIX = false;
 bool MATRIX_STATS = false;
-bool MKL_ENABLED = false; // TODO: Get rid of this
 unsigned int NUM_OF_THREADS = 1;
+int ITERS = -1;
 Matrix *csrMatrix;
 SpMVMethod *method;
 vector<MultByMFun> fptrs;
@@ -79,6 +79,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string dumpMatrixFlag("-dump_matrix");
   string numThreadsFlag("-num_threads");
   string matrixStatsFlag("-matrix_stats");
+  string itersFlag("-iters");
   
   string matrixName(argv[1]);
   csrMatrix = Matrix::readMatrixFromFile(matrixName + ".mtx");
@@ -108,7 +109,6 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new CSRWithGOTO();
   } else if(mkl.compare(*argptr) == 0) {
     method = new MKL();
-    MKL_ENABLED = true;
   } else if(plainCSR.compare(*argptr) == 0) {
     method = new PlainCSR();
   } else if(plainCSR2.compare(*argptr) == 0) {
@@ -144,6 +144,12 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
       NUM_OF_THREADS = atoi(*(++argptr));
       if (NUM_OF_THREADS < 1) {
         std::cerr << "Number of threads must be >= 1.\n";
+        exit(1);
+      }
+    } else if (itersFlag.compare(*argptr) == 0) {
+      ITERS = atoi(*(++argptr));
+      if (ITERS < 0) {
+        std::cerr << "Number of iterations must be >= 0.\n";
         exit(1);
       }
     } else {
@@ -204,11 +210,13 @@ void registerLoggersIfRequested() {
 }
 
 void generateFunctions() {
-  Profiler::recordTime("processMatrix", []() {
-    method->processMatrix();
-  });
-  Profiler::recordTime("emitCode", []() {
-    method->emitCode();
+  Profiler::recordTime("generateFunctions", []() {
+    Profiler::recordTime("processMatrix", []() {
+      method->processMatrix();
+    });
+    Profiler::recordTime("emitCode", []() {
+      method->emitCode();
+    });
   });
 }
 
@@ -223,48 +231,47 @@ void populateInputOutputVectors() {
   }
 }
 
-unsigned int getNumIterations() {
-  if (__DEBUG__) {
-    return 1;
-  }
-  if (DUMP_OBJECT) {
-    return 0;
-  }
+void setNumIterations() {
+  if (__DEBUG__)
+    ITERS = 1;
+  if (DUMP_OBJECT)
+    ITERS = 0;
+  if (ITERS < 0) {
+    unsigned long nz = csrMatrix->nz;
 
-  unsigned long nz = csrMatrix->nz;
-
-  if (nz < 5000) {
-    return 500000;
-  } else if (nz < 10000) {
-    return 200000;
-  } else if (nz < 50000) {
-    return 100000;
-  } else if (nz < 100000) {
-    return 50000;
-  } else if (nz < 200000) {
-    return 10000;
-  } else if (nz < 1000000) {
-    return 5000;
-  } else if (nz < 2000000) {
-    return 1000;
-  } else if (nz < 3000000) {
-    return 500;
-  } else if (nz < 5000000) {
-    return 200;
-  } else if (nz < 8000000) {
-    return 100;
-  } else if (nz < 12000000) {
-    return 50;
-  } else {
-    return 100;
+    if (nz < 5000) {
+      ITERS = 500000;
+    } else if (nz < 10000) {
+      ITERS = 200000;
+    } else if (nz < 50000) {
+      ITERS = 100000;
+    } else if (nz < 100000) {
+      ITERS = 50000;
+    } else if (nz < 200000) {
+      ITERS = 10000;
+    } else if (nz < 1000000) {
+      ITERS = 5000;
+    } else if (nz < 2000000) {
+      ITERS = 1000;
+    } else if (nz < 3000000) {
+      ITERS = 500;
+    } else if (nz < 5000000) {
+      ITERS = 200;
+    } else if (nz < 8000000) {
+      ITERS = 100;
+    } else if (nz < 12000000) {
+      ITERS = 50;
+    } else {
+      ITERS = 100;
+    }
   }
 }
 
 void benchmark() {
-  unsigned int ITERS = getNumIterations();
+  setNumIterations();
   unsigned long n = csrMatrix->n;
   
-  Profiler::recordTime("multByM", [ITERS]() {
+  Profiler::recordTime("multByM", []() {
     for (unsigned i=0; i < ITERS; i++) {
       method->spmv(vVector, wVector);
     }
