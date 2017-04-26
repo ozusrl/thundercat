@@ -82,14 +82,16 @@ vector<MatrixStripeInfo> *Matrix::getStripeInfos(unsigned int numPartitions) {
     unsigned int rowIndexStart = rowIndex;
     unsigned long valIndexStart = valIndex;
     unsigned long numElementsCovered = 0;
-    while(numElementsCovered < chunkSize && rowIndex < this->n) {
-      numElementsCovered += this->rows[rowIndex+1] - this->rows[rowIndex];
-      rowIndex++;
-    }
-    valIndex += numElementsCovered;
+    
     if (partitionIndex == numPartitions - 1) {
       rowIndex = this->n;
       valIndex = this->nz;
+    } else {
+      while(numElementsCovered < chunkSize && rowIndex < this->n) {
+        numElementsCovered += this->rows[rowIndex+1] - this->rows[rowIndex];
+        rowIndex++;
+      }
+      valIndex += numElementsCovered;
     }
     
     MatrixStripeInfo stripeInfo;
