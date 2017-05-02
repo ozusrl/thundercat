@@ -128,6 +128,9 @@ void CSRbyNZCodeEmitter::dumpPushPopHeader() {
   emitPushArmInst();
 
   emitLDROffsetArmInst(ARM::R7, ARM::SP, 32); // load vals into R7
+  emitADDOffsetArmInst(ARM::R2, ARM::R2, (int)(sizeof(int) * baseRowsIndex));
+  emitADDOffsetArmInst(ARM::R3, ARM::R3, (int)(sizeof(int) * baseValsIndex));
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, (int)(sizeof(double) * baseValsIndex));
 }
 
 void CSRbyNZCodeEmitter::dumpPushPopFooter() {

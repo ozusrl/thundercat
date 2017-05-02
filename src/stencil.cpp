@@ -123,6 +123,8 @@ void StencilCodeEmitter::emit() {
 void StencilCodeEmitter::dumpPushPopHeader() {
   emitPushArmInst();
   emitLDROffsetArmInst(ARM::R7, ARM::SP, 32); // load vals into R7
+  emitADDOffsetArmInst(ARM::R7, ARM::R7, sizeof(double) * baseValsIndex);
+  emitADDOffsetArmInst(ARM::R2, ARM::R2, sizeof(int) * baseRowsIndex);
 }
 
 void StencilCodeEmitter::dumpPushPopFooter() {
