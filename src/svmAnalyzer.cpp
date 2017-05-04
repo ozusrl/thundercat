@@ -173,21 +173,27 @@ void SVMAnalyzer::printFeatures() {
   }
   
   
-  cout << "Matrix N NZ NonEmptyRows MaxRowLength NumRowsWithSameLengthAsPreviousRow"
-       << "CSRbyNZGroups SumOfRowLengths RowPerNZGroup "
-       << "LengthPerNZGroup numSingleRowStencils numMultiRowStencils "
+  cout << "Matrix N NZ NonEmptyRows NZPerRow MaxRowLength NumRowsWithSameLengthAsPreviousRow "
+       << "CSRbyNZGroups SumOfRowLengths RowPerNZGroup LengthPerNZGroup "
+
+       << "numSingleRowStencils numMultiRowStencils "
        << "sumOfSingleRowStencilLengths sumOfMultiRowStencilLengths RowPerMultirowStencil "
        << "RowPerSinglerowStencil LengthPerMultirowStencil NumElementsPerStencil "
+
        << "NumDistinctValues "
+
        << "Num44Patterns sumOfPatternLengths44 numBlocks44 "
-       << "numBlocksPerPattern44 LengthsPerPattern44 NumElementsPerPattern44 "
+       << "numBlocksPerPattern44 PatternLengthPerPattern44 RatioElementsCoveredByGoodPatterns44 "
+
        << "Num55Patterns sumOfPatternLengths55 numBlocks55 "
-       << "numBlocksPerPattern55 LengthsPerPattern55 NumElementsPerPattern55 "
-       << "NZPerRow\n";
+       << "numBlocksPerPattern55 PatternLengthPerPattern55 RatioElementsCoveredByGoodPatterns55 "
+
+       << "\n";
   // General
   cout << (stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " ";
   cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) << " ";
   cout << numNonEmptyRows << " ";
+  cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) / (double)(stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " "; // NZ per row
   cout << maxRowLength << " ";
   cout << numRowsWithSameLengthAsPreviousRow << " ";
   
@@ -215,13 +221,11 @@ void SVMAnalyzer::printFeatures() {
 
   // GenOSKI44
   cout << patterns44.size() << " ";
-
   cout << sumOfPatternLengths44 << " ";
   cout << numBlocks44 << " ";
-  cout << numBlocks44 / (double)patterns44.size() << " ";
   
+  cout << numBlocks44 / (double)patterns44.size() << " ";
   cout << sumOfPatternLengths44 / (double)patterns44.size() << " ";
-
   cout << numElementsCoveredByGoodPatterns44 / (double)numElementsAnalyzedForGenOSKI44 << " ";
 
   // GenOSKI55
@@ -234,9 +238,6 @@ void SVMAnalyzer::printFeatures() {
   cout << sumOfPatternLengths55 / (double)patterns55.size() << " ";
   
   cout << numElementsCoveredByGoodPatterns55 / (double)numElementsAnalyzedForGenOSKI55 << " ";
-  
-  // NZ per row
-  cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) / (double)(stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " ";
   
   cout << "\n";
 }
