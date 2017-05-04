@@ -10,6 +10,8 @@ if [ -z ${MATRICES+x} ]; then
     exit 1
 fi
 
+source /opt/intel/bin/compilervars.sh intel64
+
 methodName=$1
 methodParam1=$2
 methodParam2=$3

@@ -10,6 +10,8 @@ if [ -z ${MATRICES+x} ]; then
   exit 1
 fi
 
+source /opt/intel/bin/compilervars.sh intel64
+
 mkdir -p ../data
 
 methodName=$1
