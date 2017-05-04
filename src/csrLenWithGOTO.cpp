@@ -39,7 +39,7 @@ void CSRLenWithGOTO::analyzeMatrix() {
 ///
 
 void CSRLenWithGOTO::convertMatrix() {
-  int *rows = new int[csrMatrix->n + 1];
+  int *rows = new int[csrMatrix->n + stripeInfos->size()]; // 1 terminating slot for each stripe
   int *cols = csrMatrix->cols;
   double *vals = csrMatrix->vals;
   
@@ -48,13 +48,13 @@ void CSRLenWithGOTO::convertMatrix() {
     int i;
     for (i = stripeInfos->at(t).rowIndexBegin; i < stripeInfos->at(t).rowIndexEnd; i++) {
       int length = csrMatrix->rows[i + 1] - csrMatrix->rows[i];
-      rows[i] = -(length * 22);
+      rows[i + t] = -(length * 22);
     }
-    rows[i] = 5 + 5 + 3 + 3 + 4 + 7 + 3 + 3;
+    rows[i + t] = 5 + 5 + 3 + 3 + 4 + 7 + 3 + 3;
   }
   
   matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
-  matrix->numRows = csrMatrix->n + 1;
+  matrix->numRows = csrMatrix->n + stripeInfos->size();
   matrix->numCols = csrMatrix->nz;
   matrix->numVals = csrMatrix->nz;
 }
@@ -68,25 +68,22 @@ public:
   CSRLenWithGOTOCodeEmitter(X86Assembler *assembler,
                             unsigned long maxRowLength,
                             unsigned long baseValsIndex,
-                            unsigned long baseRowsIndex,
-                            int N) {
+                            unsigned long baseRowsIndex) {
     this->assembler = assembler;
     this->maxRowLength = maxRowLength;
     this->baseValsIndex = baseValsIndex;
     this->baseRowsIndex = baseRowsIndex;
-    this->N = N;
   }
   
-  void emit();
+  void emit(int stripeIndex);
   
 private:
   X86Assembler *assembler;
   unsigned long maxRowLength;
   unsigned long baseValsIndex;
   unsigned long baseRowsIndex;
-  int N;
 
-  void emitHeader();
+  void emitHeader(int stripeIndex);
   
   void emitFooter();
   
@@ -100,18 +97,17 @@ void CSRLenWithGOTO::emitMultByMFunction(unsigned int index) {
   CSRLenWithGOTOCodeEmitter emitter(&assembler,
                                  maxRowLength,
                                  stripeInfos->at(index).valIndexBegin,
-                                 stripeInfos->at(index).rowIndexBegin,
-                                 N);
-  emitter.emit();
+                                 stripeInfos->at(index).rowIndexBegin);
+  emitter.emit(index);
 }
 
-void CSRLenWithGOTOCodeEmitter::emit() {
-  emitHeader();
+void CSRLenWithGOTOCodeEmitter::emit(int stripeIndex) {
+  emitHeader(stripeIndex);
   emitMainLoop();
   emitFooter();
 }
 
-void CSRLenWithGOTOCodeEmitter::emitHeader() {
+void CSRLenWithGOTOCodeEmitter::emitHeader(int stripeIndex) {
   // rows is in %rdx, cols is in %rcx, vals is in %r8
   assembler->push(r8);
   assembler->push(r9);
@@ -125,7 +121,7 @@ void CSRLenWithGOTOCodeEmitter::emitHeader() {
 
   assembler->lea(r8, ptr(r8, (int)baseValsIndex * sizeof(double)));
   assembler->lea(r9, ptr(rcx, (int)baseValsIndex * sizeof(int))); // using %r9 for cols
-  assembler->lea(r11, ptr(rdx, (int)baseRowsIndex * sizeof(int))); // using %r11 for rows
+  assembler->lea(r11, ptr(rdx, ((int)baseRowsIndex + stripeIndex) * sizeof(int))); // using %r11 for rows
   assembler->lea(rsi, ptr(rsi, (int)baseRowsIndex * sizeof(double)));
 }
 
