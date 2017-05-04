@@ -22,6 +22,9 @@ void SVMAnalyzer::printFeatures() {
   blockPatterns44.resize(matrix->n / 4 + 1);
   blockPatterns55.resize(matrix->n / 5 + 1);
   unsigned long numNonEmptyRows = 0;
+  unsigned long maxRowLength = 0;
+  int previousRowLength = -1;
+  unsigned long numRowsWithSameLengthAsPreviousRow = 0;
   set<unsigned int> nzGroups;
   unordered_set<double> distinctValues;
   map<vector<int>, unsigned int> stencils;
@@ -52,6 +55,15 @@ void SVMAnalyzer::printFeatures() {
     int rowStart = matrix->rows[i];
     int rowEnd = matrix->rows[i+1];
     unsigned int rowLength = rowEnd - rowStart;
+    
+    if (rowLength > maxRowLength) {
+      maxRowLength = rowLength;
+    }
+    if (rowLength == previousRowLength) {
+      numRowsWithSameLengthAsPreviousRow++;
+    }
+    previousRowLength = rowLength;
+    
     vector<int> stencil;
     int blockRow4 = i/4;
     int blockRow5 = i/5;
@@ -161,7 +173,8 @@ void SVMAnalyzer::printFeatures() {
   }
   
   
-  cout << "Matrix N NZ NonEmptyRows CSRbyNZGroups SumOfRowLengths RowPerNZGroup "
+  cout << "Matrix N NZ NonEmptyRows MaxRowLength NumRowsWithSameLengthAsPreviousRow"
+       << "CSRbyNZGroups SumOfRowLengths RowPerNZGroup "
        << "LengthPerNZGroup numSingleRowStencils numMultiRowStencils "
        << "sumOfSingleRowStencilLengths sumOfMultiRowStencilLengths RowPerMultirowStencil "
        << "RowPerSinglerowStencil LengthPerMultirowStencil NumElementsPerStencil "
@@ -175,6 +188,8 @@ void SVMAnalyzer::printFeatures() {
   cout << (stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " ";
   cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) << " ";
   cout << numNonEmptyRows << " ";
+  cout << maxRowLength << " ";
+  cout << numRowsWithSameLengthAsPreviousRow << " ";
   
   // CSRbyNZ
   cout << nzGroups.size() << " ";
