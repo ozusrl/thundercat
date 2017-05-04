@@ -91,7 +91,7 @@ std::vector<CodeHolder*> *Specializer::getCodeHolders() {
   return &codeHolders;
 }
 
-void Specializer::spmv(double *v, double *w) {
+void Specializer::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned j = 0; j < functions.size(); j++) {
     functions[j](v, w, matrix->rows, matrix->cols, matrix->vals);

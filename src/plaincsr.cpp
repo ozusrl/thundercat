@@ -3,7 +3,7 @@
 using namespace thundercat;
 using namespace std;
 
-void PlainCSR::spmv(double *v, double *w) {
+void PlainCSR::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -18,7 +18,7 @@ void PlainCSR::spmv(double *v, double *w) {
   }
 }
 
-void PlainCSR2::spmv(double *v, double *w) {
+void PlainCSR2::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -38,7 +38,7 @@ void PlainCSR2::spmv(double *v, double *w) {
   }
 }
 
-void PlainCSR4::spmv(double *v, double *w) {
+void PlainCSR4::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -60,7 +60,7 @@ void PlainCSR4::spmv(double *v, double *w) {
   }
 }
 
-void PlainCSR8::spmv(double *v, double *w) {
+void PlainCSR8::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;

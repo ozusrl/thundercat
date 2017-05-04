@@ -3,7 +3,7 @@
 using namespace thundercat;
 using namespace std;
 
-void DuffsDevice4::spmv(double *v, double *w) {
+void DuffsDevice4::spmv(double* __restrict v, double* __restrict w) {
   const int M = 4;
   const int *rows = matrix->rows;
   const int *cols = matrix->cols;
@@ -17,7 +17,7 @@ void DuffsDevice4::spmv(double *v, double *w) {
       int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
-      int currentCase = length % M;
+      const int currentCase = length % M;
       switch (currentCase) {
           do {
             sum += vals[k] * v[cols[k]]; k++;
@@ -37,7 +37,7 @@ void DuffsDevice4::spmv(double *v, double *w) {
   }
 }
 
-void DuffsDevice6::spmv(double *v, double *w) {
+void DuffsDevice6::spmv(double* __restrict v, double* __restrict w) {
   const int M = 6;
   const int *rows = matrix->rows;
   const int *cols = matrix->cols;
@@ -51,7 +51,7 @@ void DuffsDevice6::spmv(double *v, double *w) {
       int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
-      int currentCase = length % M;
+      const int currentCase = length % M;
       switch (currentCase) {
           do {
             sum += vals[k] * v[cols[k]]; k++;
@@ -75,7 +75,7 @@ void DuffsDevice6::spmv(double *v, double *w) {
   }
 }
 
-void DuffsDevice8::spmv(double *v, double *w) {
+void DuffsDevice8::spmv(double* __restrict v, double* __restrict w) {
   const int M = 8;
   const int *rows = matrix->rows;
   const int *cols = matrix->cols;
@@ -89,7 +89,7 @@ void DuffsDevice8::spmv(double *v, double *w) {
       int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
-      int currentCase = length % M;
+      const int currentCase = length % M;
       switch (currentCase) {
           do {
             sum += vals[k] * v[cols[k]]; k++;
@@ -117,7 +117,7 @@ void DuffsDevice8::spmv(double *v, double *w) {
   }
 }
 
-void DuffsDevice12::spmv(double *v, double *w) {
+void DuffsDevice12::spmv(double* __restrict v, double* __restrict w) {
   const int M = 12;
   const int *rows = matrix->rows;
   const int *cols = matrix->cols;
@@ -131,7 +131,7 @@ void DuffsDevice12::spmv(double *v, double *w) {
       int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
-      int currentCase = length % M;
+      const int currentCase = length % M;
       switch (currentCase) {
           do {
             sum += vals[k] * v[cols[k]]; k++;

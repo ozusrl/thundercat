@@ -27,7 +27,7 @@ namespace thundercat {
     
     virtual void processMatrix() final;
   
-    virtual void spmv(double *v, double *w) = 0;
+    virtual void spmv(double* __restrict v, double* __restrict w) = 0;
     
   protected:
     virtual void analyzeMatrix();
@@ -46,7 +46,7 @@ namespace thundercat {
   public:
     virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
     
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
   
   ///
@@ -54,22 +54,22 @@ namespace thundercat {
   ///
   class PlainCSR: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class PlainCSR2: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class PlainCSR4: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class PlainCSR8: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
 
@@ -78,22 +78,22 @@ namespace thundercat {
   ///
   class DuffsDevice4: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class DuffsDevice6: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class DuffsDevice8: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   class DuffsDevice12: public SpMVMethod {
   public:
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
   ///
@@ -109,7 +109,7 @@ namespace thundercat {
   
     virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
 
-    virtual void spmv(double *v, double *w) final;
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
     
   protected:
     virtual void emitMultByMFunction(unsigned int index) = 0;

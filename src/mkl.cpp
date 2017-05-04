@@ -13,7 +13,7 @@ void MKL::init(Matrix *csrMatrix, unsigned int numThreads) {
   mkl_set_num_threads_local(numThreads);
 }
 
-void MKL::spmv(double *v, double *w) {
+void MKL::spmv(double* __restrict v, double* __restrict w) {
   double alpha = 1.0;
   double beta = 1.0;
   int *ptrb = matrix->rows;
@@ -28,7 +28,7 @@ void MKL::spmv(double *v, double *w) {
 
 #else
 
-void MKL::spmv(double *v, double *w) {
+void MKL::spmv(double* __restrict v, double* __restrict w) {
   cerr << "MKL is not supported on this platform.\n";
   exit(1);
 }

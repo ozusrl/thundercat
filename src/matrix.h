@@ -17,16 +17,17 @@ namespace thundercat {
   
   class Matrix final {
   public:
-    int *rows;
-    int *cols;
-    double *vals;
+    int* __restrict rows;
+    int* __restrict cols;
+    double* __restrict vals;
     unsigned long n;
     unsigned long nz;
     // For some representations, numRows, numCols, numVals
     // may not be the same as n, nz.
     unsigned long numRows, numCols, numVals;
     
-    Matrix(int *rows, int *cols, double *vals, unsigned long n, unsigned long nz);
+    Matrix(int* __restrict rows, int* __restrict cols, double* __restrict vals,
+           unsigned long n, unsigned long nz);
 
     ~Matrix();
     

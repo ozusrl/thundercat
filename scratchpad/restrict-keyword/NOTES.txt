@@ -1,0 +1,23 @@
+# Plain CSR
+
+## Clang (v4.0.0)
+
+* `__restrict` keyword has no effect when we use
+the temp variable `sum`, as in `plainCSR.c`.
+
+* If we do not use the temp variable, `__restrict`
+helps improve the code. See the diff between
+`plainCSR_noTempVar.s` and `plainCSR_noTempVar_restrict.s`.
+
+* Not using a temp variable but keeping the `_restrict` keyword essentially
+yields the same code as using a temp var without the keyword.
+Compare `plainCSR.s` to `plainCSR_noTempVar_restrict.s`.
+
+## icc (v17.0.2)
+
+* Similar conclusions.
+
+# Duff's Device
+
+Using the `__restrict` keyword does not change the
+output with both compilers.
