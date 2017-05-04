@@ -223,6 +223,19 @@ namespace thundercat {
   private:
     std::vector<unsigned long> maxRowLengths;
   };
+
+  ///
+  /// CSRLenWithGOTO
+  ///
+  class CSRLenWithGOTO: public Specializer {
+  protected:
+    virtual void emitMultByMFunction(unsigned int index) final;
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+    
+  private:
+    std::vector<unsigned long> maxRowLengths;
+  };
 }
 
 #endif

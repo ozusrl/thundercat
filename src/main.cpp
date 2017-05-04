@@ -64,6 +64,7 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string rowPattern("RowPattern");
   string unrollingWithGOTO("UnrollingWithGOTO");
   string csrWithGOTO("CSRWithGOTO");
+  string csrLenWithGOTO("CSRLenWithGOTO");
   string mkl("MKL");
   string plainCSR("PlainCSR");
   string plainCSR2("PlainCSR2");
@@ -107,6 +108,8 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new UnrollingWithGOTO();
   } else if(csrWithGOTO.compare(*argptr) == 0) {
     method = new CSRWithGOTO();
+  } else if(csrLenWithGOTO.compare(*argptr) == 0) {
+    method = new CSRLenWithGOTO();
   } else if(mkl.compare(*argptr) == 0) {
     method = new MKL();
   } else if(plainCSR.compare(*argptr) == 0) {

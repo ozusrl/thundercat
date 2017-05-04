@@ -15,6 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 set(SOURCE_FILES
                  csrByNZ.cpp
+                 csrLenWithGOTO.cpp
                  csrWithGOTO.cpp
                  duffsDevice.cpp
                  genOski.cpp
