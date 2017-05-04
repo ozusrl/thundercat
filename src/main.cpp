@@ -6,7 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdio.h>
-#include <limits>
 
 using namespace thundercat;
 using namespace std;
@@ -243,24 +242,42 @@ void setNumIterations() {
   if (ITERS < 0) {
     unsigned long nz = csrMatrix->nz;
 
-    // Warmup
-    for (unsigned i = 0; i < 3; i++) {
-      method->spmv(vVector, wVector);
+    if (nz < 5000) {
+      ITERS = 500000;
+    } else if (nz < 10000) {
+      ITERS = 200000;
+    } else if (nz < 50000) {
+      ITERS = 100000;
+    } else if (nz < 100000) {
+      ITERS = 50000;
+    } else if (nz < 200000) {
+      ITERS = 10000;
+    } else if (nz < 1000000) {
+      ITERS = 5000;
+    } else if (nz < 2000000) {
+      ITERS = 1000;
+    } else if (nz < 3000000) {
+      ITERS = 500;
+    } else if (nz < 5000000) {
+      ITERS = 200;
+    } else if (nz < 8000000) {
+      ITERS = 100;
+    } else if (nz < 12000000) {
+      ITERS = 50;
+    } else {
+      ITERS = 100;
     }
-
-    auto start = std::chrono::high_resolution_clock::now();
-    method->spmv(vVector, wVector);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    // Aim to run for about 3 seconds or at least 5 iterations
-    ITERS = std::max(5, 3000 / (int)duration);
-    cout << "ITERS = " << ITERS << "\n";
   }
 }
 
 void benchmark() {
   setNumIterations();
   unsigned long n = csrMatrix->n;
+  
+  // Warmup
+  for (unsigned i = 0; i < std::min(3, ITERS); i++) {
+    method->spmv(vVector, wVector);
+  }
   
   Profiler::recordTime("multByM", []() {
     for (unsigned i=0; i < ITERS; i++) {
