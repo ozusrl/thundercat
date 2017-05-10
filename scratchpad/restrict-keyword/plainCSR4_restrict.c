@@ -1,4 +1,5 @@
-void spMV_CSR1(double *vals, int *cols, int *rows, int N, double *v, double *w) {
+void spMV_CSR1(double* __restrict vals, int* __restrict cols, int* __restrict rows,
+               int N, double* __restrict v, double* __restrict w) {
   for (int i = 0; i < N; i++) {
     double ww = 0.0;
     int k;
