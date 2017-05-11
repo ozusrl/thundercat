@@ -1,0 +1,4 @@
+# Unrolling
+
+Tested the two variations, `plainCSR4.c` and `plainCSR4_4.c`.
+The latter version is significantly (~0.80x) and consistently slower on turing.
