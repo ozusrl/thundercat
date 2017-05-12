@@ -31,7 +31,7 @@ void UnrollingWithGOTO::convertMatrix() {
       for (int rowIndex : *(rowByNZ.second.getRowIndices())) {
         *rowsPtr++ = rowIndex;
         if (rowCount != 0) {
-          *(rowsPtr-2) = rowLength * -(4 + 5 + 6 + 4 + 4) - 7;
+          *(rowsPtr-2) = rowLength * -(4 + 6 + 3 + 5 + 4) - 7;
         }
         rowsPtr++;
         int k = csrMatrix->rows[rowIndex];
@@ -140,14 +140,14 @@ void UnrollingWithGOTOCodeEmitter::emitMainLoop(int maxRowLength) {
   for (int i = 0; i < maxRowLength; ++i) {
     // movslq (%r9,%rax,4), %rbx ## cols[k]
     assembler->movsxd(rbx, ptr(r9, rax, 2));
-    // movsd (%rdi,%rbx,8), %xmm1 ## v[cols[k]]
-    assembler->movsd(xmm1, ptr(rdi, rbx, 3));
-    // mulsd (%r8,%rax,8), %xmm1 ## ...  *  vals[k]
-    assembler->mulsd(xmm1, ptr(r8, rax, 3));
+    // movsd (%r8,%rax,8), %xmm1 ## ...  *  vals[k]
+    assembler->movsd(xmm1, ptr(r8, rax, 3));
+    // addq $"1", %rax
+    assembler->inc(rax);
+    // mulsd (%rdi,%rbx,8), %xmm1 ## v[cols[k]]
+    assembler->mulsd(xmm1, ptr(rdi, rbx, 3));
     // addsd %xmm1, %xmm0
     assembler->addsd(xmm0, xmm1);
-    // addq $"1", %rax
-    assembler->add(rax, 1);
   }
 
   assembler->lea(rdx, ptr(rip));

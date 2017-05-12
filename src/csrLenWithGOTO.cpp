@@ -152,14 +152,14 @@ void CSRLenWithGOTOCodeEmitter::emitMainLoop() {
   for (int i = 0; i < maxRowLength; ++i) {
     // movslq (%r9,%rax,4), %rbx ## cols[k]
     assembler->movsxd(rbx, ptr(r9, rax, 2));
-    // movsd (%rdi,%rbx,8), %xmm1 ## v[cols[k]]
-    assembler->movsd(xmm1, ptr(rdi, rbx, 3));
-    // mulsd (%r8,%rax,8), %xmm1 ## ...  *  vals[k]
-    assembler->mulsd(xmm1, ptr(r8, rax, 3));
-    // addsd %xmm1, %xmm0
-    assembler->addsd(xmm0, xmm1);
+    // movsd (%r8,%rax,8), %xmm1 ## ...  *  vals[k]
+    assembler->movsd(xmm1, ptr(r8, rax, 3));
     // addq $"1", %rax
     assembler->inc(rax);
+    // mulsd (%rdi,%rbx,8), %xmm1 ## v[cols[k]]
+    assembler->mulsd(xmm1, ptr(rdi, rbx, 3));
+    // addsd %xmm1, %xmm0
+    assembler->addsd(xmm0, xmm1);
   }
   Label loopEnd = assembler->newLabel();
   assembler->bind(loopEnd);
