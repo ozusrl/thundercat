@@ -280,21 +280,22 @@ void benchmark() {
   setNumIterations();
   unsigned long n = csrMatrix->n;
   
-  // Warmup
-  for (unsigned i = 0; i < std::min(3, ITERS); i++) {
-    method->spmv(vVector, wVector);
-  }
-  
-  Profiler::recordTime("multByM", []() {
-    for (unsigned i=0; i < ITERS; i++) {
-      method->spmv(vVector, wVector);
-    }
-  });
-  
   if (__DEBUG__) {
+    method->spmv(vVector, wVector);
     for(int i = 0; i < n; ++i)
       printf("%g\n", wVector[i]);
   } else {
+    // Warmup
+    for (unsigned i = 0; i < std::min(3, ITERS); i++) {
+      method->spmv(vVector, wVector);
+    }
+  
+    Profiler::recordTime("multByM", []() {
+      for (unsigned i=0; i < ITERS; i++) {
+        method->spmv(vVector, wVector);
+      }
+    });
+
     Profiler::print(ITERS);
   }
 }
