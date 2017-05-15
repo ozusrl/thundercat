@@ -10,6 +10,8 @@ if [ -z ${MATRICES+x} ]; then
     exit 1
 fi
 
+source /opt/intel/bin/compilervars.sh intel64
+
 methodName=$1
 methodParam1=$2
 methodParam2=$3
@@ -52,7 +54,7 @@ findMins() {
         conversionTime=`grep convertMatrix $statsFile | awk '{print $2}'`
         setMultByMFunctionsTime=`grep setMultByMFunctions $statsFile | awk '{print $2}'`
         if [ "$setMultByMFunctionsTime" = "" ]; then
-            $setMultByMFunctionsTime=0
+            setMultByMFunctionsTime=0
         fi
         emissionTime=`grep emitCode $statsFile | awk '{print $2}'`
         codeGenTime=`grep generateFunctions $statsFile | awk '{print $2}'`
