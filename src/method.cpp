@@ -6,6 +6,7 @@
 
 using namespace thundercat;
 using namespace asmjit;
+using namespace std;
 
 extern bool DUMP_OBJECT;
 
@@ -98,3 +99,32 @@ void Specializer::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
+///
+/// LCSR Analyzer
+///
+vector<int> *RowByNZ::getRowIndices() {
+  return &rowIndices;
+}
+
+void RowByNZ::addRowIndex(int index) {
+  rowIndices.push_back(index);
+}
+
+void LCSRAnalyzer::analyzeMatrix(Matrix *csrMatrix,
+                                 std::vector<MatrixStripeInfo> *stripeInfos,
+                                 std::vector<NZtoRowMap> &rowByNZLists) {
+  rowByNZLists.resize(stripeInfos->size());
+  
+#pragma omp parallel for
+  for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
+    auto &stripeInfo = stripeInfos->at(threadIndex);
+    for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
+      int rowStart = csrMatrix->rows[rowIndex];
+      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowLength = rowEnd - rowStart;
+      if (rowLength > 0) {
+        rowByNZLists[threadIndex][rowLength].addRowIndex(rowIndex);
+      }
+    }
+  }
+}

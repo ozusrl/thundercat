@@ -12,29 +12,9 @@ using namespace x86;
 ///
 /// Analysis
 ///
-vector<int> *RowByNZ::getRowIndices() {
-  return &rowIndices;
-}
-
-void RowByNZ::addRowIndex(int index) {
-  rowIndices.push_back(index);
-}
-
 void CSRbyNZ::analyzeMatrix() {
-  rowByNZLists.resize(stripeInfos->size());
-  
-#pragma omp parallel for
-  for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
-    auto &stripeInfo = stripeInfos->at(threadIndex);
-    for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
-      int rowLength = rowEnd - rowStart;
-      if (rowLength > 0) {
-        rowByNZLists[threadIndex][rowLength].addRowIndex(rowIndex);
-      }
-    }
-  }
+  LCSRAnalyzer analyzer;
+  analyzer.analyzeMatrix(csrMatrix, stripeInfos, rowByNZLists);
 }
 
 ///

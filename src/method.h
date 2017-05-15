@@ -95,6 +95,28 @@ namespace thundercat {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
+  
+  ///
+  /// LCSR utility
+  ///
+  class RowByNZ {
+  public:
+    std::vector<int> *getRowIndices();
+    void addRowIndex(int index);
+    
+  private:
+    std::vector<int> rowIndices;
+  };
+  
+  // To keep the map keys in ascending order, using the "greater" comparator.
+  typedef std::map<unsigned long, RowByNZ, std::greater<unsigned long> > NZtoRowMap;
+  
+  class LCSRAnalyzer {
+  public:
+    virtual void analyzeMatrix(Matrix *csrMatrix,
+                               std::vector<MatrixStripeInfo> *stripeInfos,
+                               std::vector<NZtoRowMap> &rowByNZLists) final;
+  };
 
   ///
   /// Specializer
@@ -127,18 +149,6 @@ namespace thundercat {
   ///
   /// CSRbyNZ
   ///
-  class RowByNZ {
-  public:
-    std::vector<int> *getRowIndices();
-    void addRowIndex(int index);
-    
-  private:
-    std::vector<int> rowIndices;
-  };
-  
-  // To keep the map keys in ascending order, using the "greater" comparator.
-  typedef std::map<unsigned long, RowByNZ, std::greater<unsigned long> > NZtoRowMap;
-  
   class CSRbyNZ: public Specializer {
   protected:
     virtual void emitMultByMFunction(unsigned int index);
