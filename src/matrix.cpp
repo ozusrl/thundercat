@@ -216,3 +216,14 @@ Matrix* MMMatrix::toCSRMatrix() {
   return matrix;
 }
 
+LCSRInfo::LCSRInfo(int numLengths, int* length, int *lenStart) {
+  this->numLengths = numLengths;
+  this->length = length;
+  this->lenStart = lenStart;
+}
+
+LCSRInfo::~LCSRInfo() {
+  delete[] length;
+  delete[] lenStart;
+}
+

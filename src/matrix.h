@@ -73,6 +73,19 @@ namespace thundercat {
   private:
     void sort();
   };
+  
+  class LCSRInfo final {
+  public:
+    int numLengths;
+    int *length;
+    int *lenStart;
+    
+    LCSRInfo(int numLengths, int *length, int *lenStart);
+    
+    ~LCSRInfo();
+  };
+  
+
 
 }
 

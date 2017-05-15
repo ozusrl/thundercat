@@ -117,6 +117,30 @@ namespace thundercat {
                                std::vector<MatrixStripeInfo> *stripeInfos,
                                std::vector<NZtoRowMap> &rowByNZLists) final;
   };
+  
+  ///
+  /// Duff's Device for the LCSR format
+  ///
+  class DuffsDeviceLCSR: public SpMVMethod {
+  protected:
+    virtual void analyzeMatrix() final;
+    virtual void convertMatrix() final;
+    
+  protected:
+    std::vector<NZtoRowMap> rowByNZLists;
+    LCSRInfo *lcsrInfo;
+  };
+
+  class DuffsDeviceLCSR8: public DuffsDeviceLCSR {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+  
+  class DuffsDeviceLCSR16: public DuffsDeviceLCSR {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
 
   ///
   /// Specializer

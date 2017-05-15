@@ -74,6 +74,8 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string duffsDevice6("DuffsDevice6");
   string duffsDevice8("DuffsDevice8");
   string duffsDevice12("DuffsDevice12");
+  string duffsDeviceLCSR8("DuffsDeviceLCSR8");
+  string duffsDeviceLCSR16("DuffsDeviceLCSR16");
   
   string debugFlag("-debug");
   string dumpObjFlag("-dump_object");
@@ -128,6 +130,10 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new DuffsDevice8();
   } else if(duffsDevice12.compare(*argptr) == 0) {
     method = new DuffsDevice12();
+  } else if(duffsDeviceLCSR8.compare(*argptr) == 0) {
+    method = new DuffsDeviceLCSR8();
+  } else if(duffsDeviceLCSR16.compare(*argptr) == 0) {
+    method = new DuffsDeviceLCSR16();
   } else {
     std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);
