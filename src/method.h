@@ -141,6 +141,10 @@ namespace thundercat {
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
+  class DuffsDeviceLCSR32: public DuffsDeviceLCSR {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
 
   ///
   /// Specializer
