@@ -79,24 +79,28 @@ void DuffsDeviceLCSR8::spmv(double* __restrict v, double* __restrict w) {
       int rowIndex = rows[r];
       double sum = 0.0;
       int n = iterations;
+
+      vals += enter;
+      cols += enter;
       
       switch (enter) {
         case 0: do {
-          sum += vals[k] * v[cols[k]]; k++;
+          vals += 8; cols += 8;
+          sum += vals[k-8] * v[cols[k-8]];
         case 7:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-7] * v[cols[k-7]];
         case 6:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-6] * v[cols[k-6]];
         case 5:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-5] * v[cols[k-5]];
         case 4:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-4] * v[cols[k-4]];
         case 3:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-3] * v[cols[k-3]];
         case 2:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-2] * v[cols[k-2]];
         case 1:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-1] * v[cols[k-1]];
         } while (--n > 0);
       }
       w[rowIndex] += sum;
@@ -125,39 +129,43 @@ void DuffsDeviceLCSR16::spmv(double* __restrict v, double* __restrict w) {
       double sum = 0.0;
       int n = iterations;
       
+      vals += enter;
+      cols += enter;
+
       switch (enter) {
         case 0: do {
-          sum += vals[k] * v[cols[k]]; k++;
+          vals += 16; cols += 16;
+          sum += vals[k-16] * v[cols[k-16]];
         case 15:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-15] * v[cols[k-15]];
         case 14:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-14] * v[cols[k-14]];
         case 13:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-13] * v[cols[k-13]];
         case 12:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-12] * v[cols[k-12]];
         case 11:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-11] * v[cols[k-11]];
         case 10:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-10] * v[cols[k-10]];
         case 9:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-9] * v[cols[k-9]];
         case 8:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-8] * v[cols[k-8]];
         case 7:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-7] * v[cols[k-7]];
         case 6:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-6] * v[cols[k-6]];
         case 5:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-5] * v[cols[k-5]];
         case 4:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-4] * v[cols[k-4]];
         case 3:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-3] * v[cols[k-3]];
         case 2:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-2] * v[cols[k-2]];
         case 1:
-          sum += vals[k] * v[cols[k]]; k++;
+          sum += vals[k-1] * v[cols[k-1]];
         } while (--n > 0);
       }
       w[rowIndex] += sum;
