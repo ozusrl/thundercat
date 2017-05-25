@@ -59,6 +59,47 @@ void DuffsDeviceLCSR::convertMatrix() {
   lcsrInfo = new LCSRInfo(numLengths, length, lenStart);
 }
 
+void DuffsDeviceLCSR4::spmv(double* __restrict v, double* __restrict w) {
+  const int M = 4;
+  const int *rows = matrix->rows;
+  const int *cols = matrix->cols;
+  const double *vals = matrix->vals;
+  
+  // TODO: Fix this for multi-threading
+  int k = 0;
+  for (int i = 0; i < lcsrInfo->numLengths; i++) {
+    int length = lcsrInfo->length[i];
+    if (length == 0) break;
+    
+    int lenEnd = lcsrInfo->lenStart[i + 1];
+    int enter = length % M;
+    const int iterations = (enter > 0) + (length / M);
+    
+    for (int r = lcsrInfo->lenStart[i]; r < lenEnd; r++) {
+      int rowIndex = rows[r];
+      double sum = 0.0;
+      int n = iterations;
+      
+      vals += enter;
+      cols += enter;
+      
+      switch (enter) {
+        case 0: do {
+          vals += 4; cols += 4;
+          sum += vals[k-4] * v[cols[k-4]];
+        case 3:
+          sum += vals[k-3] * v[cols[k-3]];
+        case 2:
+          sum += vals[k-2] * v[cols[k-2]];
+        case 1:
+          sum += vals[k-1] * v[cols[k-1]];
+        } while (--n > 0);
+      }
+      w[rowIndex] += sum;
+    }
+  }
+}
+
 void DuffsDeviceLCSR8::spmv(double* __restrict v, double* __restrict w) {
   const int M = 8;
   const int *rows = matrix->rows;

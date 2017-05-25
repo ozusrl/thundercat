@@ -35,9 +35,173 @@ void DuffsDeviceCSRDD::convertMatrix() {
   matrix->numVals = csrMatrix->nz;
 }
 
+DuffsDeviceCSRDD4::DuffsDeviceCSRDD4() :
+DuffsDeviceCSRDD(4) {
+  
+}
+
+DuffsDeviceCSRDD8::DuffsDeviceCSRDD8() :
+DuffsDeviceCSRDD(8) {
+  
+}
+
+DuffsDeviceCSRDD16::DuffsDeviceCSRDD16() :
+DuffsDeviceCSRDD(16) {
+  
+}
+
 DuffsDeviceCSRDD32::DuffsDeviceCSRDD32() :
 DuffsDeviceCSRDD(32) {
   
+}
+
+void DuffsDeviceCSRDD4::spmv(double* __restrict v, double* __restrict w) {
+#pragma omp parallel for
+  for (unsigned int t = 0; t < stripeInfos->size(); t++) {
+    int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
+    int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+    int k = stripeInfos->at(t).valIndexBegin;
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
+    for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
+      double sum = 0.0;
+      const int ddInfo = rows[i];
+      int n = ddInfo >> 8;
+      const int entrancePoint = ddInfo & 0x000000FF;
+      
+      vals += entrancePoint;
+      cols += entrancePoint;
+      
+      switch (entrancePoint) {
+          do {
+            vals += 4; cols += 4;
+            sum += vals[k-4] * v[cols[k-4]];
+          case 3:
+            sum += vals[k-3] * v[cols[k-3]];
+          case 2:
+            sum += vals[k-2] * v[cols[k-2]];
+          case 1:
+            sum += vals[k-1] * v[cols[k-1]];
+          case 0:
+            ;
+          }
+          while (--n >= 0);
+      }
+      w[i] += sum;
+    }
+  }
+}
+
+void DuffsDeviceCSRDD8::spmv(double* __restrict v, double* __restrict w) {
+#pragma omp parallel for
+  for (unsigned int t = 0; t < stripeInfos->size(); t++) {
+    int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
+    int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+    int k = stripeInfos->at(t).valIndexBegin;
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
+    for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
+      double sum = 0.0;
+      const int ddInfo = rows[i];
+      int n = ddInfo >> 8;
+      const int entrancePoint = ddInfo & 0x000000FF;
+      
+      vals += entrancePoint;
+      cols += entrancePoint;
+      
+      switch (entrancePoint) {
+          do {
+            vals += 8; cols += 8;
+            sum += vals[k-8] * v[cols[k-8]];
+          case 7:
+            sum += vals[k-7] * v[cols[k-7]];
+          case 6:
+            sum += vals[k-6] * v[cols[k-6]];
+          case 5:
+            sum += vals[k-5] * v[cols[k-5]];
+          case 4:
+            sum += vals[k-4] * v[cols[k-4]];
+          case 3:
+            sum += vals[k-3] * v[cols[k-3]];
+          case 2:
+            sum += vals[k-2] * v[cols[k-2]];
+          case 1:
+            sum += vals[k-1] * v[cols[k-1]];
+          case 0:
+            ;
+          }
+          while (--n >= 0);
+      }
+      w[i] += sum;
+    }
+  }
+}
+
+void DuffsDeviceCSRDD16::spmv(double* __restrict v, double* __restrict w) {
+#pragma omp parallel for
+  for (unsigned int t = 0; t < stripeInfos->size(); t++) {
+    int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
+    int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+    int k = stripeInfos->at(t).valIndexBegin;
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
+    for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
+      double sum = 0.0;
+      const int ddInfo = rows[i];
+      int n = ddInfo >> 8;
+      const int entrancePoint = ddInfo & 0x000000FF;
+      
+      vals += entrancePoint;
+      cols += entrancePoint;
+      
+      switch (entrancePoint) {
+          do {
+            vals += 16; cols += 16;
+            sum += vals[k-16] * v[cols[k-16]];
+          case 15:
+            sum += vals[k-15] * v[cols[k-15]];
+          case 14:
+            sum += vals[k-14] * v[cols[k-14]];
+          case 13:
+            sum += vals[k-13] * v[cols[k-13]];
+          case 12:
+            sum += vals[k-12] * v[cols[k-12]];
+          case 11:
+            sum += vals[k-11] * v[cols[k-11]];
+          case 10:
+            sum += vals[k-10] * v[cols[k-10]];
+          case 9:
+            sum += vals[k-9] * v[cols[k-9]];
+          case 8:
+            sum += vals[k-8] * v[cols[k-8]];
+          case 7:
+            sum += vals[k-7] * v[cols[k-7]];
+          case 6:
+            sum += vals[k-6] * v[cols[k-6]];
+          case 5:
+            sum += vals[k-5] * v[cols[k-5]];
+          case 4:
+            sum += vals[k-4] * v[cols[k-4]];
+          case 3:
+            sum += vals[k-3] * v[cols[k-3]];
+          case 2:
+            sum += vals[k-2] * v[cols[k-2]];
+          case 1:
+            sum += vals[k-1] * v[cols[k-1]];
+          case 0:
+            ;
+          }
+          while (--n >= 0);
+      }
+      w[i] += sum;
+    }
+  }
 }
 
 void DuffsDeviceCSRDD32::spmv(double* __restrict v, double* __restrict w) {

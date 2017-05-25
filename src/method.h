@@ -57,11 +57,6 @@ namespace thundercat {
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
-  class PlainCSR2: public SpMVMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
   class PlainCSR4: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
@@ -72,6 +67,15 @@ namespace thundercat {
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
+  class PlainCSR16: public SpMVMethod {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  class PlainCSR32: public SpMVMethod {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
 
   ///
   /// Duff's Device
@@ -80,22 +84,22 @@ namespace thundercat {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
-
-  class DuffsDevice6: public SpMVMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
+  
   class DuffsDevice8: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
-  class DuffsDevice12: public SpMVMethod {
+  class DuffsDevice16: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
-  
+
+  class DuffsDevice32: public SpMVMethod {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
   ///
   /// LCSR utility
   ///
@@ -131,6 +135,11 @@ namespace thundercat {
     LCSRInfo *lcsrInfo;
   };
 
+  class DuffsDeviceLCSR4: public DuffsDeviceLCSR {
+  public:
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
   class DuffsDeviceLCSR8: public DuffsDeviceLCSR {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
@@ -160,6 +169,27 @@ namespace thundercat {
     const int unrollingFactor;
   };
   
+  class DuffsDeviceCSRDD4: public DuffsDeviceCSRDD {
+  public:
+    DuffsDeviceCSRDD4();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  class DuffsDeviceCSRDD8: public DuffsDeviceCSRDD {
+  public:
+    DuffsDeviceCSRDD8();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  class DuffsDeviceCSRDD16: public DuffsDeviceCSRDD {
+  public:
+    DuffsDeviceCSRDD16();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
   class DuffsDeviceCSRDD32: public DuffsDeviceCSRDD {
   public:
     DuffsDeviceCSRDD32();

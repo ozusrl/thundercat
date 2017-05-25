@@ -66,17 +66,26 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string csrWithGOTO("CSRWithGOTO");
   string csrLenWithGOTO("CSRLenWithGOTO");
   string mkl("MKL");
+
   string plainCSR("PlainCSR");
-  string plainCSR2("PlainCSR2");
   string plainCSR4("PlainCSR4");
   string plainCSR8("PlainCSR8");
+  string plainCSR16("PlainCSR16");
+  string plainCSR32("PlainCSR32");
+
   string duffsDevice4("DuffsDevice4");
-  string duffsDevice6("DuffsDevice6");
   string duffsDevice8("DuffsDevice8");
-  string duffsDevice12("DuffsDevice12");
+  string duffsDevice16("DuffsDevice16");
+  string duffsDevice32("DuffsDevice32");
+
+  string duffsDeviceLCSR4("DuffsDeviceLCSR4");
   string duffsDeviceLCSR8("DuffsDeviceLCSR8");
   string duffsDeviceLCSR16("DuffsDeviceLCSR16");
   string duffsDeviceLCSR32("DuffsDeviceLCSR32");
+
+  string duffsDeviceCSRDD4("DuffsDeviceCSRDD4");
+  string duffsDeviceCSRDD8("DuffsDeviceCSRDD8");
+  string duffsDeviceCSRDD16("DuffsDeviceCSRDD16");
   string duffsDeviceCSRDD32("DuffsDeviceCSRDD32");
   
   string debugFlag("-debug");
@@ -118,26 +127,36 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new MKL();
   } else if(plainCSR.compare(*argptr) == 0) {
     method = new PlainCSR();
-  } else if(plainCSR2.compare(*argptr) == 0) {
-    method = new PlainCSR2();
   } else if(plainCSR4.compare(*argptr) == 0) {
     method = new PlainCSR4();
   } else if(plainCSR8.compare(*argptr) == 0) {
     method = new PlainCSR8();
+  } else if(plainCSR16.compare(*argptr) == 0) {
+    method = new PlainCSR16();
+  } else if(plainCSR32.compare(*argptr) == 0) {
+    method = new PlainCSR32();
   } else if(duffsDevice4.compare(*argptr) == 0) {
     method = new DuffsDevice4();
-  } else if(duffsDevice6.compare(*argptr) == 0) {
-    method = new DuffsDevice6();
   } else if(duffsDevice8.compare(*argptr) == 0) {
     method = new DuffsDevice8();
-  } else if(duffsDevice12.compare(*argptr) == 0) {
-    method = new DuffsDevice12();
+  } else if(duffsDevice16.compare(*argptr) == 0) {
+    method = new DuffsDevice16();
+  } else if(duffsDevice32.compare(*argptr) == 0) {
+    method = new DuffsDevice32();
+  } else if(duffsDeviceLCSR4.compare(*argptr) == 0) {
+    method = new DuffsDeviceLCSR4();
   } else if(duffsDeviceLCSR8.compare(*argptr) == 0) {
     method = new DuffsDeviceLCSR8();
   } else if(duffsDeviceLCSR16.compare(*argptr) == 0) {
     method = new DuffsDeviceLCSR16();
   } else if(duffsDeviceLCSR32.compare(*argptr) == 0) {
     method = new DuffsDeviceLCSR32();
+  } else if(duffsDeviceCSRDD4.compare(*argptr) == 0) {
+    method = new DuffsDeviceCSRDD4();
+  } else if(duffsDeviceCSRDD8.compare(*argptr) == 0) {
+    method = new DuffsDeviceCSRDD8();
+  } else if(duffsDeviceCSRDD16.compare(*argptr) == 0) {
+    method = new DuffsDeviceCSRDD16();
   } else if(duffsDeviceCSRDD32.compare(*argptr) == 0) {
     method = new DuffsDeviceCSRDD32();
   } else {
