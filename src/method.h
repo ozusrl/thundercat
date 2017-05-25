@@ -147,6 +147,27 @@ namespace thundercat {
   };
 
   ///
+  /// Duff's Device for the CSRDD format
+  ///
+  class DuffsDeviceCSRDD: public SpMVMethod {
+  public:
+    DuffsDeviceCSRDD(int unrollingFactor);
+
+  protected:
+    virtual void convertMatrix() final;
+    
+  protected:
+    const int unrollingFactor;
+  };
+  
+  class DuffsDeviceCSRDD32: public DuffsDeviceCSRDD {
+  public:
+    DuffsDeviceCSRDD32();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  ///
   /// Specializer
   ///
   class Specializer : public SpMVMethod {

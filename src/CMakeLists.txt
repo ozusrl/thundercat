@@ -18,6 +18,7 @@ set(SOURCE_FILES
                  csrLenWithGOTO.cpp
                  csrWithGOTO.cpp
                  duffsDevice.cpp
+                 duffsDeviceCSRDD.cpp
                  duffsDeviceLCSR.cpp
                  genOski.cpp
                  main.cpp
