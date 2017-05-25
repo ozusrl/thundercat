@@ -61,20 +61,36 @@ void CSRbyNZ::convertMatrix() {
 ///
 class CSRbyNZCodeEmitter {
 public:
-  CSRbyNZCodeEmitter(X86Assembler *assembler,
+  CSRbyNZCodeEmitter(X86Compiler *compiler,
                      NZtoRowMap *rowByNZs,
                      unsigned long baseValsIndex,
                      unsigned long baseRowsIndex) {
-    this->assembler = assembler;
+    this->compiler = compiler;
     this->rowByNZs = rowByNZs;
     this->baseValsIndex = baseValsIndex;
     this->baseRowsIndex = baseRowsIndex;
+
+    vReg = compiler->newIntPtr("v");
+    wReg = compiler->newIntPtr("w");
+    rowsReg = compiler->newIntPtr("rows");
+    colsReg = compiler->newIntPtr("cols");
+    valsReg = compiler->newIntPtr("vals");
+    compiler->setArg(0, vReg);
+    compiler->setArg(1, wReg);
+    compiler->setArg(2, rowsReg);
+    compiler->setArg(3, colsReg);
+    compiler->setArg(4, valsReg);
   }
 
   void emit();
   
 private:
-  X86Assembler *assembler;
+  X86Compiler *compiler;
+  X86Gp vReg;
+  X86Gp wReg;
+  X86Gp rowsReg;
+  X86Gp colsReg;
+  X86Gp valsReg;
   NZtoRowMap *rowByNZs;
   unsigned long baseValsIndex;
   unsigned long baseRowsIndex;
@@ -87,13 +103,18 @@ private:
 };
 
 void CSRbyNZ::emitMultByMFunction(unsigned int index) {
-  X86Assembler assembler(codeHolders[index]);
+  X86Compiler compiler(codeHolders[index]);
+  // (v, w, rows, cols, vals)
+  compiler.addFunc(FuncSignature5<void, double*, double*, int*, int*, double*>());
+
   NZtoRowMap &rowByNZs = rowByNZLists.at(index);
-  CSRbyNZCodeEmitter emitter(&assembler,
+  CSRbyNZCodeEmitter emitter(&compiler,
                              &rowByNZs,
                              stripeInfos->at(index).valIndexBegin,
                              stripeInfos->at(index).rowIndexBegin);
   emitter.emit();
+  compiler.endFunc();
+  compiler.finalize();
 }
 
 
@@ -109,76 +130,66 @@ void CSRbyNZCodeEmitter::emit() {
 }
   
 void CSRbyNZCodeEmitter::emitHeader() {
-  // rows is in %rdx, cols is in %rcx, vals is in %r8
-  assembler->push(r8);
-  assembler->push(r9);
-  assembler->push(r10);
-  assembler->push(r11);
-  assembler->push(rax);
-  assembler->push(rbx);
-  assembler->push(rcx);
-  assembler->push(rdx);
-
-  assembler->lea(rdx, ptr(rdx, (int)(sizeof(int) * baseRowsIndex)));
-  assembler->lea(rcx, ptr(rcx, (int)(sizeof(int) * baseValsIndex)));
-  assembler->lea(r8, ptr(r8, (int)(sizeof(double) * baseValsIndex)));
+  compiler->lea(rowsReg, ptr(rowsReg, (int)(sizeof(int) * baseRowsIndex)));
+  compiler->lea(colsReg, ptr(colsReg, (int)(sizeof(int) * baseValsIndex)));
+  compiler->lea(valsReg, ptr(valsReg, (int)(sizeof(double) * baseValsIndex)));
 }
 
 void CSRbyNZCodeEmitter::emitFooter() {
-  assembler->pop(rdx);
-  assembler->pop(rcx);
-  assembler->pop(rbx);
-  assembler->pop(rax);
-  assembler->pop(r11);
-  assembler->pop(r10);
-  assembler->pop(r9);
-  assembler->pop(r8);
-  assembler->ret();
+  compiler->ret();
 }
 
 void CSRbyNZCodeEmitter::emitSingleLoop(unsigned long numRows,
                                         unsigned long rowLength) {
-  assembler->xor_(r9d, r9d);
-  assembler->xor_(ebx, ebx);
+  X86Gp aReg = compiler->newI32("a");
+  X86Gp bReg = compiler->newI32("b");
+  X86Gp colReg = compiler->newI32("col");
+  X86Gp rowReg = compiler->newI32("row");
+  X86Gp valReg = compiler->newUInt64("val");
+  X86Xmm sumReg = compiler->newXmm("sum");
 
-  assembler->align(kAlignCode, 16);
-  Label loopBegin = assembler->newLabel();
-  assembler->bind(loopBegin);
+  compiler->xor_(bReg, bReg);
+  compiler->xor_(aReg, aReg);
+  
+  compiler->align(kAlignCode, 16);
+  Label loopBegin = compiler->newLabel();
+  compiler->bind(loopBegin);
   
   //xorps %xmm0, %xmm0
-  assembler->xorps(xmm0, xmm0);
+  compiler->xorps(sumReg, sumReg);
   
   // done for a single row
   for(int i = 0 ; i < rowLength ; i++){
+    X86Xmm multReg = compiler->newXmm("mult");
     //movslq "i*4"(%rcx,%r9,4), %rax
-    assembler->movsxd(rax, ptr(rcx, r9, 2, i * sizeof(int)));
+    compiler->movsxd(colReg, ptr(colsReg, bReg, 2, i * sizeof(int)));
     //movsd "i*8"(%r8,%r9,8), %xmm1
-    assembler->movsd(xmm1, ptr(r8, r9, 3, i * sizeof(double)));
+    compiler->movsd(multReg, ptr(valsReg, bReg, 3, i * sizeof(double)));
     //mulsd (%rdi,%rax,8), %xmm1
-    assembler->mulsd(xmm1, ptr(rdi, rax, 3));
+    compiler->mulsd(multReg, ptr(vReg, colReg, 3));
     //addsd %xmm1, %xmm0
-    assembler->addsd(xmm0, xmm1);
+    compiler->addsd(sumReg, multReg);
   }
   
   // movslq (%rdx,%rbx,4), %rax
-  assembler->movsxd(rax, ptr(rdx, rbx, 2));
+  compiler->movsxd(rowReg, ptr(rowsReg, aReg, 2));
   //addq $rowLength, %r9
-  assembler->add(r9, (unsigned int)rowLength);
+  compiler->add(bReg, (unsigned int)rowLength);
   //addq $1, %rbx
-  assembler->inc(rbx);
+  compiler->inc(aReg);
   //addsd (%rsi,%rax,8), %xmm0
-  assembler->addsd(xmm0, ptr(rsi, rax, 3));
+  compiler->addsd(sumReg, ptr(wReg, rowReg, 3));
   //cmpl numRows, %ebx
-  assembler->cmp(ebx, (unsigned int)numRows);
+  compiler->cmp(aReg, (unsigned int)numRows);
   //movsd %xmm0, (%rsi,%rax,8)
-  assembler->movsd(ptr(rsi, rax, 3), xmm0);
+  compiler->movsd(ptr(wReg, rowReg, 3), sumReg);
   //jne .LBB0_1
-  assembler->jne(loopBegin);
+  compiler->jne(loopBegin);
   
   //addq $numRows*4, %rdx
-  assembler->add(rdx, (unsigned int)(numRows * sizeof(int)));
+  compiler->add(rowsReg, (unsigned int)(numRows * sizeof(int)));
   //addq $numRows*rowLength*4, %rcx
-  assembler->add(rcx, (unsigned int)(numRows * rowLength * sizeof(int)));
+  compiler->add(colsReg, (unsigned int)(numRows * rowLength * sizeof(int)));
   //addq $numRows*rowLength*8, %r8
-  assembler->add(r8, (unsigned int)(numRows * rowLength * sizeof(double)));
+  compiler->add(valsReg, (unsigned int)(numRows * rowLength * sizeof(double)));
 }
