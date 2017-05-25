@@ -3,30 +3,35 @@
 using namespace thundercat;
 using namespace std;
 
+#define branch(i) case i: sum += vals[-i] * v[cols[-i]];
+
 void DuffsDevice4::spmv(double* __restrict v, double* __restrict w) {
   const int M = 4;
-  const int *rows = matrix->rows;
-  const int *cols = matrix->cols;
-  const double *vals = matrix->vals;
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+    
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
       const int currentCase = length % M;
+      
+      vals += currentCase;
+      cols += currentCase;
+      
       switch (currentCase) {
           do {
-            sum += vals[k] * v[cols[k]]; k++;
-          case 3:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 2:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 1:
-            sum += vals[k] * v[cols[k]]; k++;
+            vals += 4; cols += 4;
+            sum += vals[-4] * v[cols[-4]];
+            branch(3)
+            branch(2)
+            branch(1)
           case 0:
             ;
           }
@@ -39,36 +44,35 @@ void DuffsDevice4::spmv(double* __restrict v, double* __restrict w) {
 
 void DuffsDevice8::spmv(double* __restrict v, double* __restrict w) {
   const int M = 8;
-  const int *rows = matrix->rows;
-  const int *cols = matrix->cols;
-  const double *vals = matrix->vals;
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
       const int currentCase = length % M;
+
+      vals += currentCase;
+      cols += currentCase;
+      
       switch (currentCase) {
           do {
-            sum += vals[k] * v[cols[k]]; k++;
-          case 7:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 6:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 5:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 4:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 3:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 2:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 1:
-            sum += vals[k] * v[cols[k]]; k++;
+            vals += 8; cols += 8;
+            sum += vals[-8] * v[cols[-8]];
+            branch(7)
+            branch(6)
+            branch(5)
+            branch(4)
+            branch(3)
+            branch(2)
+            branch(1)
           case 0:
             ;
           }
@@ -81,52 +85,43 @@ void DuffsDevice8::spmv(double* __restrict v, double* __restrict w) {
 
 void DuffsDevice16::spmv(double* __restrict v, double* __restrict w) {
   const int M = 16;
-  const int *rows = matrix->rows;
-  const int *cols = matrix->cols;
-  const double *vals = matrix->vals;
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
       const int currentCase = length % M;
+
+      vals += currentCase;
+      cols += currentCase;
+      
       switch (currentCase) {
           do {
-            sum += vals[k] * v[cols[k]]; k++;
-          case 15:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 14:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 13:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 12:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 11:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 10:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 9:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 8:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 7:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 6:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 5:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 4:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 3:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 2:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 1:
-            sum += vals[k] * v[cols[k]]; k++;
+            vals += 16; cols += 16;
+            sum += vals[-16] * v[cols[-16]];
+            branch(15)
+            branch(14)
+            branch(13)
+            branch(12)
+            branch(11)
+            branch(10)
+            branch(9)
+            branch(8)
+            branch(7)
+            branch(6)
+            branch(5)
+            branch(4)
+            branch(3)
+            branch(2)
+            branch(1)
           case 0:
             ;
           }
@@ -139,84 +134,59 @@ void DuffsDevice16::spmv(double* __restrict v, double* __restrict w) {
 
 void DuffsDevice32::spmv(double* __restrict v, double* __restrict w) {
   const int M = 32;
-  const int *rows = matrix->rows;
-  const int *cols = matrix->cols;
-  const double *vals = matrix->vals;
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
+
+    const int *rows = matrix->rows + stripeInfos->at(t).rowIndexBegin;
+    int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
+    double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      int k = rows[i];
       const int length = rows[i + 1] - rows[i];
       int n =  length / M;
       const int currentCase = length % M;
+      
+      vals += currentCase;
+      cols += currentCase;
+
       switch (currentCase) {
           do {
-            sum += vals[k] * v[cols[k]]; k++;
-          case 31:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 30:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 29:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 28:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 27:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 26:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 25:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 24:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 23:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 22:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 21:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 20:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 19:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 18:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 17:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 16:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 15:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 14:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 13:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 12:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 11:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 10:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 9:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 8:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 7:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 6:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 5:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 4:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 3:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 2:
-            sum += vals[k] * v[cols[k]]; k++;
-          case 1:
-            sum += vals[k] * v[cols[k]]; k++;
+            vals += 32; cols += 32;
+            sum += vals[-32] * v[cols[-32]];
+            branch(31)
+            branch(30)
+            branch(29)
+            branch(28)
+            branch(27)
+            branch(26)
+            branch(25)
+            branch(24)
+            branch(23)
+            branch(22)
+            branch(21)
+            branch(20)
+            branch(19)
+            branch(18)
+            branch(17)
+            branch(16)
+            branch(15)
+            branch(14)
+            branch(13)
+            branch(12)
+            branch(11)
+            branch(10)
+            branch(9)
+            branch(8)
+            branch(7)
+            branch(6)
+            branch(5)
+            branch(4)
+            branch(3)
+            branch(2)
+            branch(1)
           case 0:
             ;
           }
