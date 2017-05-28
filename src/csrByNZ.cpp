@@ -75,6 +75,14 @@ public:
     rowsReg = compiler->newIntPtr("rows");
     colsReg = compiler->newIntPtr("cols");
     valsReg = compiler->newIntPtr("vals");
+
+    aReg = compiler->newI32("a");
+    bReg = compiler->newI32("b");
+    colReg = compiler->newI32("col");
+    rowReg = compiler->newI32("row");
+    valReg = compiler->newUInt64("val");
+    sumReg = compiler->newXmm("sum");
+
     compiler->setArg(0, vReg);
     compiler->setArg(1, wReg);
     compiler->setArg(2, rowsReg);
@@ -91,6 +99,14 @@ private:
   X86Gp rowsReg;
   X86Gp colsReg;
   X86Gp valsReg;
+
+  X86Gp aReg;
+  X86Gp bReg;
+  X86Gp colReg;
+  X86Gp rowReg;
+  X86Gp valReg;
+  X86Xmm sumReg;
+    
   NZtoRowMap *rowByNZs;
   unsigned long baseValsIndex;
   unsigned long baseRowsIndex;
@@ -141,12 +157,6 @@ void CSRbyNZCodeEmitter::emitFooter() {
 
 void CSRbyNZCodeEmitter::emitSingleLoop(unsigned long numRows,
                                         unsigned long rowLength) {
-  X86Gp aReg = compiler->newI32("a");
-  X86Gp bReg = compiler->newI32("b");
-  X86Gp colReg = compiler->newI32("col");
-  X86Gp rowReg = compiler->newI32("row");
-  X86Gp valReg = compiler->newUInt64("val");
-  X86Xmm sumReg = compiler->newXmm("sum");
 
   compiler->xor_(bReg, bReg);
   compiler->xor_(aReg, aReg);
