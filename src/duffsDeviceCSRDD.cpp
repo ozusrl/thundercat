@@ -29,7 +29,7 @@ void DuffsDeviceCSRDD::convertMatrix() {
     }
   }
   
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = csrMatrix->n;
   matrix->numCols = csrMatrix->nz;
   matrix->numVals = csrMatrix->nz;

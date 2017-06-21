@@ -19,8 +19,8 @@ void SVMAnalyzer::printFeatures() {
   
   vector<bitset<32> > blockPatterns44;
   vector<bitset<32> > blockPatterns55;
-  blockPatterns44.resize(matrix->n / 4 + 1);
-  blockPatterns55.resize(matrix->n / 5 + 1);
+  blockPatterns44.resize(matrix->m / 4 + 1);
+  blockPatterns55.resize(matrix->m / 5 + 1);
   unsigned long numNonEmptyRows = 0;
   unsigned long maxRowLength = 0;
   int previousRowLength = -1;
@@ -34,7 +34,7 @@ void SVMAnalyzer::printFeatures() {
   map<unsigned long, unsigned int> patterns55;
   const unsigned long distinctValueLimit = 5000;
   const unsigned long stencilCountLimit = EARLY_EXIT_ENABLED ? 2000 : (matrix->n + 1);
-  const unsigned long patternCountLimit = EARLY_EXIT_ENABLED ? 5000 : (matrix->n * matrix->n);
+  const unsigned long patternCountLimit = EARLY_EXIT_ENABLED ? 5000 : (matrix->n * matrix->m);
 
   unsigned long numElementsAnalyzedForStencil = 0;
   unsigned long numElementsAnalyzedForGenOSKI44 = 0;
@@ -173,7 +173,7 @@ void SVMAnalyzer::printFeatures() {
   }
   
   
-  cout << "Matrix N NZ NonEmptyRows NZPerRow MaxRowLength NumRowsWithSameLengthAsPreviousRow "
+  cout << "Matrix N M NZ NonEmptyRows NZPerRow MaxRowLength NumRowsWithSameLengthAsPreviousRow "
        << "CSRbyNZGroups SumOfRowLengths RowPerNZGroup LengthPerNZGroup "
 
        << "numSingleRowStencils numMultiRowStencils "
@@ -191,6 +191,7 @@ void SVMAnalyzer::printFeatures() {
        << "\n";
   // General
   cout << (stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " ";
+  cout << matrix->m << " ";
   cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) << " ";
   cout << numNonEmptyRows << " ";
   cout << (stripeInfo->valIndexEnd - stripeInfo->valIndexBegin) / (double)(stripeInfo->rowIndexEnd - stripeInfo->rowIndexBegin) << " "; // NZ per row

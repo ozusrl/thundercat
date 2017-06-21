@@ -21,8 +21,9 @@ void MKL::spmv(double* __restrict v, double* __restrict w) {
   char trans[] = "N";
   char matdescra[] = "G__C";
   int mkl_n = matrix->n;
+  int mkl_m = matrix->m;
   
-  mkl_dcsrmv(trans, &mkl_n, &mkl_n, &alpha, matdescra,
+  mkl_dcsrmv(trans, &mkl_n, &mkl_m, &alpha, matdescra,
              matrix->vals, matrix->cols, ptrb, ptre, v, &beta, w);
 }
 

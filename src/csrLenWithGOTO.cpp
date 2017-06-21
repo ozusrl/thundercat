@@ -53,7 +53,7 @@ void CSRLenWithGOTO::convertMatrix() {
     rows[i + t] = 5 + 5 + 3 + 3 + 4 + 7 + 3 + 3;
   }
   
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = csrMatrix->n + stripeInfos->size();
   matrix->numCols = csrMatrix->nz;
   matrix->numVals = csrMatrix->nz;

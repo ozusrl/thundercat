@@ -9,8 +9,8 @@
 using namespace thundercat;
 using namespace std;
 
-Matrix::Matrix(int *rows, int *cols, double *vals, unsigned long n, unsigned long nz):
-  rows(rows), cols(cols), vals(vals), n(n), nz(nz) { 
+Matrix::Matrix(int *rows, int *cols, double *vals, unsigned long n, unsigned long m, unsigned long nz):
+  rows(rows), cols(cols), vals(vals), n(n), m(m), nz(nz) {
   numRows = n;
   numCols = nz;
   numVals = nz;
@@ -41,13 +41,9 @@ Matrix* Matrix::readMatrixFromFile(string fileName) {
   stringstream header(headerLine, ios_base::in);
   int n, m, nz;
   header >> n >> m >> nz;
-  if (n != m) {
-    std::cerr << "Only square matrices are accepted.\n";
-    exit(1);
-  }
   
   // Read rows, cols, vals
-  MMMatrix matrix(n);
+  MMMatrix matrix(n, m);
   int row; int col; double val;
   
   string line;
@@ -106,6 +102,7 @@ vector<MatrixStripeInfo> *Matrix::getStripeInfos(unsigned int numPartitions) {
 
 void Matrix::print() {
   cout << "int numMatrixRows = " << n << ";\n";
+  cout << "int numMatrixCols = " << m << ";\n";
   cout << "int numMatrixValues = " << nz << ";\n";
   if (numCols == 0) {
     cout << "int *matrixCols = 0;\n";
@@ -149,8 +146,9 @@ bool MMElement::compareCol(int limit){
   return (col < limit);
 }
 
-MMMatrix::MMMatrix(unsigned long n) {
+MMMatrix::MMMatrix(unsigned long n, unsigned long m) {
   this->n = n;
+  this->m = m;
 }
 
 MMMatrix::~MMMatrix() {
@@ -170,7 +168,7 @@ void MMMatrix::normalize() {
 }
     
 void MMMatrix::print() {
-  cout << n << " " << n << " " << elts.size() << "\n";
+  cout << n << " " << m << " " << elts.size() << "\n";
   for (MMElement &elt : elts) {
     cout << elt.row << " "
          << elt.col << " "
@@ -179,7 +177,7 @@ void MMMatrix::print() {
 }
 
 void MMMatrix::printMTX() {
-  cout << n << " " << n << " " << elts.size() << "\n";
+  cout << n << " " << m << " " << elts.size() << "\n";
   for (MMElement &elt : elts) {
     cout << (elt.row + 1) << " "
          << (elt.col + 1) << " "
@@ -211,7 +209,7 @@ Matrix* MMMatrix::toCSRMatrix() {
   }
   rows[n] = eltIndex;
   
-  Matrix *matrix = new Matrix(rows, cols, vals, n, sz);
+  Matrix *matrix = new Matrix(rows, cols, vals, n, m, sz);
   matrix->numRows = n + 1;
   return matrix;
 }

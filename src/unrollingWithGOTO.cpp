@@ -45,7 +45,7 @@ void UnrollingWithGOTO::convertMatrix() {
     *(rowsPtr-1) = 3 + 4 + 5 + 5 + 3 + 4 + 4 + 2; // last row jumps forward
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = 2 * csrMatrix->n;
   matrix->numCols = csrMatrix->nz;
   matrix->numVals = csrMatrix->nz;

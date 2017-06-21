@@ -21,13 +21,14 @@ namespace thundercat {
     int* __restrict cols;
     double* __restrict vals;
     unsigned long n;
+    unsigned long m;
     unsigned long nz;
     // For some representations, numRows, numCols, numVals
     // may not be the same as n, nz.
     unsigned long numRows, numCols, numVals;
     
     Matrix(int* __restrict rows, int* __restrict cols, double* __restrict vals,
-           unsigned long n, unsigned long nz);
+           unsigned long n, unsigned long m, unsigned long nz);
 
     ~Matrix();
     
@@ -56,9 +57,10 @@ namespace thundercat {
   private:
     std::vector<MMElement> elts;
     unsigned long n;
+    unsigned long m;
 
   public:
-    MMMatrix(unsigned long n);
+    MMMatrix(unsigned long n, unsigned long m);
 
     ~MMMatrix();
 

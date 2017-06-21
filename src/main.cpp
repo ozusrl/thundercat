@@ -256,11 +256,14 @@ void generateFunctions() {
 
 void populateInputOutputVectors() {
   unsigned long n = csrMatrix->n;
+  unsigned long m = csrMatrix->m;
   unsigned long nz = csrMatrix->nz;
-  vVector = new double[n];
+  vVector = new double[m];
   wVector = new double[n];
-  for(int i = 0; i < n; ++i) {
+  for(int i = 0; i < m; ++i) {
     vVector[i] = i + 1;
+  }
+  for(int i = 0; i < n; ++i) {
     wVector[i] = i + 1;
   }
 }
@@ -295,8 +298,10 @@ void setNumIterations() {
       ITERS = 100;
     } else if (nz < 12000000) {
       ITERS = 50;
+    } else if (nz < 40000000) {
+      ITERS = 20;
     } else {
-      ITERS = 100;
+      ITERS = 10;
     }
   }
 }

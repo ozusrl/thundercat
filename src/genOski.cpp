@@ -24,7 +24,7 @@ void GenOSKI::analyzeMatrix() {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     map<int, BlockInfo> currentBlockRowPatternsAndElements;
     vector<BlockInfo> blockPatterns;
-    blockPatterns.resize(csrMatrix->n / b_c + 1);
+    blockPatterns.resize(csrMatrix->m / b_c + 1);
     vector<int> indicesOfDetectedBlockColumns;
     
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
@@ -101,7 +101,7 @@ void GenOSKI::convertMatrix() {
     }
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = numTotalBlocks;
   matrix->numCols = numTotalBlocks;
   matrix->numVals = csrMatrix->nz;

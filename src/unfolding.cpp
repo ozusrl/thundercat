@@ -78,7 +78,7 @@ void Unfolding::convertMatrix() {
     numVals = csrMatrix->nz;
   }
   
-  matrix = new Matrix(NULL, (int*)cols, values, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(NULL, (int*)cols, values, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = 0;
   matrix->numCols = 2 * sizeof(unsigned long) / sizeof(int);
   matrix->numVals = numVals;

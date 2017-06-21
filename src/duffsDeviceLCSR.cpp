@@ -55,7 +55,7 @@ void DuffsDeviceLCSR::convertMatrix() {
     }
   }
   
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   lcsrInfo = new LCSRInfo(numLengths, length, lenStart);
 }
 

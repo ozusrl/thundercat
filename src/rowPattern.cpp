@@ -60,7 +60,7 @@ void RowPattern::convertMatrix() {
     }
   }
   
-  matrix = new Matrix(rows, NULL, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, NULL, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = csrMatrix->n;
   matrix->numCols = 0;
   matrix->numVals = csrMatrix->nz;

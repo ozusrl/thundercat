@@ -52,7 +52,7 @@ void CSRbyNZ::convertMatrix() {
     }
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->nz);
+  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
 }
 
 ///
