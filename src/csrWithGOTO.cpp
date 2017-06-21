@@ -129,8 +129,8 @@ void CSRWithGOTOCodeEmitter::emitMainLoop() {
   // movslq (%r11), %rcx
   assembler->movsxd(rcx, ptr(r11, 0));
   
-  Label init = assembler->newLabel();
-  assembler->jmp(init);
+  Label end = assembler->newLabel();
+  assembler->jmp(end);
   Label loopStart = assembler->newLabel();
   assembler->bind(loopStart);
   
@@ -149,21 +149,21 @@ void CSRWithGOTOCodeEmitter::emitMainLoop() {
   Label loopEnd = assembler->newLabel();
   assembler->bind(loopEnd);
   // Add to w[r]
-  //addsd (%rsi,%rdx,8), %xmm0
-  assembler->addsd(xmm0, ptr(rsi, rdx, 3));
-  //movsd %xmm0, (%rsi,%rdx,8)
-  assembler->movsd(ptr(rsi, rdx, 3), xmm0);
+  //addsd -8(%rsi,%rdx,8), %xmm0
+  assembler->addsd(xmm0, ptr(rsi, rdx, 3, -8));
+  //movsd %xmm0, -8(%rsi,%rdx,8)
+  assembler->movsd(ptr(rsi, rdx, 3, -8), xmm0);
+  
+  assembler->bind(end); // This is the destination of the very first jump.
   // addq $"1", %rdx
   assembler->inc(rdx);
-  
-  assembler->bind(init); // This is the destination of the very first jump.
   // compare %rbx and N to check for the end of the loop
   assembler->cmp(rdx, N);
-  Label end = assembler->newLabel();
-  assembler->jge(end);
+  Label veryEnd = assembler->newLabel();
+  assembler->jg(veryEnd);
   
   // Move the next row index to rbx
-  assembler->movsxd(rbx, ptr(r11, rdx, 2, 4));
+  assembler->movsxd(rbx, ptr(r11, rdx, 2));
   // Find row length, store in rcx
   assembler->sub(rcx, rbx); // rcx = rcx - rbx. This is a negative number.
   // mulq $PER_ELEMENT_CODE_LENGTH, %rcx
@@ -191,6 +191,6 @@ void CSRWithGOTOCodeEmitter::emitMainLoop() {
   // jmp *%r10
   assembler->jmp(r10);
   
-  assembler->bind(end);
+  assembler->bind(veryEnd);
 }
 
