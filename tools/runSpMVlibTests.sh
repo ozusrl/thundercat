@@ -18,18 +18,22 @@ methodParam2=$3
 
 echo "Running spMVlib test " $methodName $methodParam1 $methodParam2
 
-while read matrixName
+while read line
 do
-    echo -n $matrixName" "
+    IFS=' ' read -r -a info <<< "$line"
+    groupName=${info[0]}
+    matrixName=${info[1]}
+
+    echo -n "$groupName"/"$matrixName "
 
     cd ..
-    folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+    folderName=data/"$groupName"/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
     rm -f "$folderName"/runtime.txt
 
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 | grep "perIteration" | awk '{print $2}' >> "$folderName"/runtime.txt
     cd tools
 
 done < matrixNames.txt
@@ -40,12 +44,16 @@ findMins() {
     currentTime=`date +%Y.%m.%d_%H.%M`
     local fileName=../data/$HOSTNAME.thundercat."$methodName""$methodParam1""$methodParam2".$currentTime.csv 
     rm -f $fileName
-    while read matrixName
+    while read line
     do
-	cd ../data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+        IFS=' ' read -r -a info <<< "$line"
+        groupName=${info[0]}
+        matrixName=${info[1]}
+
+	cd ../data/"$groupName"/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
 	runTimes=`cat runtime.txt`
 	cd - > /dev/null
-	echo -n $matrixName" "  >> $fileName
+	echo -n $groupName" "$matrixName" "  >> $fileName
 	./findMinTiming.py $runTimes >> $fileName
 	echo     ""  >> $fileName
     done < matrixNames.txt

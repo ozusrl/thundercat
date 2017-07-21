@@ -19,26 +19,30 @@ methodParam1=$2
 methodParam2=$3
 
 test() {
-    local matrixName=$1
-    local methodName=$2
-    local methodParam1=$3
-    local methodParam2=$4
+    local groupName=$1
+    local matrixName=$2
+    local methodName=$3
+    local methodParam1=$4
+    local methodParam2=$5
 
-    folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+    folderName=data/"$groupName"/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
     rm -f "$folderName"/output.txt
 
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -debug > "$folderName"/output.txt
 }
 
 echo "*" Running spMVlib for "$methodName""$methodParam1""$methodParam2"
 
-while read matrixName
+while read line
 do
-    echo -n $matrixName" "
+    IFS=' ' read -r -a info <<< "$line"
+    groupName=${info[0]}
+    matrixName=${info[1]}
 
+    echo -n "$groupName"/"$matrixName "
     cd ..
-    test $matrixName "$methodName" "$methodParam1" "$methodParam2"
+    test $groupName $matrixName "$methodName" "$methodParam1" "$methodParam2"
     cd - > /dev/null
 done < matrixNames.txt
 
