@@ -18,18 +18,22 @@ methodParam2=$3
 
 echo "Running spMVlib test " $methodName $methodParam1 $methodParam2
 
-while read matrixName
+while read line
 do
-    echo -n $matrixName" "
+    IFS=' ' read -r -a info <<< "$line"
+    groupName=${info[0]}
+    matrixName=${info[1]}
+
+    echo -n "$groupName"/"$matrixName "
 
     cd ..
-    folderName=data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+    folderName=data/"$groupName"/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
     mkdir -p "$folderName"
     rm -f "$folderName"/stats*.txt
 
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats1.txt
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats2.txt
-    ./build/thundercat $MATRICES/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats3.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats1.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats2.txt
+    ./build/thundercat $MATRICES/$groupName/$matrixName/$matrixName $methodName $methodParam1 $methodParam2 -iters 1 > "$folderName"/stats3.txt
     cd tools
 
 done < matrixNames.txt
@@ -40,10 +44,14 @@ findMins() {
     currentTime=`date +%Y.%m.%d`
     local fileName=../data/$HOSTNAME.gencost.$currentTime."$methodName""$methodParam1""$methodParam2".csv 
     rm -f $fileName
-    while read matrixName
+    while read line
     do
+        IFS=' ' read -r -a info <<< "$line"
+        groupName=${info[0]}
+        matrixName=${info[1]}
+        
         toolsFolder=`pwd`
-        cd ../data/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
+        cd ../data/"$groupName"/"$matrixName"/"$methodName""$methodParam1""$methodParam2"
         codeGen1=`grep generateFunctions stats1.txt | awk '{print $2}'`
         codeGen2=`grep generateFunctions stats2.txt | awk '{print $2}'`
         codeGen3=`grep generateFunctions stats3.txt | awk '{print $2}'`
@@ -59,7 +67,7 @@ findMins() {
         emissionTime=`grep emitCode $statsFile | awk '{print $2}'`
         codeGenTime=`grep generateFunctions $statsFile | awk '{print $2}'`
         cd - > /dev/null
-        echo $matrixName $partitionTime $analysisTime $conversionTime $setMultByMFunctionsTime $emissionTime $codeGenTime  >> $fileName
+        echo $groupName $matrixName $partitionTime $analysisTime $conversionTime $setMultByMFunctionsTime $emissionTime $codeGenTime  >> $fileName
     done < matrixNames.txt
 }
 
