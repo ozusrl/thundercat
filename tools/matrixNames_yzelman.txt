@@ -1,0 +1,11 @@
+MatrixMarket fidap037
+Hamm memplus
+Mallya lhr34
+Qaplib lp_nug30
+GHS_psdef s3dkt3m2
+Kamvar Stanford
+Kamvar Stanford_Berkeley
+Gleich wikipedia-20051105
+vanHeukelum cage14
+JGD_GL7d GL7d18
+Gleich wikipedia-20060925
