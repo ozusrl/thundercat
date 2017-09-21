@@ -196,7 +196,60 @@ namespace thundercat {
     
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
+  
+  ///
+  /// Duff's Device with compression
+  ///
+  class DuffsDeviceCompressed: public SpMVMethod {
+  public:
+    DuffsDeviceCompressed();
 
+  protected:
+    virtual void convertMatrix() final;
+    
+    template <typename T>
+    void spmvDD4(double* __restrict v, double* __restrict w, T* __restrict rows);
+
+    template <typename T>
+    void spmvDD8(double* __restrict v, double* __restrict w, T* __restrict rows);
+
+    template <typename T>
+    void spmvDD16(double* __restrict v, double* __restrict w, T* __restrict rows);
+
+    template <typename T>
+    void spmvDD32(double* __restrict v, double* __restrict w, T* __restrict rows);
+  protected:
+    int sizeOfRowLength;
+  };
+  
+  class DuffsDeviceCompressed4: public DuffsDeviceCompressed {
+  public:
+    DuffsDeviceCompressed4();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+  
+  class DuffsDeviceCompressed8: public DuffsDeviceCompressed {
+  public:
+    DuffsDeviceCompressed8();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  class DuffsDeviceCompressed16: public DuffsDeviceCompressed {
+  public:
+    DuffsDeviceCompressed16();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+
+  class DuffsDeviceCompressed32: public DuffsDeviceCompressed {
+  public:
+    DuffsDeviceCompressed32();
+    
+    virtual void spmv(double* __restrict v, double* __restrict w) final;
+  };
+  
   ///
   /// Specializer
   ///

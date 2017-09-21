@@ -88,6 +88,11 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string duffsDeviceCSRDD16("DuffsDeviceCSRDD16");
   string duffsDeviceCSRDD32("DuffsDeviceCSRDD32");
   
+  string duffsDeviceCompressed4("DuffsDeviceCompressed4");
+  string duffsDeviceCompressed8("DuffsDeviceCompressed8");
+  string duffsDeviceCompressed16("DuffsDeviceCompressed16");
+  string duffsDeviceCompressed32("DuffsDeviceCompressed32");
+  
   string debugFlag("-debug");
   string dumpObjFlag("-dump_object");
   string dumpMatrixFlag("-dump_matrix");
@@ -159,6 +164,14 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new DuffsDeviceCSRDD16();
   } else if(duffsDeviceCSRDD32.compare(*argptr) == 0) {
     method = new DuffsDeviceCSRDD32();
+  } else if(duffsDeviceCompressed4.compare(*argptr) == 0) {
+    method = new DuffsDeviceCompressed4();
+  } else if(duffsDeviceCompressed8.compare(*argptr) == 0) {
+    method = new DuffsDeviceCompressed8();
+  } else if(duffsDeviceCompressed16.compare(*argptr) == 0) {
+    method = new DuffsDeviceCompressed16();
+  } else if(duffsDeviceCompressed32.compare(*argptr) == 0) {
+    method = new DuffsDeviceCompressed32();
   } else {
     std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);
