@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <stdio.h>
+#include "duffsDeviceCSRDD.hpp"
+#include "duffsDeviceCompressed.hpp"
 
 using namespace thundercat;
 using namespace std;
@@ -157,21 +159,21 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   } else if(duffsDeviceLCSR32.compare(*argptr) == 0) {
     method = new DuffsDeviceLCSR32();
   } else if(duffsDeviceCSRDD4.compare(*argptr) == 0) {
-    method = new DuffsDeviceCSRDD4();
+    method = new DuffsDeviceCSRDD<4>();
   } else if(duffsDeviceCSRDD8.compare(*argptr) == 0) {
-    method = new DuffsDeviceCSRDD8();
+    method = new DuffsDeviceCSRDD<8>();
   } else if(duffsDeviceCSRDD16.compare(*argptr) == 0) {
-    method = new DuffsDeviceCSRDD16();
+    method = new DuffsDeviceCSRDD<16>();
   } else if(duffsDeviceCSRDD32.compare(*argptr) == 0) {
-    method = new DuffsDeviceCSRDD32();
+    method = new DuffsDeviceCSRDD<32>();
   } else if(duffsDeviceCompressed4.compare(*argptr) == 0) {
-    method = new DuffsDeviceCompressed4();
+    method = new DuffsDeviceCompressed<4>();
   } else if(duffsDeviceCompressed8.compare(*argptr) == 0) {
-    method = new DuffsDeviceCompressed8();
+    method = new DuffsDeviceCompressed<8>();
   } else if(duffsDeviceCompressed16.compare(*argptr) == 0) {
-    method = new DuffsDeviceCompressed16();
+    method = new DuffsDeviceCompressed<16>();
   } else if(duffsDeviceCompressed32.compare(*argptr) == 0) {
-    method = new DuffsDeviceCompressed32();
+    method = new DuffsDeviceCompressed<32>();
   } else {
     std::cerr << "Method " << *argptr << " not found.\n";
     exit(1);

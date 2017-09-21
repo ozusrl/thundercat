@@ -1,3 +1,7 @@
+#pragma once
+#ifndef _DUFFSDEVICECSRDD_CPP_
+#define _DUFFSDEVICECSRDD_CPP_
+
 #include "method.h"
 #include <iostream>
 
@@ -7,13 +11,25 @@ using namespace asmjit;
 using namespace x86;
 
 ///
-/// DuffsDeviceCSRDD
+/// Duff's Device for the CSRDD format
 ///
-DuffsDeviceCSRDD::DuffsDeviceCSRDD(int unrollingFactor) :
-unrollingFactor(unrollingFactor) {
+template <unsigned int UnrollingFactor>
+class DuffsDeviceCSRDD: public SpMVMethod {
+public:
+  DuffsDeviceCSRDD();
+  
+  virtual void spmv(double* __restrict v, double* __restrict w) final;
+
+protected:
+  virtual void convertMatrix() final;
+};
+
+template <unsigned int UnrollingFactor>
+DuffsDeviceCSRDD<UnrollingFactor>::DuffsDeviceCSRDD() {
 }
 
-void DuffsDeviceCSRDD::convertMatrix() {
+template <unsigned int UnrollingFactor>
+void DuffsDeviceCSRDD<UnrollingFactor>::convertMatrix() {
   int *rows = new int[csrMatrix->n];
   int *cols = csrMatrix->cols;
   double *vals = csrMatrix->vals;
@@ -23,8 +39,8 @@ void DuffsDeviceCSRDD::convertMatrix() {
     int i;
     for (i = stripeInfos->at(t).rowIndexBegin; i < stripeInfos->at(t).rowIndexEnd; i++) {
       int length = csrMatrix->rows[i + 1] - csrMatrix->rows[i];
-      int entrancePoint = length % unrollingFactor;
-      int iterations = length / unrollingFactor;
+      int entrancePoint = length % UnrollingFactor;
+      int iterations = length / UnrollingFactor;
       rows[i] = (iterations << 8) | (entrancePoint & 0x000000FF);
     }
   }
@@ -35,27 +51,9 @@ void DuffsDeviceCSRDD::convertMatrix() {
   matrix->numVals = csrMatrix->nz;
 }
 
-DuffsDeviceCSRDD4::DuffsDeviceCSRDD4() :
-DuffsDeviceCSRDD(4) {
-  
-}
 
-DuffsDeviceCSRDD8::DuffsDeviceCSRDD8() :
-DuffsDeviceCSRDD(8) {
-  
-}
-
-DuffsDeviceCSRDD16::DuffsDeviceCSRDD16() :
-DuffsDeviceCSRDD(16) {
-  
-}
-
-DuffsDeviceCSRDD32::DuffsDeviceCSRDD32() :
-DuffsDeviceCSRDD(32) {
-  
-}
-
-void DuffsDeviceCSRDD4::spmv(double* __restrict v, double* __restrict w) {
+template <>
+void DuffsDeviceCSRDD<4>::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -93,7 +91,8 @@ void DuffsDeviceCSRDD4::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
-void DuffsDeviceCSRDD8::spmv(double* __restrict v, double* __restrict w) {
+template <>
+void DuffsDeviceCSRDD<8>::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -139,7 +138,8 @@ void DuffsDeviceCSRDD8::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
-void DuffsDeviceCSRDD16::spmv(double* __restrict v, double* __restrict w) {
+template <>
+void DuffsDeviceCSRDD<16>::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -201,7 +201,8 @@ void DuffsDeviceCSRDD16::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
-void DuffsDeviceCSRDD32::spmv(double* __restrict v, double* __restrict w) {
+template <>
+void DuffsDeviceCSRDD<32>::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -294,3 +295,5 @@ void DuffsDeviceCSRDD32::spmv(double* __restrict v, double* __restrict w) {
     }
   }
 }
+
+#endif

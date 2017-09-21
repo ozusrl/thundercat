@@ -18,8 +18,6 @@ set(SOURCE_FILES
                  csrLenWithGOTO.cpp
                  csrWithGOTO.cpp
                  duffsDevice.cpp
-                 duffsDeviceCSRDD.cpp
-                 duffsDeviceCompressed.cpp
                  duffsDeviceLCSR.cpp
                  genOski.cpp
                  main.cpp
@@ -35,6 +33,8 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+                 duffsDeviceCSRDD.hpp
+                 duffsDeviceCompressed.hpp
                  matrix.h
                  method.h
                  profiler.h

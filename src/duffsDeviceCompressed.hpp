@@ -1,3 +1,5 @@
+#pragma once
+
 #include "method.h"
 #include <iostream>
 
@@ -7,12 +9,32 @@ using namespace asmjit;
 using namespace x86;
 
 ///
-/// DuffsDeviceCompressed
+/// Duff's Device with compression
 ///
-DuffsDeviceCompressed::DuffsDeviceCompressed() {
+template <unsigned int UnrollingFactor>
+class DuffsDeviceCompressed: public SpMVMethod {
+public:
+  DuffsDeviceCompressed();
+  
+  virtual void spmv(double* __restrict v, double* __restrict w) final;
+
+protected:
+  virtual void convertMatrix() final;
+  
+private:
+  template <typename T>
+  void spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows);
+  
+protected:
+  int sizeOfRowLength;
+};
+
+template <unsigned int UnrollingFactor>
+DuffsDeviceCompressed<UnrollingFactor>::DuffsDeviceCompressed() {
 }
 
-void DuffsDeviceCompressed::convertMatrix() {
+template <unsigned int UnrollingFactor>
+void DuffsDeviceCompressed<UnrollingFactor>::convertMatrix() {
   int *rows = new int[csrMatrix->n];
   unsigned char *rowPtr = (unsigned char *)rows;
   int *cols = csrMatrix->cols;
@@ -60,76 +82,22 @@ void DuffsDeviceCompressed::convertMatrix() {
   matrix->numVals = csrMatrix->nz;
 }
 
-DuffsDeviceCompressed4::DuffsDeviceCompressed4() :
-DuffsDeviceCompressed() {
-  
-}
-
-DuffsDeviceCompressed8::DuffsDeviceCompressed8() :
-DuffsDeviceCompressed() {
-  
-}
-
-DuffsDeviceCompressed16::DuffsDeviceCompressed16() :
-DuffsDeviceCompressed() {
-  
-}
-
-DuffsDeviceCompressed32::DuffsDeviceCompressed32() :
-DuffsDeviceCompressed() {
-  
-}
-
-void DuffsDeviceCompressed4::spmv(double* __restrict v, double* __restrict w) {
+template <unsigned int UnrollingFactor>
+void DuffsDeviceCompressed<UnrollingFactor>::spmv(double* __restrict v, double* __restrict w) {
   const int *rows = matrix->rows;
   switch(sizeOfRowLength) {
   case 1:
-    spmvDD4(v, w, (unsigned char *)rows); break;
+    spmvDD(v, w, (unsigned char *)rows); break;
   case 2:
-    spmvDD4(v, w, (unsigned short *)rows); break;
+    spmvDD(v, w, (unsigned short *)rows); break;
   default:
-    spmvDD4(v, w, (unsigned int *)rows); break;
+    spmvDD(v, w, (unsigned int *)rows); break;
   }
 }
 
-void DuffsDeviceCompressed8::spmv(double* __restrict v, double* __restrict w) {
-  const int *rows = matrix->rows;
-  switch(sizeOfRowLength) {
-  case 1:
-    spmvDD8(v, w, (unsigned char *)rows); break;
-  case 2:
-    spmvDD8(v, w, (unsigned short *)rows); break;
-  default:
-    spmvDD8(v, w, (unsigned int *)rows); break;
-  }
-}
-
-void DuffsDeviceCompressed16::spmv(double* __restrict v, double* __restrict w) {
-  const int *rows = matrix->rows;
-  switch(sizeOfRowLength) {
-  case 1:
-    spmvDD16(v, w, (unsigned char *)rows); break;
-  case 2:
-    spmvDD16(v, w, (unsigned short *)rows); break;
-  default:
-    spmvDD16(v, w, (unsigned int *)rows); break;
-  }
-}
-
-void DuffsDeviceCompressed32::spmv(double* __restrict v, double* __restrict w) {
-  const int *rows = matrix->rows;
-  switch(sizeOfRowLength) {
-  case 1:
-    spmvDD32(v, w, (unsigned char *)rows); break;
-  case 2:
-    spmvDD32(v, w, (unsigned short *)rows); break;
-  default:
-    spmvDD32(v, w, (unsigned int *)rows); break;
-  }
-}
-
+template <>
 template <typename T>
-void DuffsDeviceCompressed::spmvDD4(double* __restrict v, double* __restrict w, T* __restrict rows) {
+void DuffsDeviceCompressed<4>::spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -167,8 +135,9 @@ void DuffsDeviceCompressed::spmvDD4(double* __restrict v, double* __restrict w, 
   }
 }
 
+template <>
 template <typename T>
-void DuffsDeviceCompressed::spmvDD8(double* __restrict v, double* __restrict w, T* __restrict rows) {
+void DuffsDeviceCompressed<8>::spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -214,8 +183,9 @@ void DuffsDeviceCompressed::spmvDD8(double* __restrict v, double* __restrict w, 
   }
 }
 
+template <>
 template <typename T>
-void DuffsDeviceCompressed::spmvDD16(double* __restrict v, double* __restrict w, T* __restrict rows) {
+void DuffsDeviceCompressed<16>::spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
@@ -277,8 +247,9 @@ void DuffsDeviceCompressed::spmvDD16(double* __restrict v, double* __restrict w,
   }
 }
 
+template <>
 template <typename T>
-void DuffsDeviceCompressed::spmvDD32(double* __restrict v, double* __restrict w, T* __restrict rows) {
+void DuffsDeviceCompressed<32>::spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
