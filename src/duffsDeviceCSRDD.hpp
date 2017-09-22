@@ -1,6 +1,4 @@
 #pragma once
-#ifndef _DUFFSDEVICECSRDD_CPP_
-#define _DUFFSDEVICECSRDD_CPP_
 
 #include "method.h"
 #include <iostream>
@@ -39,9 +37,7 @@ void DuffsDeviceCSRDD<UnrollingFactor>::convertMatrix() {
     int i;
     for (i = stripeInfos->at(t).rowIndexBegin; i < stripeInfos->at(t).rowIndexEnd; i++) {
       int length = csrMatrix->rows[i + 1] - csrMatrix->rows[i];
-      int entrancePoint = length % UnrollingFactor;
-      int iterations = length / UnrollingFactor;
-      rows[i] = (iterations << 8) | (entrancePoint & 0x000000FF);
+      rows[i] = length;
     }
   }
   
@@ -64,9 +60,9 @@ void DuffsDeviceCSRDD<4>::spmv(double* __restrict v, double* __restrict w) {
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const int ddInfo = rows[i];
-      int n = ddInfo >> 8;
-      const int entrancePoint = ddInfo & 0x000000FF;
+      const int length = rows[i];
+      int n = length / 4;
+      const int entrancePoint = length % 4;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -103,9 +99,9 @@ void DuffsDeviceCSRDD<8>::spmv(double* __restrict v, double* __restrict w) {
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const int ddInfo = rows[i];
-      int n = ddInfo >> 8;
-      const int entrancePoint = ddInfo & 0x000000FF;
+      const int length = rows[i];
+      int n = length / 8;
+      const int entrancePoint = length % 8;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -150,9 +146,9 @@ void DuffsDeviceCSRDD<16>::spmv(double* __restrict v, double* __restrict w) {
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const int ddInfo = rows[i];
-      int n = ddInfo >> 8;
-      const int entrancePoint = ddInfo & 0x000000FF;
+      const int length = rows[i];
+      int n = length / 16;
+      const int entrancePoint = length % 16;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -213,9 +209,9 @@ void DuffsDeviceCSRDD<32>::spmv(double* __restrict v, double* __restrict w) {
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const int ddInfo = rows[i];
-      int n = ddInfo >> 8;
-      const int entrancePoint = ddInfo & 0x000000FF;
+      const int length = rows[i];
+      int n = length / 32;
+      const int entrancePoint = length % 32;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -296,4 +292,3 @@ void DuffsDeviceCSRDD<32>::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
-#endif
