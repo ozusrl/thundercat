@@ -103,9 +103,9 @@ void RowIncrementalCSR::spmvICSR(double* __restrict v, double* __restrict w, T* 
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
       const T length = rows[i];
-      int end = k + length;
-      for (; k < end; k++) {
+      for (T j = 0; j < length; j++) {
         sum += matrix->vals[k] * v[matrix->cols[k]];
+        k++;
       }
       w[i] += sum;
     }
