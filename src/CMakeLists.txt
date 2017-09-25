@@ -35,6 +35,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
                  duffsDeviceCSRDD.hpp
                  duffsDeviceCompressed.hpp
+                 incrementalCSR.hpp
                  matrix.h
                  method.h
                  profiler.h

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "duffsDeviceCSRDD.hpp"
 #include "duffsDeviceCompressed.hpp"
+#include "incrementalCSR.hpp"
 
 using namespace thundercat;
 using namespace std;
@@ -74,6 +75,8 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
   string plainCSR8("PlainCSR8");
   string plainCSR16("PlainCSR16");
   string plainCSR32("PlainCSR32");
+
+  string rowIncrementalCSR("RowIncrementalCSR");
 
   string duffsDevice4("DuffsDevice4");
   string duffsDevice8("DuffsDevice8");
@@ -142,6 +145,8 @@ void parseCommandLineArguments(int argc, const char *argv[]) {
     method = new PlainCSR16();
   } else if(plainCSR32.compare(*argptr) == 0) {
     method = new PlainCSR32();
+  } else if(rowIncrementalCSR.compare(*argptr) == 0) {
+    method = new RowIncrementalCSR();
   } else if(duffsDevice4.compare(*argptr) == 0) {
     method = new DuffsDevice4();
   } else if(duffsDevice8.compare(*argptr) == 0) {
