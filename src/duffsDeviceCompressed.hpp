@@ -26,17 +26,24 @@ private:
   void spmvDD(double* __restrict v, double* __restrict w, T* __restrict rows);
   
 protected:
-  int sizeOfRowLength;
+  int sizeOfRowItem;
 };
 
 template <unsigned int UnrollingFactor>
 DuffsDeviceCompressed<UnrollingFactor>::DuffsDeviceCompressed() {
 }
 
+template <unsigned int UnrollingFactor, typename T>
+void buildMatrixData(int rowIndexBegin, int rowIndexEnd, int *rows, T *rowPtr) {
+  for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
+    int length = rows[i + 1] - rows[i];
+    rowPtr[2 * i] = (T)(length / UnrollingFactor);
+    rowPtr[2 * i + 1] = (T)(length % UnrollingFactor);
+  }
+}
+
 template <unsigned int UnrollingFactor>
 void DuffsDeviceCompressed<UnrollingFactor>::convertMatrix() {
-  int *rows = new int[csrMatrix->n];
-  unsigned char *rowPtr = (unsigned char *)rows;
   int *cols = csrMatrix->cols;
   double *vals = csrMatrix->vals;
 
@@ -47,35 +54,27 @@ void DuffsDeviceCompressed<UnrollingFactor>::convertMatrix() {
       maxRowLength = length;
     }
   }
-  
-  if (maxRowLength <= 256) {             // 1 byte
-    sizeOfRowLength = 1;
-  } else if (maxRowLength <= 65536) {    // 2 bytes
-    sizeOfRowLength = 2;
-  } else {                               // 4 bytes
-    sizeOfRowLength = 4;
+
+  if (maxRowLength / UnrollingFactor < (1 << 8)) {            // 1 byte
+    sizeOfRowItem = 1;
+  } else if (maxRowLength / UnrollingFactor < (1 << 16)) {    // 2 bytes
+    sizeOfRowItem = 2;
+  } else {
+    sizeOfRowItem = 4;
   }
+
+  int *rows = new int[csrMatrix->n * 2];
   
 #pragma omp parallel for
   for (int t = 0; t < stripeInfos->size(); ++t) {
-    int i;
-    for (i = stripeInfos->at(t).rowIndexBegin; i < stripeInfos->at(t).rowIndexEnd; i++) {
-      int length = csrMatrix->rows[i + 1] - csrMatrix->rows[i];
-      unsigned char *charPtr = (unsigned char*)rowPtr;
-      unsigned short *shortPtr = (unsigned short*)rowPtr;
-      int *intPtr = (int*)rowPtr;
-      switch(sizeOfRowLength) {
-      case 1:
-        *charPtr = (unsigned char)length; break;
-      case 2:
-        *shortPtr = (unsigned short)length; break;
-      default:
-        *intPtr = (int)length; break;
-      }
-      rowPtr += sizeOfRowLength;
+    if (sizeOfRowItem == 1) {
+      buildMatrixData<UnrollingFactor>(stripeInfos->at(t).rowIndexBegin, stripeInfos->at(t).rowIndexEnd, csrMatrix->rows, (unsigned char *)rows);
+    } else if (sizeOfRowItem == 2) {
+      buildMatrixData<UnrollingFactor>(stripeInfos->at(t).rowIndexBegin, stripeInfos->at(t).rowIndexEnd, csrMatrix->rows, (unsigned short *)rows);
+    } else {
+      buildMatrixData<UnrollingFactor>(stripeInfos->at(t).rowIndexBegin, stripeInfos->at(t).rowIndexEnd, csrMatrix->rows, (unsigned int *)rows);
     }
   }
-  
   matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
   matrix->numRows = csrMatrix->n;
   matrix->numCols = csrMatrix->nz;
@@ -85,7 +84,7 @@ void DuffsDeviceCompressed<UnrollingFactor>::convertMatrix() {
 template <unsigned int UnrollingFactor>
 void DuffsDeviceCompressed<UnrollingFactor>::spmv(double* __restrict v, double* __restrict w) {
   const int *rows = matrix->rows;
-  switch(sizeOfRowLength) {
+  switch(sizeOfRowItem) {
   case 1:
     spmvDD(v, w, (unsigned char *)rows); break;
   case 2:
@@ -102,15 +101,16 @@ void DuffsDeviceCompressed<4>::spmvDD(double* __restrict v, double* __restrict w
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
-    rows += stripeInfos->at(t).rowIndexBegin;
     int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
     double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    T *rowPtr = rows;
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const T length = rows[i];
-      int n = (int)(length / 4);
-      const T entrancePoint = length % 4;
+      T n = *rowPtr;
+      rowPtr++;
+      const T entrancePoint = *rowPtr;
+      rowPtr++;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -128,7 +128,7 @@ void DuffsDeviceCompressed<4>::spmvDD(double* __restrict v, double* __restrict w
           case 0:
             ;
           }
-          while (--n >= 0);
+          while (n-- > 0);
       }
       w[i] += sum;
     }
@@ -142,15 +142,16 @@ void DuffsDeviceCompressed<8>::spmvDD(double* __restrict v, double* __restrict w
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
-    rows += stripeInfos->at(t).rowIndexBegin;
     int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
     double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    T *rowPtr = rows;
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const T length = rows[i];
-      int n = (int)(length / 8);
-      const T entrancePoint = length % 8;
+      T n = *rowPtr;
+      rowPtr++;
+      const T entrancePoint = *rowPtr;
+      rowPtr++;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -176,7 +177,7 @@ void DuffsDeviceCompressed<8>::spmvDD(double* __restrict v, double* __restrict w
           case 0:
             ;
           }
-          while (--n >= 0);
+          while (n-- > 0);
       }
       w[i] += sum;
     }
@@ -190,15 +191,16 @@ void DuffsDeviceCompressed<16>::spmvDD(double* __restrict v, double* __restrict 
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
-    rows += stripeInfos->at(t).rowIndexBegin;
     int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
     double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    T *rowPtr = rows;
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const T length = rows[i];
-      int n = (int)(length / 16);
-      const T entrancePoint = length % 16;
+      T n = *rowPtr;
+      rowPtr++;
+      const T entrancePoint = *rowPtr;
+      rowPtr++;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -240,7 +242,7 @@ void DuffsDeviceCompressed<16>::spmvDD(double* __restrict v, double* __restrict 
           case 0:
             ;
           }
-          while (--n >= 0);
+          while (n-- > 0);
       }
       w[i] += sum;
     }
@@ -254,15 +256,16 @@ void DuffsDeviceCompressed<32>::spmvDD(double* __restrict v, double* __restrict 
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
     int rowIndexEnd = stripeInfos->at(t).rowIndexEnd;
-    rows += stripeInfos->at(t).rowIndexBegin;
     int *cols = matrix->cols + stripeInfos->at(t).valIndexBegin;
     double *vals = matrix->vals + stripeInfos->at(t).valIndexBegin;
+    T *rowPtr = rows;
     
     for (int i = rowIndexBegin; i < rowIndexEnd; i++) {
       double sum = 0.0;
-      const T length = rows[i];
-      int n = (int)(length / 32);
-      const T entrancePoint = length % 32;
+      T n = *rowPtr;
+      rowPtr++;
+      const T entrancePoint = *rowPtr;
+      rowPtr++;
       
       vals += entrancePoint;
       cols += entrancePoint;
@@ -336,7 +339,7 @@ void DuffsDeviceCompressed<32>::spmvDD(double* __restrict v, double* __restrict 
           case 0:
             ;
           }
-          while (--n >= 0);
+          while (n-- > 0);
       }
       w[i] += sum;
     }
