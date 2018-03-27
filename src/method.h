@@ -55,26 +55,31 @@ namespace thundercat {
   class PlainCSR: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
+    static const std::string name;
   };
 
   class PlainCSR4: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
+    static const std::string name;
   };
 
   class PlainCSR8: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
+    static const std::string name;
   };
 
   class PlainCSR16: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
+    static const std::string name;
   };
 
   class PlainCSR32: public SpMVMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
+    static const std::string name;
   };
 
   ///

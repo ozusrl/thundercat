@@ -14,32 +14,37 @@ set(dir ${CMAKE_CURRENT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 set(SOURCE_FILES
-                 csrByNZ.cpp
-                 csrLenWithGOTO.cpp
-                 csrWithGOTO.cpp
-                 duffsDevice.cpp
-                 duffsDeviceLCSR.cpp
-                 genOski.cpp
-                 main.cpp
+#                 csrByNZ.cpp
+#                 csrLenWithGOTO.cpp
+#                 csrWithGOTO.cpp
+#                 duffsDevice.cpp
+#                 duffsDeviceLCSR.cpp
+#                 genOski.cpp
+#                 main.cpp
                  matrix.cpp
                  method.cpp
-                 mkl.cpp
-                 plaincsr.cpp
+#                 mkl.cpp
+#                 plaincsr.cpp
                  profiler.cpp
-                 rowPattern.cpp
-                 svmAnalyzer.cpp
-                 unfolding.cpp
-                 unrollingWithGOTO.cpp
+#                 rowPattern.cpp
+#                 svmAnalyzer.cpp
+#                 unfolding.cpp
+#                 unrollingWithGOTO.cpp
+                 main2.cpp
+                 spmvRegistry.cpp
+                 parse_options.cpp
 )
 
 set(HEADER_FILES
-                 duffsDeviceCSRDD.hpp
-                 duffsDeviceCompressed.hpp
-                 incrementalCSR.hpp
+#                 duffsDeviceCSRDD.hpp
+#                 duffsDeviceCompressed.hpp
+#                 incrementalCSR.hpp
                  matrix.h
                  method.h
                  profiler.h
-                 svmAnalyzer.h
+#                 svmAnalyzer.h
+                 spmvRegistry.h
+                 parse_options.h
 )
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
