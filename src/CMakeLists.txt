@@ -24,7 +24,7 @@ set(SOURCE_FILES
                  matrix.cpp
                  method.cpp
 #                 mkl.cpp
-#                 plaincsr.cpp
+                 plaincsr.cpp
                  profiler.cpp
 #                 rowPattern.cpp
 #                 svmAnalyzer.cpp

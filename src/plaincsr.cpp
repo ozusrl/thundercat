@@ -1,8 +1,10 @@
 #include "method.h"
+#include "spmvRegistry.h"
 
 using namespace thundercat;
 using namespace std;
 
+const std::string PlainCSR::name = "pcsr";
 void PlainCSR::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
@@ -18,6 +20,9 @@ void PlainCSR::spmv(double* __restrict v, double* __restrict w) {
   }
 }
 
+REGISTER_METHOD(PlainCSR)
+
+const std::string PlainCSR4::name = "pcsr4";
 void PlainCSR4::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
@@ -39,7 +44,9 @@ void PlainCSR4::spmv(double* __restrict v, double* __restrict w) {
     }
   }
 }
+REGISTER_METHOD(PlainCSR4)
 
+const std::string PlainCSR8::name = "pcsr8";
 void PlainCSR8::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
@@ -65,7 +72,9 @@ void PlainCSR8::spmv(double* __restrict v, double* __restrict w) {
     }
   }
 }
+REGISTER_METHOD(PlainCSR8)
 
+const std::string PlainCSR16::name = "pcsr16";
 void PlainCSR16::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
@@ -99,7 +108,9 @@ void PlainCSR16::spmv(double* __restrict v, double* __restrict w) {
     }
   }
 }
+REGISTER_METHOD(PlainCSR16)
 
+const std::string PlainCSR32::name = "pcsr32";
 void PlainCSR32::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
@@ -149,3 +160,4 @@ void PlainCSR32::spmv(double* __restrict v, double* __restrict w) {
     }
   }
 }
+REGISTER_METHOD(PlainCSR32)
