@@ -1,3 +1,9 @@
 [submodule "asmjit"]
 	path = asmjit
 	url = ./asmjit
+[submodule "docopt.cpp"]
+	path = docopt.cpp
+	url = https://github.com/docopt/docopt.cpp.git
+[submodule "MMMatrixIO"]
+	path = MMMatrixIO
+	url = https://github.com/ozusrl/MMMatrixIO.git

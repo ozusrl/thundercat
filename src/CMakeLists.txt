@@ -103,4 +103,22 @@ if (OPENMP_FOUND)
   message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 endif()
 
+##
+## MMMatrixIO library
+##
+find_library(MMMatrixIO
+        mmmatrixio
+        PATHS ${CMAKE_SOURCE_DIR}/../lib/mmmatrixio
+        )
+target_link_libraries(thundercat ${MMMatrixIO})
+target_include_directories(thundercat PUBLIC ${CMAKE_SOURCE_DIR}/../MMMatrixIO/src)
 
+#
+# docopt library
+#
+include_directories(${CMAKE_SOURCE_DIR}/../docopt.cpp)
+find_library(docopt
+        docopt
+        PATHS ${CMAKE_SOURCE_DIR}/../lib/docopt.cpp
+        )
+target_link_libraries(thundercat ${docopt})
