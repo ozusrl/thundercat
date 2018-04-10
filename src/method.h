@@ -1,21 +1,26 @@
 #ifndef _METHOD_H_
 #define _METHOD_H_
 
-#include "matrix.h"
+#include "mmmatrix.hpp"
 #include <unordered_map>
 #include <iostream>
+#include <map>
 #include "asmjit/asmjit.h"
 #ifdef OPENMP_EXISTS
 #include "omp.h"
 #endif
 
+#define MATRIX_ELEMENT double
+#define MATRIX thundercat::MMMatrix<MATRIX_ELEMENT>&
+
 namespace thundercat {
+
   // multByM(v, w, rows, cols, vals)
   typedef void(*MultByMFun)(double*, double*, int*, int*, double*);
   
   class SpMVMethod {
   public:
-    virtual void init(Matrix *csrMatrix, unsigned int numThreads);
+    virtual void init(unsigned int numThreads);
 
     virtual ~SpMVMethod();
     
@@ -23,28 +28,29 @@ namespace thundercat {
     
     virtual void emitCode();
     
-    virtual Matrix* getMethodSpecificMatrix() final;
+//    virtual MATRIX getMethodSpecificMatrix() final;
     
-    virtual void processMatrix() final;
+    virtual void processMatrix(MATRIX matrix) final;
   
     virtual void spmv(double* __restrict v, double* __restrict w) = 0;
+
     
   protected:
     virtual void analyzeMatrix();
     virtual void convertMatrix();
     
     std::vector<MatrixStripeInfo> *stripeInfos;
-    Matrix *csrMatrix;
-    Matrix *matrix;
     unsigned int numPartitions;
-  };
+
+    std::unique_ptr<CSRMatrix<MATRIX_ELEMENT>> csrMatrix;
+    };
   
   ///
   /// MKL
   ///
   class MKL: public SpMVMethod {
   public:
-    virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
+    virtual void init(MATRIX csrMatrix, unsigned int numThreads) final;
     
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
@@ -122,7 +128,7 @@ namespace thundercat {
   
   class LCSRAnalyzer {
   public:
-    virtual void analyzeMatrix(Matrix *csrMatrix,
+      virtual void analyzeMatrix(CSRMatrix<MATRIX_ELEMENT>& csrMatrix,
                                std::vector<MatrixStripeInfo> *stripeInfos,
                                std::vector<NZtoRowMap> &rowByNZLists) final;
   };
@@ -137,7 +143,7 @@ namespace thundercat {
     
   protected:
     std::vector<NZtoRowMap> rowByNZLists;
-    LCSRInfo *lcsrInfo;
+//    LCSRInfo *lcsrInfo;
   };
 
   class DuffsDeviceLCSR4: public DuffsDeviceLCSR {
@@ -165,7 +171,7 @@ namespace thundercat {
   ///
   class Specializer : public SpMVMethod {
   public:
-    virtual void init(Matrix *csrMatrix, unsigned int numThreads) final;
+    virtual void init(unsigned int numThreads) final;
     
     virtual bool isSpecializer() final;
     

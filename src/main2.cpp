@@ -1,10 +1,12 @@
 #include <iostream>
 #include "spmvRegistry.h"
 #include "parse_options.h"
-#include "matrix.h"
+#include "method.h"
 
-#define MATRIX thundercat::Matrix
+#include "mmmatrix.hpp"
+#include "profiler.h"
 
+using namespace thundercat;
 
 long long int deltaMicroseconds(
     std::chrono::steady_clock::time_point &t2,
@@ -20,15 +22,17 @@ int main(int argc, const char *argv[]) {
   auto method = registry.getMethod(cliOptions->method);
 
   auto readStart = std::chrono::high_resolution_clock::now();
-  auto matrix = MATRIX::readMatrixFromFile(cliOptions->mtxFile);
+  auto matrix = MMMatrix<MATRIX_ELEMENT>::fromFile(cliOptions->mtxFile);
 
   auto initStart = std::chrono::high_resolution_clock::now();
-  method->init(matrix, cliOptions->threads);
 
-  method->processMatrix();
+  auto N =  matrix->N;
+  method->init(cliOptions->threads);
 
-  double *in = new double[matrix->n];
-  double *out = new double[matrix->n];
+  method->processMatrix(matrix.operator*());
+
+  double *in = new double[N];
+  double *out = new double[N];
 
 
   auto computeStart = std::chrono::high_resolution_clock::now();

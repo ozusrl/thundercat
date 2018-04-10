@@ -13,9 +13,7 @@ extern bool DUMP_OBJECT;
 SpMVMethod::~SpMVMethod() {
 }
 
-void SpMVMethod::init(Matrix *csrMatrix, unsigned int numThreads) {
-  this->csrMatrix = csrMatrix;
-  this->matrix = csrMatrix;
+void SpMVMethod::init(unsigned int numThreads) {
   this->numPartitions = numThreads;
 }
 
@@ -27,11 +25,14 @@ void SpMVMethod::emitCode() {
   // By default, do nothing
 }
 
-Matrix* SpMVMethod::getMethodSpecificMatrix() {
-  return matrix;
-}
+//MATRIX SpMVMethod::getMethodSpecificMatrix() {
+//  return matrix;
+//}
 
-void SpMVMethod::processMatrix() {
+void SpMVMethod::processMatrix(MATRIX matrix) {
+
+  csrMatrix = matrix.toCSR();
+
   Profiler::recordTime("getStripeInfos", [this]() {
     stripeInfos = csrMatrix->getStripeInfos(numPartitions);
   });
@@ -51,9 +52,9 @@ void SpMVMethod::convertMatrix() {
   // Do nothing.
 }
 
-void Specializer::init(Matrix *csrMatrix, unsigned int numThreads) {
-  SpMVMethod::init(csrMatrix, numThreads);
-  
+void Specializer::init(unsigned int numThreads) {
+  SpMVMethod::init(numThreads);
+
   codeHolders.clear();
   for (int i = 0; i < numThreads; i++) {
     codeHolders.push_back(new CodeHolder);
@@ -95,7 +96,7 @@ std::vector<CodeHolder*> *Specializer::getCodeHolders() {
 void Specializer::spmv(double* __restrict v, double* __restrict w) {
 #pragma omp parallel for
   for (unsigned j = 0; j < functions.size(); j++) {
-    functions[j](v, w, matrix->rows, matrix->cols, matrix->vals);
+    functions[j](v, w, csrMatrix->rowPtr, csrMatrix->colIndices, csrMatrix->values);
   }
 }
 
@@ -110,7 +111,7 @@ void RowByNZ::addRowIndex(int index) {
   rowIndices.push_back(index);
 }
 
-void LCSRAnalyzer::analyzeMatrix(Matrix *csrMatrix,
+void LCSRAnalyzer::analyzeMatrix(CSRMatrix<MATRIX_ELEMENT>& csrMatrix,
                                  std::vector<MatrixStripeInfo> *stripeInfos,
                                  std::vector<NZtoRowMap> &rowByNZLists) {
   rowByNZLists.resize(stripeInfos->size());
@@ -119,8 +120,8 @@ void LCSRAnalyzer::analyzeMatrix(Matrix *csrMatrix,
   for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix.rowPtr[rowIndex];
+      int rowEnd = csrMatrix.rowPtr[rowIndex+1];
       int rowLength = rowEnd - rowStart;
       if (rowLength > 0) {
         rowByNZLists[threadIndex][rowLength].addRowIndex(rowIndex);
