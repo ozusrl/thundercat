@@ -1,4 +1,3 @@
-#include "profiler.h"
 #include "method.h"
 #include <iostream>
 #include <sstream>
@@ -33,15 +32,9 @@ void SpMVMethod::processMatrix(MATRIX matrix) {
 
   csrMatrix = matrix.toCSR();
 
-  Profiler::recordTime("getStripeInfos", [this]() {
-    stripeInfos = csrMatrix->getStripeInfos(numPartitions);
-  });
-  Profiler::recordTime("analyzeMatrix", [this]() {
-    analyzeMatrix();
-  });
-  Profiler::recordTime("convertMatrix", [this]() {
-    convertMatrix();
-  });
+  stripeInfos = csrMatrix->getStripeInfos(numPartitions);
+  analyzeMatrix();
+  convertMatrix();
 }
 
 void SpMVMethod::analyzeMatrix() {
@@ -74,19 +67,17 @@ void Specializer::emitCode() {
     emitMultByMFunction(i);
     codeHolders[i]->sync();
   }
-  
-  Profiler::recordTime("setMultByMFunctions", [this]() {
-    for (unsigned int i = 0; i < codeHolders.size(); i++) {
-      MultByMFun fn;
-      asmjit::Error err = rt.add(&fn, codeHolders[i]);
-      if (err) {
-        std::cerr << "Problem occurred while adding function " << i << " to Runtime.\n";
-        std::cerr << err;
-        exit(1);
-      }
-      functions[i] = fn;
+
+  for (unsigned int i = 0; i < codeHolders.size(); i++) {
+    MultByMFun fn;
+    asmjit::Error err = rt.add(&fn, codeHolders[i]);
+    if (err) {
+      std::cerr << "Problem occurred while adding function " << i << " to Runtime.\n";
+      std::cerr << err;
+      exit(1);
     }
-  });
+    functions[i] = fn;
+  }
 }
 
 std::vector<CodeHolder*> *Specializer::getCodeHolders() {
