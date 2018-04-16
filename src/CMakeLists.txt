@@ -14,7 +14,7 @@ set(dir ${CMAKE_CURRENT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 set(SOURCE_FILES
-#                 csrByNZ.cpp
+                 csrByNZ.cpp
 #                 csrLenWithGOTO.cpp
 #                 csrWithGOTO.cpp
 #                 duffsDevice.cpp

@@ -29,6 +29,7 @@ int main(int argc, const char *argv[]) {
   method->init(cliOptions->threads);
 
   method->processMatrix(std::move(matrix));
+  method->emitCode();
 
   double *in = new double[N];
   double *out = new double[N];

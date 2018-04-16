@@ -215,10 +215,13 @@ namespace thundercat {
   /// CSRbyNZ
   ///
   class CSRbyNZ: public Specializer {
+  public:
+    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index);
     virtual void analyzeMatrix() final;
     virtual void convertMatrix();
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
 
   protected:
     std::vector<NZtoRowMap> rowByNZLists;

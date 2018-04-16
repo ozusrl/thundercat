@@ -3,18 +3,22 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "spmvRegistry.h"
 
 using namespace thundercat;
 using namespace std;
 using namespace asmjit;
 using namespace x86;
 
+const std::string CSRbyNZ::name = "csrbynz";
+REGISTER_METHOD(CSRbyNZ)
+
 ///
 /// Analysis
 ///
 void CSRbyNZ::analyzeMatrix() {
   LCSRAnalyzer analyzer;
-  analyzer.analyzeMatrix(csrMatrix, stripeInfos, rowByNZLists);
+  analyzer.analyzeMatrix(*csrMatrix, *stripeInfos, rowByNZLists);
 }
 
 ///
@@ -28,9 +32,9 @@ void CSRbyNZ::analyzeMatrix() {
 // vals: values as usual,
 //       sorted according to the order used in rows array
 void CSRbyNZ::convertMatrix() {
-  int *rows = new int[csrMatrix->n];
-  int *cols = new int[csrMatrix->nz];
-  double *vals = new double[csrMatrix->nz];
+  int *rows = new int[csrMatrix->N];
+  int *cols = new int[csrMatrix->NZ];
+  double *vals = new double[csrMatrix->NZ];
 
 #pragma omp parallel for
   for (int t = 0; t < rowByNZLists.size(); ++t) {
@@ -43,16 +47,16 @@ void CSRbyNZ::convertMatrix() {
       unsigned long rowLength = rowByNZ.first;
       for (int rowIndex : *(rowByNZ.second.getRowIndices())) {
         *rowsPtr++ = rowIndex;
-        int k = csrMatrix->rows[rowIndex];
+        int k = csrMatrix->rowPtr[rowIndex];
         for (int i = 0; i < rowLength; i++, k++) {
-          *colsPtr++ = csrMatrix->cols[k];
-          *valsPtr++ = csrMatrix->vals[k];
+          *colsPtr++ = csrMatrix->colIndices[k];
+          *valsPtr++ = csrMatrix->values[k];
         }
       }
     }
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
 }
 
 ///
