@@ -28,9 +28,9 @@ void SpMVMethod::emitCode() {
 //  return matrix;
 //}
 
-void SpMVMethod::processMatrix(MATRIX matrix) {
+void SpMVMethod::processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) {
 
-  csrMatrix = matrix.toCSR();
+  csrMatrix = matrix->toCSR();
 
   stripeInfos = csrMatrix->getStripeInfos(numPartitions);
   analyzeMatrix();
@@ -102,14 +102,14 @@ void RowByNZ::addRowIndex(int index) {
   rowIndices.push_back(index);
 }
 
-void LCSRAnalyzer::analyzeMatrix(CSRMatrix<MATRIX_ELEMENT>& csrMatrix,
-                                 std::vector<MatrixStripeInfo> *stripeInfos,
+void LCSRAnalyzer::analyzeMatrix(CSRMatrix<VALUE_TYPE>& csrMatrix,
+                                 std::vector<MatrixStripeInfo> stripeInfos,
                                  std::vector<NZtoRowMap> &rowByNZLists) {
-  rowByNZLists.resize(stripeInfos->size());
+  rowByNZLists.resize(stripeInfos.size());
   
 #pragma omp parallel for
-  for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
-    auto &stripeInfo = stripeInfos->at(threadIndex);
+  for (int threadIndex = 0; threadIndex < stripeInfos.size(); ++threadIndex) {
+    auto &stripeInfo = stripeInfos.at(threadIndex);
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
       int rowStart = csrMatrix.rowPtr[rowIndex];
       int rowEnd = csrMatrix.rowPtr[rowIndex+1];

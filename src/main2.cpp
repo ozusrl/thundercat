@@ -18,18 +18,17 @@ int main(int argc, const char *argv[]) {
 
   auto cliOptions = parseCliOptions(argc, argv);
   
-  SpmvMethodRegistry& registry = SpmvMethodRegistry::instance();
-  auto method = registry.getMethod(cliOptions->method);
+  auto method = SpmvMethodRegistry::instance().getMethod(cliOptions->method);
 
   auto readStart = std::chrono::high_resolution_clock::now();
-  auto matrix = MMMatrix<MATRIX_ELEMENT>::fromFile(cliOptions->mtxFile);
+  auto matrix = MMMatrix<VALUE_TYPE>::fromFile(cliOptions->mtxFile);
 
   auto initStart = std::chrono::high_resolution_clock::now();
 
   auto N =  matrix->N;
   method->init(cliOptions->threads);
 
-  method->processMatrix(matrix.operator*());
+  method->processMatrix(std::move(matrix));
 
   double *in = new double[N];
   double *out = new double[N];

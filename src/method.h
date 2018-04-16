@@ -10,15 +10,32 @@
 #include "omp.h"
 #endif
 
-#define MATRIX_ELEMENT double
-#define MATRIX thundercat::MMMatrix<MATRIX_ELEMENT>&
+#define VALUE_TYPE double
+
 
 namespace thundercat {
 
   // multByM(v, w, rows, cols, vals)
   typedef void(*MultByMFun)(double*, double*, int*, int*, double*);
+
+  class BaseSpMVMethod {
+  public:
+      virtual void init(unsigned int numThreads) = 0;
+
+      virtual ~BaseSpMVMethod() {}
+
+      virtual bool isSpecializer() = 0;
+
+      virtual void emitCode() = 0;
+
+//    virtual MATRIX getMethodSpecificMatrix() = 0;
+
+        virtual void processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) = 0;
+
+        virtual void spmv(double* __restrict v, double* __restrict w) = 0;
+  };
   
-  class SpMVMethod {
+  class SpMVMethod : public BaseSpMVMethod {
   public:
     virtual void init(unsigned int numThreads);
 
@@ -29,8 +46,8 @@ namespace thundercat {
     virtual void emitCode();
     
 //    virtual MATRIX getMethodSpecificMatrix() final;
-    
-    virtual void processMatrix(MATRIX matrix) final;
+
+    virtual void processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) final;
   
     virtual void spmv(double* __restrict v, double* __restrict w) = 0;
 
@@ -42,7 +59,7 @@ namespace thundercat {
     std::vector<MatrixStripeInfo> *stripeInfos;
     unsigned int numPartitions;
 
-    std::unique_ptr<CSRMatrix<MATRIX_ELEMENT>> csrMatrix;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> csrMatrix;
     };
   
   ///
@@ -50,7 +67,7 @@ namespace thundercat {
   ///
   class MKL: public SpMVMethod {
   public:
-    virtual void init(MATRIX csrMatrix, unsigned int numThreads) final;
+    virtual void init(unsigned int numThreads) final;
     
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
@@ -128,8 +145,8 @@ namespace thundercat {
   
   class LCSRAnalyzer {
   public:
-      virtual void analyzeMatrix(CSRMatrix<MATRIX_ELEMENT>& csrMatrix,
-                               std::vector<MatrixStripeInfo> *stripeInfos,
+      virtual void analyzeMatrix(CSRMatrix<VALUE_TYPE>& csrMatrix,
+                               std::vector<MatrixStripeInfo> stripeInfos,
                                std::vector<NZtoRowMap> &rowByNZLists) final;
   };
   
