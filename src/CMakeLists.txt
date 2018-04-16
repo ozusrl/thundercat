@@ -25,7 +25,7 @@ set(SOURCE_FILES
 #                 mkl.cpp
                  plaincsr.cpp
                  profiler.cpp
-#                 rowPattern.cpp
+                 rowPattern.cpp
 #                 svmAnalyzer.cpp
 #                 unfolding.cpp
 #                 unrollingWithGOTO.cpp

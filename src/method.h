@@ -263,6 +263,8 @@ namespace thundercat {
   typedef std::map<std::vector<int>, std::vector<int> > RowPatternInfo;
   
   class RowPattern: public Specializer {
+  public:
+    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -270,6 +272,7 @@ namespace thundercat {
     
   private:
     std::vector<RowPatternInfo> patternInfos;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
   
 

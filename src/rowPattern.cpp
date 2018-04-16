@@ -1,4 +1,5 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
 
 using namespace thundercat;
@@ -6,6 +7,10 @@ using namespace std;
 using namespace asmjit;
 using namespace x86;
 
+
+
+const std::string RowPattern::name = "rowpattern";
+REGISTER_METHOD(RowPattern)
 ///
 /// Analysis
 ///
@@ -16,14 +21,14 @@ void RowPattern::analyzeMatrix() {
   for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix->rowPtr[rowIndex];
+      int rowEnd = csrMatrix->rowPtr[rowIndex+1];
       int rowLength = rowEnd - rowStart;
       
       if (rowLength > 0) {
         vector<int> pattern;
         for (int k = rowStart; k < rowEnd; ++k) {
-          pattern.push_back(csrMatrix->cols[k] - (int)rowIndex);
+          pattern.push_back(csrMatrix->colIndices[k] - (int)rowIndex);
         }
         patternInfos[threadIndex][pattern].push_back((int)rowIndex);
       }
@@ -35,8 +40,8 @@ void RowPattern::analyzeMatrix() {
 /// RowPattern
 ///
 void RowPattern::convertMatrix() {
-  double *vals = new double[csrMatrix->nz];
-  int *rows = new int[csrMatrix->n];
+  double *vals = new double[csrMatrix->NZ];
+  int *rows = new int[csrMatrix->N];
   
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); ++t) {
@@ -47,8 +52,8 @@ void RowPattern::convertMatrix() {
     for (auto &stencilInfo : stencils) {
       // build vals array
       for (auto rowIndex: stencilInfo.second) {
-        for (int k = csrMatrix->rows[rowIndex]; k < csrMatrix->rows[rowIndex+1]; ++k) {
-          *valPtr++ = csrMatrix->vals[k];
+        for (int k = csrMatrix->rowPtr[rowIndex]; k < csrMatrix->rowPtr[rowIndex+1]; ++k) {
+          *valPtr++ = csrMatrix->values[k];
         }
       }
       // build rows array
@@ -60,10 +65,7 @@ void RowPattern::convertMatrix() {
     }
   }
   
-  matrix = new Matrix(rows, NULL, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
-  matrix->numRows = csrMatrix->n;
-  matrix->numCols = 0;
-  matrix->numVals = csrMatrix->nz;
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, (int *) NULL, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
 }
 
 ///
