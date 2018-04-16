@@ -18,11 +18,11 @@ namespace thundercat {
   // multByM(v, w, rows, cols, vals)
   typedef void(*MultByMFun)(double*, double*, int*, int*, double*);
 
-  class BaseSpMVMethod {
+  class SpmvMethod {
   public:
       virtual void init(unsigned int numThreads) = 0;
 
-      virtual ~BaseSpMVMethod() {}
+      virtual ~SpmvMethod() {}
 
       virtual bool isSpecializer() = 0;
 
@@ -35,11 +35,11 @@ namespace thundercat {
         virtual void spmv(double* __restrict v, double* __restrict w) = 0;
   };
   
-  class SpMVMethod : public BaseSpMVMethod {
+  class CsrSpmvMethod : public SpmvMethod {
   public:
     virtual void init(unsigned int numThreads);
 
-    virtual ~SpMVMethod();
+    virtual ~CsrSpmvMethod();
     
     virtual bool isSpecializer();
     
@@ -65,7 +65,7 @@ namespace thundercat {
   ///
   /// MKL
   ///
-  class MKL: public SpMVMethod {
+  class MKL: public CsrSpmvMethod {
   public:
     virtual void init(unsigned int numThreads) final;
     
@@ -75,31 +75,31 @@ namespace thundercat {
   ///
   /// PlainCSR
   ///
-  class PlainCSR: public SpMVMethod {
+  class PlainCSR: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
     static const std::string name;
   };
 
-  class PlainCSR4: public SpMVMethod {
+  class PlainCSR4: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
     static const std::string name;
   };
 
-  class PlainCSR8: public SpMVMethod {
+  class PlainCSR8: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
     static const std::string name;
   };
 
-  class PlainCSR16: public SpMVMethod {
+  class PlainCSR16: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
     static const std::string name;
   };
 
-  class PlainCSR32: public SpMVMethod {
+  class PlainCSR32: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
     static const std::string name;
@@ -108,22 +108,22 @@ namespace thundercat {
   ///
   /// Duff's Device
   ///
-  class DuffsDevice4: public SpMVMethod {
+  class DuffsDevice4: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
   
-  class DuffsDevice8: public SpMVMethod {
+  class DuffsDevice8: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
-  class DuffsDevice16: public SpMVMethod {
+  class DuffsDevice16: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
 
-  class DuffsDevice32: public SpMVMethod {
+  class DuffsDevice32: public CsrSpmvMethod {
   public:
     virtual void spmv(double* __restrict v, double* __restrict w) final;
   };
@@ -153,7 +153,7 @@ namespace thundercat {
   ///
   /// Duff's Device for the LCSR format
   ///
-  class DuffsDeviceLCSR: public SpMVMethod {
+  class DuffsDeviceLCSR: public CsrSpmvMethod {
   protected:
     virtual void analyzeMatrix() final;
     virtual void convertMatrix() final;
@@ -186,7 +186,7 @@ namespace thundercat {
   ///
   /// Specializer
   ///
-  class Specializer : public SpMVMethod {
+  class Specializer : public CsrSpmvMethod {
   public:
     virtual void init(unsigned int numThreads) final;
     

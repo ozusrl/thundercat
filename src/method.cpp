@@ -9,26 +9,26 @@ using namespace std;
 
 extern bool DUMP_OBJECT;
 
-SpMVMethod::~SpMVMethod() {
+CsrSpmvMethod::~CsrSpmvMethod() {
 }
 
-void SpMVMethod::init(unsigned int numThreads) {
+void CsrSpmvMethod::init(unsigned int numThreads) {
   this->numPartitions = numThreads;
 }
 
-bool SpMVMethod::isSpecializer() {
+bool CsrSpmvMethod::isSpecializer() {
   return false;
 }
 
-void SpMVMethod::emitCode() {
+void CsrSpmvMethod::emitCode() {
   // By default, do nothing
 }
 
-//MATRIX SpMVMethod::getMethodSpecificMatrix() {
+//MATRIX CsrSpmvMethod::getMethodSpecificMatrix() {
 //  return matrix;
 //}
 
-void SpMVMethod::processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) {
+void CsrSpmvMethod::processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) {
 
   csrMatrix = matrix->toCSR();
 
@@ -37,16 +37,16 @@ void SpMVMethod::processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) {
   convertMatrix();
 }
 
-void SpMVMethod::analyzeMatrix() {
+void CsrSpmvMethod::analyzeMatrix() {
   // Do nothing.
 }
 
-void SpMVMethod::convertMatrix() {
+void CsrSpmvMethod::convertMatrix() {
   // Do nothing.
 }
 
 void Specializer::init(unsigned int numThreads) {
-  SpMVMethod::init(numThreads);
+  CsrSpmvMethod::init(numThreads);
 
   codeHolders.clear();
   for (int i = 0; i < numThreads; i++) {

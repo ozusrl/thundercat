@@ -6,7 +6,7 @@
 #include <map>
 #include "method.h"
 
-#define SpmvMethod thundercat::BaseSpMVMethod
+#define SpmvMethod thundercat::SpmvMethod
 
 class SpmvMethodCreator {
 public:
