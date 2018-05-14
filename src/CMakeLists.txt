@@ -19,7 +19,7 @@ set(SOURCE_FILES
                  csrWithGOTO.cpp
 #                 duffsDevice.cpp
 #                 duffsDeviceLCSR.cpp
-#                 genOski.cpp
+                 genOski.cpp
                  incrementalCSR.cpp
 #                 main.cpp
                  method.cpp

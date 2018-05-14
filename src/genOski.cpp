@@ -1,4 +1,5 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
 #include <bitset>
 
@@ -15,6 +16,9 @@ struct BlockInfo {
   vector<double> vals;
 };
 
+const std::string GenOSKI::name = "genoski";
+REGISTER_METHOD(GenOSKI)
+
 void GenOSKI::analyzeMatrix() {
   groupByBlockPatternMaps.resize(stripeInfos->size());
   numBlocks.resize(stripeInfos->size());
@@ -24,21 +28,21 @@ void GenOSKI::analyzeMatrix() {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     map<int, BlockInfo> currentBlockRowPatternsAndElements;
     vector<BlockInfo> blockPatterns;
-    blockPatterns.resize(csrMatrix->m / b_c + 1);
+    blockPatterns.resize(csrMatrix->M / b_c + 1);
     vector<int> indicesOfDetectedBlockColumns;
     
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix->rowPtr[rowIndex];
+      int rowEnd = csrMatrix->rowPtr[rowIndex+1];
       
       for (int k = rowStart; k < rowEnd; ++k) {
-        int col = csrMatrix->cols[k];
+        int col = csrMatrix->colIndices[k];
         int row = rowIndex;
         int blockCol = col/b_c;
         unsigned int elementPosition = (row % b_r) * b_c + (col % b_c);
         blockPatterns[blockCol].pattern.set(elementPosition);
         blockPatterns[blockCol].vals.reserve(b_r * b_c);
-        blockPatterns[blockCol].vals.push_back(csrMatrix->vals[k]);
+        blockPatterns[blockCol].vals.push_back(csrMatrix->values[k]);
         indicesOfDetectedBlockColumns.push_back(blockCol);
       }
       if ((rowIndex % b_r) == b_r - 1 || rowIndex == stripeInfo.rowIndexEnd - 1) {
@@ -65,6 +69,15 @@ void GenOSKI::analyzeMatrix() {
 /// GenOSKI
 ///
 
+// TODO: GenOski requires extra b_r and b_c params. We don't have support for this in registry yet, therefore we define
+// TODO: GenOSKI33 by default for now
+
+GenOSKI::GenOSKI()
+ : b_r(3)
+ , b_c(3) {
+
+}
+
 GenOSKI::GenOSKI(unsigned int b_r, unsigned int b_c) {
   this->b_r = b_r;
   this->b_c = b_c;
@@ -80,7 +93,7 @@ void GenOSKI::convertMatrix() {
   
   int *rows = new int[numTotalBlocks];
   int *cols = new int[numTotalBlocks];
-  double *vals = new double[csrMatrix->nz];
+  double *vals = new double[csrMatrix->NZ];
   
 #pragma omp parallel for
   for (int t = 0; t < stripeInfos->size(); ++t) {
@@ -101,10 +114,11 @@ void GenOSKI::convertMatrix() {
     }
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
-  matrix->numRows = numTotalBlocks;
-  matrix->numCols = numTotalBlocks;
-  matrix->numVals = csrMatrix->nz;
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
+  // TODO: Following fields seems to be unused. What are the consequences of removing these lines?
+//  matrix->numRows = numTotalBlocks;
+//  matrix->numCols = numTotalBlocks;
+//  matrix->numVals = csrMatrix->nz;
 }
 
 ///

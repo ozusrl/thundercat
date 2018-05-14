@@ -243,8 +243,10 @@ namespace thundercat {
   
   class GenOSKI: public Specializer {
   public:
+    static const std::string name;
+    GenOSKI();
     GenOSKI(unsigned int b_r, unsigned int b_c);
-    
+
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -254,6 +256,7 @@ namespace thundercat {
     unsigned int b_r, b_c;
     std::vector<GroupByBlockPatternMap> groupByBlockPatternMaps;
     std::vector<unsigned int> numBlocks;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
 
   ///
