@@ -20,6 +20,7 @@ set(SOURCE_FILES
 #                 duffsDevice.cpp
 #                 duffsDeviceLCSR.cpp
 #                 genOski.cpp
+                 incrementalCSR.cpp
 #                 main.cpp
                  method.cpp
 #                 mkl.cpp
@@ -37,7 +38,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
 #                 duffsDeviceCSRDD.hpp
 #                 duffsDeviceCompressed.hpp
-#                 incrementalCSR.hpp
+                 incrementalCSR.hpp
                  method.h
                  profiler.h
 #                 svmAnalyzer.h
