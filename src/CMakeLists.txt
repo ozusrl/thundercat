@@ -29,7 +29,7 @@ set(SOURCE_FILES
                  rowPattern.cpp
 #                 svmAnalyzer.cpp
                  unfolding.cpp
-#                 unrollingWithGOTO.cpp
+                 unrollingWithGOTO.cpp
                  main2.cpp
                  spmvRegistry.cpp
                  parse_options.cpp

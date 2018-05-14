@@ -1,10 +1,15 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
 
 using namespace thundercat;
 using namespace std;
 using namespace asmjit;
 using namespace x86;
+
+
+const std::string UnrollingWithGOTO::name = "unfoldingwithgoto";
+REGISTER_METHOD(UnrollingWithGOTO)
 
 ///
 /// Analysis is inherited from CSRbyNZ.
@@ -14,9 +19,9 @@ using namespace x86;
 /// UnrollingWithGOTO
 ///
 void UnrollingWithGOTO::convertMatrix() {
-  int *rows = new int[2 * csrMatrix->n]; // keeps the row index and num bytes to jump back
-  int *cols = new int[csrMatrix->nz];
-  double *vals = new double[csrMatrix->nz];
+  int *rows = new int[2 * csrMatrix->N]; // keeps the row index and num bytes to jump back
+  int *cols = new int[csrMatrix->NZ];
+  double *vals = new double[csrMatrix->NZ];
   
 #pragma omp parallel for
   for (int t = 0; t < stripeInfos->size(); ++t) {
@@ -34,10 +39,10 @@ void UnrollingWithGOTO::convertMatrix() {
           *(rowsPtr-2) = rowLength * -(4 + 6 + 3 + 5 + 4) - 7;
         }
         rowsPtr++;
-        int k = csrMatrix->rows[rowIndex];
+        int k = csrMatrix->rowPtr[rowIndex];
         for (int i = 0; i < rowLength; i++, k++) {
-          *colsPtr++ = csrMatrix->cols[k];
-          *valsPtr++ = csrMatrix->vals[k];
+          *colsPtr++ = csrMatrix->colIndices[k];
+          *valsPtr++ = csrMatrix->values[k];
         }
         rowCount++;
       }
@@ -45,10 +50,11 @@ void UnrollingWithGOTO::convertMatrix() {
     *(rowsPtr-1) = 3 + 4 + 5 + 5 + 3 + 4 + 4 + 2; // last row jumps forward
   }
 
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
-  matrix->numRows = 2 * csrMatrix->n;
-  matrix->numCols = csrMatrix->nz;
-  matrix->numVals = csrMatrix->nz;
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
+// TODO: Following fields seems to be unused. What are the consequences of removing these lines?
+//  matrix->numRows = 2 * csrMatrix->n;
+//  matrix->numCols = csrMatrix->nz;
+//  matrix->numVals = csrMatrix->nz;
 }
 
 ///

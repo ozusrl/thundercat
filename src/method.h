@@ -231,6 +231,8 @@ namespace thundercat {
   /// UnrollingWithGOTO
   ///
   class UnrollingWithGOTO: public CSRbyNZ {
+  public:
+      static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void convertMatrix() final;
