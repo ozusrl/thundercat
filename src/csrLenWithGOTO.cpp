@@ -1,4 +1,5 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
 
 using namespace thundercat;
@@ -12,6 +13,9 @@ using namespace x86;
 /// This way, we do not have to compute the distance dynamically.
 /// Matrix values are not reordered. Only the rows array changes.
 
+const std::string CSRLenWithGOTO::name = "csrlenwithgoto";
+REGISTER_METHOD(CSRLenWithGOTO)
+
 ///
 /// Analysis
 ///
@@ -23,8 +27,8 @@ void CSRLenWithGOTO::analyzeMatrix() {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     int maxRowLength = 0;
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix->rowPtr[rowIndex];
+      int rowEnd = csrMatrix->rowPtr[rowIndex+1];
       int rowLength = rowEnd - rowStart;
       if (rowLength > maxRowLength) {
         maxRowLength = rowLength;
@@ -39,24 +43,26 @@ void CSRLenWithGOTO::analyzeMatrix() {
 ///
 
 void CSRLenWithGOTO::convertMatrix() {
-  int *rows = new int[csrMatrix->n + stripeInfos->size()]; // 1 terminating slot for each stripe
-  int *cols = csrMatrix->cols;
-  double *vals = csrMatrix->vals;
+  int *rows = new int[csrMatrix->N + stripeInfos->size()]; // 1 terminating slot for each stripe
+  int *cols = csrMatrix->colIndices;
+  double *vals = csrMatrix->values;
   
 #pragma omp parallel for
   for (int t = 0; t < stripeInfos->size(); ++t) {
     int i;
     for (i = stripeInfos->at(t).rowIndexBegin; i < stripeInfos->at(t).rowIndexEnd; i++) {
-      int length = csrMatrix->rows[i + 1] - csrMatrix->rows[i];
+      int length = csrMatrix->rowPtr[i + 1] - csrMatrix->rowPtr[i];
       rows[i + t] = -(length * 22);
     }
     rows[i + t] = 5 + 5 + 3 + 3 + 4 + 7 + 3 + 3;
   }
-  
-  matrix = new Matrix(rows, cols, vals, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
-  matrix->numRows = csrMatrix->n + stripeInfos->size();
-  matrix->numCols = csrMatrix->nz;
-  matrix->numVals = csrMatrix->nz;
+
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
+
+// TODO: Following fields seems to be unused. What are the consequences of removing these lines?
+//  matrix->numRows = csrMatrix->NZ + stripeInfos->size();
+//  matrix->numCols = csrMatrix->NZ;
+//  matrix->numVals = csrMatrix->NZ;
 }
 
 ///
