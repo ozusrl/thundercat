@@ -283,6 +283,8 @@ namespace thundercat {
   /// Unfolding
   ///
   class Unfolding: public Specializer {
+  public:
+    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -291,6 +293,7 @@ namespace thundercat {
   private:
     std::vector<std::map<double, unsigned long> > valToIndexMaps;
     std::vector<std::vector<double> > distinctValueLists;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
     
     bool hasFewDistinctValues();
   };

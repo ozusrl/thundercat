@@ -1,5 +1,7 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
+#include <set>
 
 using namespace thundercat;
 using namespace std;
@@ -9,6 +11,9 @@ using namespace x86;
 #define DISTINCT_VALUE_COUNT_LIMIT 5000
 #define REGISTER_LIMIT 7
 #define LIMIT_TO_DO_LEAQ 120
+
+const std::string Unfolding::name = "unfolding";
+REGISTER_METHOD(Unfolding)
 
 ///
 /// Analysis
@@ -23,11 +28,11 @@ void Unfolding::analyzeMatrix() {
   for (int threadIndex = 0; threadIndex < stripeInfos->size(); ++threadIndex) {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; !earlyExit && rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix->rowPtr[rowIndex];
+      int rowEnd = csrMatrix->rowPtr[rowIndex+1];
       
       for (int k = rowStart; k < rowEnd; ++k) {
-        double val = csrMatrix->vals[k];
+        double val = csrMatrix->values[k];
         if (valToIndexMaps[threadIndex].count(val) == 0) {
           unsigned long valueIndex = distinctValueLists[threadIndex].size();
           valToIndexMaps[threadIndex][val] = valueIndex;
@@ -74,14 +79,15 @@ void Unfolding::convertMatrix() {
       valPtr += partitionValues.size();
     }
   } else {
-    values = csrMatrix->vals;
-    numVals = csrMatrix->nz;
+    values = csrMatrix->values;
+    numVals = csrMatrix->NZ;
   }
   
-  matrix = new Matrix(NULL, (int*)cols, values, csrMatrix->n, csrMatrix->m, csrMatrix->nz);
-  matrix->numRows = 0;
-  matrix->numCols = 2 * sizeof(unsigned long) / sizeof(int);
-  matrix->numVals = numVals;
+  matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>((int  *)NULL, (int*)cols, values, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
+// TODO:
+//  matrix->numRows = 0;
+//  matrix->numCols = 2 * sizeof(unsigned long) / sizeof(int);
+//  matrix->numVals = numVals;
 }
 
 ///
@@ -91,7 +97,7 @@ void Unfolding::convertMatrix() {
 class UnfoldingCodeEmitter {
 public:
   UnfoldingCodeEmitter(X86Assembler *assembler,
-                       Matrix *csrMatrix,
+                       CSRMatrix<VALUE_TYPE> *csrMatrix,
                        MatrixStripeInfo *stripeInfo) {
     this->assembler = assembler;
     this->csrMatrix = csrMatrix;
@@ -103,7 +109,7 @@ public:
   
 protected:
   X86Assembler *assembler;
-  Matrix *csrMatrix;
+  CSRMatrix<VALUE_TYPE> *csrMatrix;
   MatrixStripeInfo *stripeInfo;
   unsigned long numWPointerShiftings;
   
@@ -126,7 +132,7 @@ private:
 class UnfoldingWithDistinctValuesCodeEmitter : public UnfoldingCodeEmitter {
 public:
   UnfoldingWithDistinctValuesCodeEmitter(X86Assembler *assembler,
-                                         Matrix *csrMatrix,
+                                         CSRMatrix<VALUE_TYPE> *csrMatrix,
                                          MatrixStripeInfo *stripeInfo,
                                          map<double, unsigned long> *valToIndexMap,
                                          unsigned long baseValsIndex) :
@@ -153,7 +159,7 @@ void Unfolding::emitMultByMFunction(unsigned int index) {
   X86Assembler assembler(codeHolders[index]);
   auto &stripeInfo = stripeInfos->at(index);
   if (!hasFewDistinctValues()) {
-    UnfoldingCodeEmitter emitter(&assembler, csrMatrix, &stripeInfo);
+    UnfoldingCodeEmitter emitter(&assembler, csrMatrix.get(), &stripeInfo);
     emitter.emit();
   } else {
     unsigned long baseValsIndex = 0;
@@ -162,7 +168,7 @@ void Unfolding::emitMultByMFunction(unsigned int index) {
     }
 
     UnfoldingWithDistinctValuesCodeEmitter emitter(&assembler,
-                                                   csrMatrix,
+                                                   csrMatrix.get(),
                                                    &stripeInfo,
                                                    &(valToIndexMaps[index]),
                                                    baseValsIndex);
@@ -211,7 +217,7 @@ void UnfoldingCodeEmitter::emitFooter() {
 }
 
 void UnfoldingCodeEmitter::emitRow(int rowIndex) {
-  int rowLength = csrMatrix->rows[rowIndex+1] - csrMatrix->rows[rowIndex];
+  int rowLength = csrMatrix->rowPtr[rowIndex+1] - csrMatrix->rowPtr[rowIndex];
   if (rowLength == 0) return;
   
   vector<vector<int> > partitions;
@@ -258,7 +264,7 @@ static void splitElements(int *elements, int length, vector<vector<int> > &parti
 }
 
 void UnfoldingCodeEmitter::partitionRowElements(int rowIndex, vector<vector<int> > &partitions) {
-  splitElements(pair<int, int>(csrMatrix->rows[rowIndex], csrMatrix->rows[rowIndex+1]), partitions, REGISTER_LIMIT);
+  splitElements(pair<int, int>(csrMatrix->rowPtr[rowIndex], csrMatrix->rowPtr[rowIndex+1]), partitions, REGISTER_LIMIT);
 }
 
 void UnfoldingCodeEmitter::emitPartialRow(vector<vector<int> > &partitions,
@@ -268,7 +274,7 @@ void UnfoldingCodeEmitter::emitPartialRow(vector<vector<int> > &partitions,
   // Move vector elements to registers
   unsigned int vRegIndex = 0;
   for (auto eltIndex : elements) {
-    int colIndex = csrMatrix->cols[eltIndex];
+    int colIndex = csrMatrix->colIndices[eltIndex];
     //  movsd "sizeof(double)*colIndex"(%rdi), %xmm"vRegIndex"
     assembler->movsd(xmm(vRegIndex), ptr(rdi, sizeof(double) * colIndex));
     vRegIndex++;
@@ -277,7 +283,7 @@ void UnfoldingCodeEmitter::emitPartialRow(vector<vector<int> > &partitions,
   // Multiply matrix values with vector elements
   vRegIndex = 0;
   for (auto eltIndex : elements) {
-    double value = csrMatrix->vals[eltIndex];
+    double value = csrMatrix->values[eltIndex];
     unsigned long valIndex = getValIndexAndShiftValsPointer(eltIndex);
     if (value == -1.0) {
       // do nothing
@@ -292,7 +298,7 @@ void UnfoldingCodeEmitter::emitPartialRow(vector<vector<int> > &partitions,
   
   vector<bool> signs;
   for (auto eltIndex: elements) {
-      signs.push_back(csrMatrix->vals[eltIndex] != -1);
+      signs.push_back(csrMatrix->values[eltIndex] != -1);
   }
   emitRegisterReduce(signs);
   
@@ -325,16 +331,16 @@ unsigned long UnfoldingCodeEmitter::getValIndexAndShiftValsPointer(int elementIn
 void UnfoldingWithDistinctValuesCodeEmitter::partitionRowElements(int rowIndex, vector<vector<int> > &partitions) {
   // Find distinct values of this row
   set<double> distinctValues;
-  for (int k = csrMatrix->rows[rowIndex]; k < csrMatrix->rows[rowIndex+1]; ++k) {
-    distinctValues.insert(csrMatrix->vals[k]);
+  for (int k = csrMatrix->rowPtr[rowIndex]; k < csrMatrix->rowPtr[rowIndex+1]; ++k) {
+    distinctValues.insert(csrMatrix->values[k]);
   }
   
   // For each distinct value, group the MMElements that have that distinct val
   // and partition each group.
   for (double distinctVal : distinctValues) {
     vector<int> distinctValIndices;
-    for (int k = csrMatrix->rows[rowIndex]; k < csrMatrix->rows[rowIndex+1]; ++k) {
-      if (csrMatrix->vals[k] == distinctVal)
+    for (int k = csrMatrix->rowPtr[rowIndex]; k < csrMatrix->rowPtr[rowIndex+1]; ++k) {
+      if (csrMatrix->values[k] == distinctVal)
         distinctValIndices.push_back(k);
     }
     
@@ -355,11 +361,11 @@ void UnfoldingWithDistinctValuesCodeEmitter::emitPartialRow(vector<vector<int> >
   // Check if this is the *first* partition for a particular distinct value.
   // If so, emit a move instruction, otherwise we continue to add on xmm0
   bool isFirstPartition = partitionIndex == 0;
-  double val = csrMatrix->vals[elements[0]];
-  double prevVal = isFirstPartition ? 0 : csrMatrix->vals[partitions[partitionIndex-1][0]];
+  double val = csrMatrix->values[elements[0]];
+  double prevVal = isFirstPartition ? 0 : csrMatrix->values[partitions[partitionIndex-1][0]];
   
   for (; iterIndex < (elements.size() + 1) / 2; iterIndex++, vRegIndex++) {
-    int colIndex = csrMatrix->cols[elements[iterIndex]];
+    int colIndex = csrMatrix->colIndices[elements[iterIndex]];
     if (iterIndex == 0 && !(isFirstPartition || val != prevVal)) {
       //  addsd "sizeof(double)*colIndex"(%rdi), %xmm"vRegIndex"
       assembler->addsd(xmm(vRegIndex), ptr(rdi, sizeof(double) * colIndex));
@@ -370,7 +376,7 @@ void UnfoldingWithDistinctValuesCodeEmitter::emitPartialRow(vector<vector<int> >
   }
   vRegIndex = 0;
   for (; iterIndex < elements.size(); iterIndex++, vRegIndex++) {
-    int colIndex = csrMatrix->cols[elements[iterIndex]];
+    int colIndex = csrMatrix->colIndices[elements[iterIndex]];
     //  addsd "sizeof(double)*colIndex"(%rdi), %xmm"vRegIndex"
     assembler->addsd(xmm(vRegIndex), ptr(rdi, sizeof(double) * colIndex));
   }
@@ -382,7 +388,7 @@ void UnfoldingWithDistinctValuesCodeEmitter::emitPartialRow(vector<vector<int> >
   // Check if this is the last partition for a particular distinct value.
   // If so, emit the multiplication with the accumulated sum of vector elements
   bool isLastPartition = partitionIndex == partitions.size() - 1;
-  double nextVal = isLastPartition ? 0 : csrMatrix->vals[partitions[partitionIndex+1][0]];
+  double nextVal = isLastPartition ? 0 : csrMatrix->values[partitions[partitionIndex+1][0]];
   if (isLastPartition || val != nextVal) {
     unsigned long valIndex = sizeof(double) * valToIndexMap->at(val);
     if (val == -1.0) {

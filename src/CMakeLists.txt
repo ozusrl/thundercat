@@ -28,7 +28,7 @@ set(SOURCE_FILES
                  profiler.cpp
                  rowPattern.cpp
 #                 svmAnalyzer.cpp
-#                 unfolding.cpp
+                 unfolding.cpp
 #                 unrollingWithGOTO.cpp
                  main2.cpp
                  spmvRegistry.cpp
