@@ -1,10 +1,16 @@
 #include "method.h"
+#include "spmvRegistry.h"
 #include <iostream>
 
 using namespace thundercat;
 using namespace std;
 using namespace asmjit;
 using namespace x86;
+
+
+const std::string CSRWithGOTO::name = "csrwithgoto";
+REGISTER_METHOD(CSRWithGOTO)
+
 
 ///
 /// Analysis
@@ -17,8 +23,8 @@ void CSRWithGOTO::analyzeMatrix() {
     auto &stripeInfo = stripeInfos->at(threadIndex);
     int maxRowLength = 0;
     for (unsigned long rowIndex = stripeInfo.rowIndexBegin; rowIndex < stripeInfo.rowIndexEnd; ++rowIndex) {
-      int rowStart = csrMatrix->rows[rowIndex];
-      int rowEnd = csrMatrix->rows[rowIndex+1];
+      int rowStart = csrMatrix->rowPtr[rowIndex];
+      int rowEnd = csrMatrix->rowPtr[rowIndex+1];
       int rowLength = rowEnd - rowStart;
       if (rowLength > maxRowLength) {
         maxRowLength = rowLength;
@@ -34,7 +40,7 @@ void CSRWithGOTO::analyzeMatrix() {
 
 void CSRWithGOTO::convertMatrix() {
   // We use the original CSR format
-  matrix = csrMatrix;
+  matrix = std::move(csrMatrix);
 }
 
 ///

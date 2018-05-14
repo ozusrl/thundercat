@@ -296,6 +296,8 @@ namespace thundercat {
   /// CSRWithGOTO
   ///
   class CSRWithGOTO: public Specializer {
+  public:
+      static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -303,6 +305,7 @@ namespace thundercat {
     
   private:
     std::vector<unsigned long> maxRowLengths;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
 
   ///
