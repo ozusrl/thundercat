@@ -204,6 +204,9 @@ namespace thundercat {
     std::vector<asmjit::CodeHolder*> codeHolders;
     
     std::vector<MultByMFun> functions;
+    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
+
+
     
   private:
     void emitConstData();
@@ -258,7 +261,6 @@ namespace thundercat {
     unsigned int b_r, b_c;
     std::vector<GroupByBlockPatternMap> groupByBlockPatternMaps;
     std::vector<unsigned int> numBlocks;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
 
   ///
@@ -277,7 +279,6 @@ namespace thundercat {
     
   private:
     std::vector<RowPatternInfo> patternInfos;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
   
 
@@ -295,7 +296,6 @@ namespace thundercat {
   private:
     std::vector<std::map<double, unsigned long> > valToIndexMaps;
     std::vector<std::vector<double> > distinctValueLists;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
     
     bool hasFewDistinctValues();
   };
@@ -313,7 +313,6 @@ namespace thundercat {
     
   private:
     std::vector<unsigned long> maxRowLengths;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
 
   ///
@@ -329,7 +328,6 @@ namespace thundercat {
     
   private:
     std::vector<unsigned long> maxRowLengths;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
   };
 }
 
