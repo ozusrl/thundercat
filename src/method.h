@@ -224,7 +224,6 @@ namespace thundercat {
     virtual void emitMultByMFunction(unsigned int index);
     virtual void analyzeMatrix() final;
     virtual void convertMatrix();
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
 
   protected:
     std::vector<NZtoRowMap> rowByNZLists;
