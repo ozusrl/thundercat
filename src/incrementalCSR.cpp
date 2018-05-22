@@ -14,6 +14,11 @@ void RowIncrementalCSR::convertMatrix() {
   int *cols = csrMatrix->colIndices;
   double *vals = csrMatrix->values;
 
+  // newly created matrix will take the ownership of colIndices and values, set these two to NULL to avoid double free
+  // problem.
+  csrMatrix->colIndices = NULL;
+  csrMatrix->values = NULL;
+
   int maxRowLength = 0;
   for (int i = 0; i < csrMatrix->N; i++) {
     int length = csrMatrix->rowPtr[i + 1] - csrMatrix->rowPtr[i];
