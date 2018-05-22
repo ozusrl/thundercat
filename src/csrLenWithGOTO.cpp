@@ -46,6 +46,11 @@ void CSRLenWithGOTO::convertMatrix() {
   int *rows = new int[csrMatrix->N + stripeInfos->size()]; // 1 terminating slot for each stripe
   int *cols = csrMatrix->colIndices;
   double *vals = csrMatrix->values;
+
+  // newly created matrix will take the ownership of colIndices and values, set these two to NULL to avoid double free
+  // problem.
+  csrMatrix->colIndices = NULL;
+  csrMatrix->values = NULL;
   
 #pragma omp parallel for
   for (int t = 0; t < stripeInfos->size(); ++t) {
