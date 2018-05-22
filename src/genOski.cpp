@@ -16,9 +16,6 @@ struct BlockInfo {
   vector<double> vals;
 };
 
-const std::string GenOSKI::name = "genoski";
-REGISTER_METHOD(GenOSKI)
-
 void GenOSKI::analyzeMatrix() {
   groupByBlockPatternMaps.resize(stripeInfos->size());
   numBlocks.resize(stripeInfos->size());
@@ -68,15 +65,6 @@ void GenOSKI::analyzeMatrix() {
 ///
 /// GenOSKI
 ///
-
-// TODO: GenOski requires extra b_r and b_c params. We don't have support for this in registry yet, therefore we define
-// TODO: GenOSKI33 by default for now
-
-GenOSKI::GenOSKI()
- : b_r(3)
- , b_c(3) {
-
-}
 
 GenOSKI::GenOSKI(unsigned int b_r, unsigned int b_c) {
   this->b_r = b_r;
@@ -283,3 +271,21 @@ void GenOSKICodeEmitter::emitSingleLoop(bitset<32> &patternBits, unsigned int nu
   assembler->lea(r9, ptr(r9, sizeof(int) * numBlocks));
 }
 
+
+// TODO: GenOski requires extra b_r and b_c params. We don't have support for this in registry yet, therefore we define
+// TODO: GenOSKI33 and GenOSKI44 as separate methods
+
+const std::string GenOSKI33::name = "genoski33";
+REGISTER_METHOD(GenOSKI33)
+const std::string GenOSKI44::name = "genoski44";
+REGISTER_METHOD(GenOSKI44)
+
+GenOSKI33::GenOSKI33()
+    : GenOSKI(3,3) {
+
+}
+
+GenOSKI44::GenOSKI44()
+    : GenOSKI(4,4){
+
+}

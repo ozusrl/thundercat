@@ -248,8 +248,6 @@ namespace thundercat {
   
   class GenOSKI: public Specializer {
   public:
-    static const std::string name;
-    GenOSKI();
     GenOSKI(unsigned int b_r, unsigned int b_c);
 
   protected:
@@ -263,6 +261,17 @@ namespace thundercat {
     std::vector<unsigned int> numBlocks;
   };
 
+  class GenOSKI33: public GenOSKI {
+  public:
+      static const std::string name;
+      GenOSKI33();
+  };
+
+  class GenOSKI44: public GenOSKI {
+  public:
+      static const std::string name;
+      GenOSKI44();
+  };
   ///
   /// RowPattern
   ///
