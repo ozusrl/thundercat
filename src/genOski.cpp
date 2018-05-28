@@ -103,10 +103,6 @@ void GenOSKI::convertMatrix() {
   }
 
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
-  // TODO: Following fields seems to be unused. What are the consequences of removing these lines?
-//  matrix->numRows = numTotalBlocks;
-//  matrix->numCols = numTotalBlocks;
-//  matrix->numVals = csrMatrix->nz;
 }
 
 ///

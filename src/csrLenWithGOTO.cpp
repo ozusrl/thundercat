@@ -63,11 +63,6 @@ void CSRLenWithGOTO::convertMatrix() {
   }
 
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
-
-// TODO: Following fields seems to be unused. What are the consequences of removing these lines?
-//  matrix->numRows = csrMatrix->NZ + stripeInfos->size();
-//  matrix->numCols = csrMatrix->NZ;
-//  matrix->numVals = csrMatrix->NZ;
 }
 
 ///

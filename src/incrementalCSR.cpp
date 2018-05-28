@@ -56,10 +56,6 @@ void RowIncrementalCSR::convertMatrix() {
   }
 
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
-  // TODO: Following fields seems to be unused. What are the consequences of removing these lines?
-//  matrix->numRows = csrMatrix->n;
-//  matrix->numCols = csrMatrix->nz;
-//  matrix->numVals = csrMatrix->nz;
 }
 
 void RowIncrementalCSR::spmv(double* __restrict v, double* __restrict w) {

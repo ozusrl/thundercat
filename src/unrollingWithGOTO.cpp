@@ -51,10 +51,6 @@ void UnrollingWithGOTO::convertMatrix() {
   }
 
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
-// TODO: Following fields seems to be unused. What are the consequences of removing these lines?
-//  matrix->numRows = 2 * csrMatrix->n;
-//  matrix->numCols = csrMatrix->nz;
-//  matrix->numVals = csrMatrix->nz;
 }
 
 ///
