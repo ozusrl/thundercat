@@ -13,6 +13,7 @@ message(STATUS "Linker Flags: " ${CMAKE_EXE_LINKER_FLAGS})
 set(dir ${CMAKE_CURRENT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
+
 set(SOURCE_FILES
                  csrByNZ.cpp
                  csrLenWithGOTO.cpp
@@ -33,6 +34,7 @@ set(SOURCE_FILES
                  main2.cpp
                  spmvRegistry.cpp
                  parse_options.cpp
+                 zzCsr.cpp
 )
 
 set(HEADER_FILES
@@ -44,6 +46,7 @@ set(HEADER_FILES
 #                 svmAnalyzer.h
                  spmvRegistry.h
                  parse_options.h
+                 zzCsr.hpp
 )
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
@@ -124,5 +127,16 @@ include_directories(${CMAKE_SOURCE_DIR}/../docopt.cpp)
 find_library(docopt
         docopt
         PATHS ${CMAKE_SOURCE_DIR}/../lib/docopt.cpp
+        )
+target_link_libraries(thundercat ${docopt})
+
+
+##
+## Yzelman
+##
+include_directories(${CMAKE_SOURCE_DIR}/../yzelman/include)
+find_library(Yzelman
+        sparselib
+        PATHS ${CMAKE_SOURCE_DIR}/../yzelman/lib
         )
 target_link_libraries(thundercat ${docopt})
