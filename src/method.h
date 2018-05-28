@@ -24,15 +24,9 @@ namespace thundercat {
 
       virtual ~SpmvMethod() {}
 
-      virtual bool isSpecializer() = 0;
+      virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) = 0;
 
-      virtual void emitCode() = 0;
-
-//    virtual MATRIX getMethodSpecificMatrix() = 0;
-
-        virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) = 0;
-
-        virtual void spmv(double* __restrict v, double* __restrict w) = 0;
+      virtual void spmv(double* __restrict v, double* __restrict w) = 0;
   };
   
   class CsrSpmvMethod : public SpmvMethod {
@@ -40,14 +34,8 @@ namespace thundercat {
     virtual void init(unsigned int numThreads);
 
     virtual ~CsrSpmvMethod();
-    
-    virtual bool isSpecializer();
-    
-    virtual void emitCode();
-    
-//    virtual MATRIX getMethodSpecificMatrix() final;
 
-    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) final;
+    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
   
     virtual void spmv(double* __restrict v, double* __restrict w) = 0;
 
@@ -189,10 +177,10 @@ namespace thundercat {
   class Specializer : public CsrSpmvMethod {
   public:
     virtual void init(unsigned int numThreads) final;
+
+    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
     
-    virtual bool isSpecializer() final;
-    
-    virtual void emitCode() final;
+
   
     virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
 
@@ -209,8 +197,7 @@ namespace thundercat {
 
     
   private:
-    void emitConstData();
-    
+    virtual void emitCode() final;
     asmjit::JitRuntime rt;
   };
 

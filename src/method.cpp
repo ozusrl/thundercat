@@ -16,18 +16,6 @@ void CsrSpmvMethod::init(unsigned int numThreads) {
   this->numPartitions = numThreads;
 }
 
-bool CsrSpmvMethod::isSpecializer() {
-  return false;
-}
-
-void CsrSpmvMethod::emitCode() {
-  // By default, do nothing
-}
-
-//MATRIX CsrSpmvMethod::getMethodSpecificMatrix() {
-//  return matrix;
-//}
-
 void CsrSpmvMethod::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
 
   csrMatrix = matrix.toCSR();
@@ -57,8 +45,9 @@ void Specializer::init(unsigned int numThreads) {
   functions.resize(numThreads);
 }
 
-bool Specializer::isSpecializer() {
-  return true;
+void Specializer::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
+  CsrSpmvMethod::preprocess(matrix);
+  emitCode();
 }
 
 void Specializer::emitCode() {
