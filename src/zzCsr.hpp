@@ -19,7 +19,7 @@ namespace thundercat {
 
       virtual void emitCode() {};
 
-      virtual void processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix);
+      virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
 
       virtual void spmv(double* __restrict v, double* __restrict w);
 

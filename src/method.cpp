@@ -28,9 +28,9 @@ void CsrSpmvMethod::emitCode() {
 //  return matrix;
 //}
 
-void CsrSpmvMethod::processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) {
+void CsrSpmvMethod::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
 
-  csrMatrix = matrix->toCSR();
+  csrMatrix = matrix.toCSR();
 
   stripeInfos = csrMatrix->getStripeInfos(numPartitions);
   analyzeMatrix();

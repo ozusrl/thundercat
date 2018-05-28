@@ -28,7 +28,7 @@ int main(int argc, const char *argv[]) {
   auto N =  matrix->N;
   method->init(cliOptions->threads);
 
-  method->processMatrix(std::move(matrix));
+  method->preprocess(*matrix);
   method->emitCode();
 
   double *in = new double[N];

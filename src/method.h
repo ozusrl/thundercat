@@ -30,7 +30,7 @@ namespace thundercat {
 
 //    virtual MATRIX getMethodSpecificMatrix() = 0;
 
-        virtual void processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) = 0;
+        virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) = 0;
 
         virtual void spmv(double* __restrict v, double* __restrict w) = 0;
   };
@@ -47,7 +47,7 @@ namespace thundercat {
     
 //    virtual MATRIX getMethodSpecificMatrix() final;
 
-    virtual void processMatrix(std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix) final;
+    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) final;
   
     virtual void spmv(double* __restrict v, double* __restrict w) = 0;
 
