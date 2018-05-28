@@ -79,15 +79,11 @@ void Unfolding::convertMatrix() {
       valPtr += partitionValues.size();
     }
   } else {
-    values = csrMatrix->values;
-    numVals = csrMatrix->NZ;
+    values = new VALUE_TYPE[csrMatrix->NZ];
+    std::memcpy(values, csrMatrix->values, sizeof(VALUE_TYPE) * csrMatrix->NZ);
   }
   
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>((int  *)NULL, (int*)cols, values, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
-// TODO:
-//  matrix->numRows = 0;
-//  matrix->numCols = 2 * sizeof(unsigned long) / sizeof(int);
-//  matrix->numVals = numVals;
 }
 
 ///
