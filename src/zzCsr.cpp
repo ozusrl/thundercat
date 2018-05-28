@@ -9,8 +9,6 @@ using namespace std;
 const std::string ZzCrs::name = "zzcrs";
 REGISTER_METHOD(ZzCrs)
 
-ZzCrs::ZzCrs() {}
-
 void ZzCrs::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
 
   vector<Triplet<VALUE_TYPE>> triplets;

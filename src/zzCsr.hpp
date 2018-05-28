@@ -9,15 +9,11 @@ namespace thundercat {
   public:
       static const std::string name;
 
-      ZzCrs();
+      ZzCrs() {};
 
       virtual void init(unsigned int numThreads) {};
 
       virtual ~ZzCrs() {};
-
-      virtual bool isSpecializer() {return false;};
-
-      virtual void emitCode() {};
 
       virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
 
