@@ -1,4 +1,5 @@
 #include "method.h"
+#include "profiler.h"
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -17,12 +18,13 @@ void CsrSpmvMethod::init(unsigned int numThreads) {
 }
 
 void CsrSpmvMethod::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
+  Profiler::recordTime("PREPROCESS", [&]() {
+      csrMatrix = matrix.toCSR();
 
-  csrMatrix = matrix.toCSR();
-
-  stripeInfos = csrMatrix->getStripeInfos(numPartitions);
-  analyzeMatrix();
-  convertMatrix();
+      stripeInfos = csrMatrix->getStripeInfos(numPartitions);
+      analyzeMatrix();
+      convertMatrix();
+  });
 }
 
 void CsrSpmvMethod::analyzeMatrix() {
@@ -47,7 +49,9 @@ void Specializer::init(unsigned int numThreads) {
 
 void Specializer::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
   CsrSpmvMethod::preprocess(matrix);
-  emitCode();
+  Profiler::recordTime("EMIT CODE", [&]() {
+      emitCode();
+  });
 }
 
 void Specializer::emitCode() {
