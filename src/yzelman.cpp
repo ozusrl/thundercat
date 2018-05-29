@@ -1,4 +1,3 @@
-#include "ZZ_CRS.hpp"
 #include "method.h"
 #include "yzelman.hpp"
 #include "spmvRegistry.h"
@@ -21,4 +20,13 @@ REGISTER_METHOD(THilbert)
 unique_ptr<Hilbert<VALUE_TYPE>> THilbert::createUnderlying(std::vector<Triplet<VALUE_TYPE> > &input, int m, int n,
                                                        VALUE_TYPE zero) {
   return make_unique<Hilbert<VALUE_TYPE>>(input, m, n, zero);
+}
+
+
+const std::string Hts::name = "hts";
+REGISTER_METHOD(Hts)
+
+unique_ptr<HTS<VALUE_TYPE>> Hts::createUnderlying(std::vector<Triplet<VALUE_TYPE> > &input, int m, int n,
+                                                           VALUE_TYPE zero) {
+  return make_unique<HTS<VALUE_TYPE>>(input, m, n, zero);
 }

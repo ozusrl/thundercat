@@ -2,6 +2,7 @@
 #include "method.h"
 #include "ZZ_CRS.hpp"
 #include "Hilbert.hpp"
+#include "HTS.hpp"
 
 namespace thundercat {
 
@@ -67,6 +68,17 @@ namespace thundercat {
           VALUE_TYPE zero);
   };
 
+    class Hts : public YzelmanMethod<HTS<VALUE_TYPE>> {
+    public:
+        static const std::string name;
+
+    protected:
+        virtual std::unique_ptr<HTS<VALUE_TYPE>> createUnderlying(
+            std::vector<Triplet<VALUE_TYPE>> &input,
+            int m,
+            int n,
+            VALUE_TYPE zero);
+    };
 }
 
 #endif
