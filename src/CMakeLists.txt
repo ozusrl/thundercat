@@ -35,6 +35,7 @@ set(SOURCE_FILES
                  spmvRegistry.cpp
                  parse_options.cpp
                  zzCsr.cpp
+                 yzelman.cpp
 )
 
 set(HEADER_FILES
@@ -47,6 +48,7 @@ set(HEADER_FILES
                  spmvRegistry.h
                  parse_options.h
                  zzCsr.hpp
+                 yzelman.hpp
 )
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
@@ -139,4 +141,4 @@ find_library(Yzelman
         sparselib
         PATHS ${CMAKE_SOURCE_DIR}/../yzelman/lib
         )
-target_link_libraries(thundercat ${docopt})
+target_link_libraries(thundercat ${Yzelman})
