@@ -44,7 +44,7 @@ namespace thundercat {
       std::unique_ptr<UNDERLYING> underlying;
   };
 
-  class ZzCrs2: public YzelmanMethod<ZZ_CRS<VALUE_TYPE>> {
+  class ZzCrs: public YzelmanMethod<ZZ_CRS<VALUE_TYPE>> {
   public:
       static const std::string name;
 

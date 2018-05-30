@@ -5,10 +5,10 @@
 using namespace thundercat;
 using namespace std;
 
-const std::string ZzCrs2::name = "zzcrs2";
-REGISTER_METHOD(ZzCrs2)
+const std::string ZzCrs::name = "zzcrs";
+REGISTER_METHOD(ZzCrs)
 
-unique_ptr<ZZ_CRS<VALUE_TYPE>> ZzCrs2::createUnderlying(std::vector<Triplet<VALUE_TYPE> > &input, int m, int n,
+unique_ptr<ZZ_CRS<VALUE_TYPE>> ZzCrs::createUnderlying(std::vector<Triplet<VALUE_TYPE> > &input, int m, int n,
                                                       VALUE_TYPE zero) {
   return make_unique<ZZ_CRS<VALUE_TYPE>>(input, m, n, zero);
 }

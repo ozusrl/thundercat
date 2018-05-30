@@ -34,8 +34,8 @@ set(SOURCE_FILES
                  main2.cpp
                  spmvRegistry.cpp
                  parse_options.cpp
-                 zzCsr.cpp
                  yzelman.cpp
+                 ../yzelman/src/Matrix2HilbertCoordinates.cpp
 )
 
 set(HEADER_FILES
@@ -47,7 +47,6 @@ set(HEADER_FILES
 #                 svmAnalyzer.h
                  spmvRegistry.h
                  parse_options.h
-                 zzCsr.hpp
                  yzelman.hpp
 )
 
