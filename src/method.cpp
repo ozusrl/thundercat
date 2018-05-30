@@ -18,11 +18,17 @@ void CsrSpmvMethod::init(unsigned int numThreads) {
 }
 
 void CsrSpmvMethod::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
-  Profiler::recordTime("PREPROCESS", [&]() {
+  Profiler::recordTime("ConversionToCSR", [&]() {
       csrMatrix = matrix.toCSR();
+  });
 
-      stripeInfos = csrMatrix->getStripeInfos(numPartitions);
+  stripeInfos = csrMatrix->getStripeInfos(numPartitions);
+
+  Profiler::recordTime("Analysis", [&]() {
       analyzeMatrix();
+  });
+
+  Profiler::recordTime("Conversion", [&]() {
       convertMatrix();
   });
 }
@@ -49,7 +55,7 @@ void Specializer::init(unsigned int numThreads) {
 
 void Specializer::preprocess(MMMatrix<VALUE_TYPE>& matrix) {
   CsrSpmvMethod::preprocess(matrix);
-  Profiler::recordTime("EMIT CODE", [&]() {
+  Profiler::recordTime("EmitCode", [&]() {
       emitCode();
   });
 }

@@ -179,9 +179,7 @@ namespace thundercat {
     virtual void init(unsigned int numThreads) final;
 
     virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
-    
 
-  
     virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
 
     virtual void spmv(double* __restrict v, double* __restrict w) final;

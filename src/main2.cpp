@@ -17,17 +17,18 @@ int main(int argc, const char *argv[]) {
 
   // Read input file
   std::unique_ptr<MMMatrix<VALUE_TYPE>> matrix;
-  Profiler::recordTime("READ", [&]() {
+  Profiler::recordTime("ReadInputFile", [&]() {
       matrix = MMMatrix<VALUE_TYPE>::fromFile(cliOptions->mtxFile);
   });
 
 
   // Method initialisation
-  Profiler::recordTime("WARMUP", [&]() {
+  Profiler::recordTime("Init", [&]() {
+      method->init(cliOptions->threads);
+  });
 
-    method->init(cliOptions->threads);
-
-    method->preprocess(*matrix);
+  Profiler::recordTime("Preprocess", [&]() {
+      method->preprocess(*matrix);
   });
 
 
@@ -38,7 +39,7 @@ int main(int argc, const char *argv[]) {
 
 
   // Do benchmark
-  Profiler::recordTime("SPMV", [&]() {
+  Profiler::recordTime("Spmv", [&]() {
     for (int i = 0; i < cliOptions->iters; ++i) {
       method->spmv(in, out);
     }
