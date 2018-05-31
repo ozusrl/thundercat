@@ -8,6 +8,7 @@
 
 using namespace thundercat;
 
+const int warmupIterations = 5;
 
 void populateInputOutputVectors(VALUE_TYPE** input, VALUE_TYPE** output, unsigned int n, unsigned int m) {
   *input = new double[m];
@@ -48,7 +49,10 @@ int main(int argc, const char *argv[]) {
 
   populateInputOutputVectors(&in, &out, matrix->N, matrix->M);
 
-  
+  // Warm up
+  for (int i = 0; i < warmupIterations; ++i) {
+    method->spmv(in, out);
+  }
 
   // Do benchmark
   Profiler::recordTime("Spmv", [&]() {
