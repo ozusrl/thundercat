@@ -8,6 +8,18 @@
 
 using namespace thundercat;
 
+
+void populateInputOutputVectors(VALUE_TYPE** input, VALUE_TYPE** output, unsigned int n, unsigned int m) {
+  *input = new double[m];
+  *output = new double[n];
+  for(int i = 0; i < m; ++i) {
+    *input[i] = i + 1;
+  }
+  for(int i = 0; i < n; ++i) {
+    *input[i] = i + 1;
+  }
+}
+
 int main(int argc, const char *argv[]) {
 
   auto cliOptions = parseCliOptions(argc, argv);
@@ -32,11 +44,11 @@ int main(int argc, const char *argv[]) {
   });
 
 
-  // Prepare input & output vectors
-  auto N =  matrix->N;
-  double *in = new double[N];
-  double *out = new double[N];
+  double *in, *out;
 
+  populateInputOutputVectors(&in, &out, matrix->N, matrix->M);
+
+  
 
   // Do benchmark
   Profiler::recordTime("Spmv", [&]() {
