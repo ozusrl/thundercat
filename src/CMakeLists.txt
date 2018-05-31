@@ -136,8 +136,4 @@ target_link_libraries(thundercat ${docopt})
 ## Yzelman
 ##
 include_directories(${CMAKE_SOURCE_DIR}/../yzelman/include)
-find_library(Yzelman
-        sparselib
-        PATHS ${CMAKE_SOURCE_DIR}/../yzelman/lib
-        )
-target_link_libraries(thundercat ${Yzelman})
+
