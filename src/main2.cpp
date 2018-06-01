@@ -14,10 +14,10 @@ void populateInputOutputVectors(VALUE_TYPE** input, VALUE_TYPE** output, unsigne
   *input = new double[m];
   *output = new double[n];
   for(int i = 0; i < m; ++i) {
-    *input[i] = i + 1;
+    (*input)[i] = i + 1;
   }
   for(int i = 0; i < n; ++i) {
-    *input[i] = i + 1;
+    (*input)[i] = i + 1;
   }
 }
 
