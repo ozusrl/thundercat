@@ -36,6 +36,7 @@ set(SOURCE_FILES
         parse_options.cpp
         yzelman.cpp
         ../yzelman/src/Matrix2HilbertCoordinates.cpp
+        csr5.cpp
         )
 
 set(HEADER_FILES
@@ -48,6 +49,7 @@ set(HEADER_FILES
         spmvRegistry.h
         parse_options.h
         yzelman.hpp
+        csr5.hpp
         )
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
@@ -136,4 +138,10 @@ target_link_libraries(thundercat ${docopt})
 ## Yzelman
 ##
 include_directories(${CMAKE_SOURCE_DIR}/../yzelman/include)
+
+
+##
+## CSR5
+##
+include_directories(${CMAKE_SOURCE_DIR}/../csr5/CSR5_avx2)
 
