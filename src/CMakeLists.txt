@@ -24,7 +24,7 @@ set(SOURCE_FILES
         incrementalCSR.cpp
         #main.cpp
         method.cpp
-        #mkl.cpp
+        mkl.cpp
         plaincsr.cpp
         profiler.cpp
         rowPattern.cpp
