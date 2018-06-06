@@ -34,9 +34,6 @@ set(SOURCE_FILES
         main2.cpp
         spmvRegistry.cpp
         parse_options.cpp
-        yzelman.cpp
-        ../yzelman/src/Matrix2HilbertCoordinates.cpp
-        csr5.cpp
         )
 
 set(HEADER_FILES
@@ -48,9 +45,40 @@ set(HEADER_FILES
         #svmAnalyzer.h
         spmvRegistry.h
         parse_options.h
-        yzelman.hpp
-        csr5.hpp
         )
+
+##
+## Yzelman
+##
+if (YZELMAN)
+    set(SOURCE_FILES
+            ${SOURCE_FILES}
+            yzelman.cpp
+            ${YZELMAN}/src/Matrix2HilbertCoordinates.cpp
+            )
+    set(HEADER_FILES
+            ${HEADER_FILES}
+            yzelman.hpp
+            )
+    include_directories(${YZELMAN}/include)
+endif ()
+
+##
+## CSR5
+##
+if (CSR5)
+    set(SOURCE_FILES
+            ${SOURCE_FILES}
+            csr5.cpp
+            )
+    set(HEADER_FILES
+            ${HEADER_FILES}
+            csr5.hpp
+            )
+    include_directories(${CSR5}/CSR5_avx2)
+endif ()
+
+
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -132,16 +160,4 @@ find_library(docopt
         PATHS ${CMAKE_SOURCE_DIR}/../lib/docopt.cpp
         )
 target_link_libraries(thundercat ${docopt})
-
-
-##
-## Yzelman
-##
-include_directories(${CMAKE_SOURCE_DIR}/../yzelman/include)
-
-
-##
-## CSR5
-##
-include_directories(${CMAKE_SOURCE_DIR}/../csr5/CSR5_avx2)
 
