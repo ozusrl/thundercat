@@ -63,19 +63,36 @@ if (YZELMAN)
     include_directories(${YZELMAN}/include)
 endif ()
 
+
+##
+## OpenMP
+##
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    add_definitions(-DOPENMP_EXISTS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
+endif ()
+
 ##
 ## CSR5
 ##
 if (CSR5)
-    set(SOURCE_FILES
-            ${SOURCE_FILES}
-            csr5.cpp
-            )
-    set(HEADER_FILES
-            ${HEADER_FILES}
-            csr5.hpp
-            )
-    include_directories(${CSR5}/CSR5_avx2)
+    if(OPENMP_FOUND)
+        set(SOURCE_FILES
+                ${SOURCE_FILES}
+                csr5.cpp
+                )
+        set(HEADER_FILES
+                ${HEADER_FILES}
+                csr5.hpp
+                )
+        include_directories(${CSR5}/CSR5_avx2)
+    else()
+        message( FATAL_ERROR "OpenMP not found. CSR5 can only be used with OpenMP" )
+    endif()
+
 endif ()
 
 
@@ -129,17 +146,6 @@ if (MKL_ROOT_DIR)
             )
 endif ()
 
-
-##
-## OpenMP
-##
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    add_definitions(-DOPENMP_EXISTS)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
-endif ()
 
 ##
 ## MMMatrixIO library
