@@ -24,6 +24,7 @@ namespace thundercat {
 
     private:
         unsigned int mNumThreads;
+        bool isXSet;
         std::unique_ptr<anonymouslibHandle<int, unsigned int, VALUE_TYPE>> underlying;
 
     };

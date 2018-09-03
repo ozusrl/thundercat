@@ -20,13 +20,16 @@ Csr5::~Csr5() {
 
 void Csr5::preprocess(MMMatrix<VALUE_TYPE>& matrix){
   auto csr = matrix.toCSR();
-   underlying = make_unique<anonymouslibHandle<int, unsigned int, VALUE_TYPE>>(csr->M, csr->N);
+  underlying = make_unique<anonymouslibHandle<int, unsigned int, VALUE_TYPE>>(csr->M, csr->N);
   underlying->inputCSR(csr->NZ, csr->rowPtr, csr->colIndices, csr->values);
   underlying->setSigma(ANONYMOUSLIB_CSR5_SIGMA);
   underlying->asCSR5();
 }
 
 void Csr5::spmv(double* __restrict v, double* __restrict w){
-  underlying->setX(v);
+  if (isXSet == false) {
+    underlying->setX(v);
+    isXSet = true;
+  }
   underlying->spmv(1.0 /*alpha */, w);
 }
