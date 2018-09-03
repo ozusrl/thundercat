@@ -50,9 +50,11 @@ int main(int argc, const char *argv[]) {
   populateInputOutputVectors(&in, &out, matrix->N, matrix->M);
 
   // Warm up
-  for (int i = 0; i < warmupIterations; ++i) {
-    method->spmv(in, out);
-  }
+  Profiler::recordTime("Warm up", [&]() {
+    for (int i = 0; i < warmupIterations; ++i) {
+      method->spmv(in, out);
+    }
+  });
 
   // Do benchmark
   Profiler::recordTime("Spmv", [&]() {
