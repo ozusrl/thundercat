@@ -82,11 +82,11 @@ if (CSR5)
     if(OPENMP_FOUND)
         set(SOURCE_FILES
                 ${SOURCE_FILES}
-                csr5.cpp
+                csr5avx2.cpp
                 )
         set(HEADER_FILES
                 ${HEADER_FILES}
-                csr5.hpp
+                csr5avx2.hpp
                 )
         include_directories(${CSR5}/CSR5_avx2)
     else()
