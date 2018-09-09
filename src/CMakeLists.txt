@@ -68,10 +68,10 @@ if (OPENMP_FOUND)
     message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 endif ()
 
-
 find_package(CUDA)
 if (CUDA_FOUND)
-    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp)
+    enable_language(CUDA)
+    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparse.cu)
     set(HEADER_FILES ${HEADER_FILES} cusparse.hpp)
 
 endif()
