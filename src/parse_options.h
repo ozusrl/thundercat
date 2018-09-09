@@ -2,7 +2,7 @@
 #define SPMV_BENCHMARKING_PARSE_OPTIONS_H
 
 #include <string>
-
+#include <memory>
 struct CliOptions {
     const std::string mtxFile;
     const std::string method;

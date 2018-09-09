@@ -80,7 +80,7 @@ void Unfolding::convertMatrix() {
     }
   } else {
     values = new VALUE_TYPE[csrMatrix->NZ];
-    std::memcpy(values, csrMatrix->values, sizeof(VALUE_TYPE) * csrMatrix->NZ);
+    memcpy(values, csrMatrix->values, sizeof(VALUE_TYPE) * csrMatrix->NZ);
   }
   
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>((int  *)NULL, (int*)cols, values, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
