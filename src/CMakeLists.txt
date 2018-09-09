@@ -68,6 +68,14 @@ if (OPENMP_FOUND)
     message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 endif ()
 
+
+find_package(CUDA)
+if (CUDA_FOUND)
+    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp)
+    set(HEADER_FILES ${HEADER_FILES} cusparse.hpp)
+
+endif()
+
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
 
 ##
@@ -137,4 +145,6 @@ find_library(docopt
         PATHS ${CMAKE_SOURCE_DIR}/../lib/docopt.cpp
         )
 target_link_libraries(thundercat ${docopt})
+
+target_link_libraries(thundercat ${CUDA_cusparse_LIBRARY} )
 
