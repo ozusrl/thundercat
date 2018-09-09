@@ -68,28 +68,6 @@ if (OPENMP_FOUND)
     message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 endif ()
 
-##
-## CSR5
-##
-if (CSR5)
-    if(OPENMP_FOUND)
-        set(SOURCE_FILES
-                ${SOURCE_FILES}
-                csr5avx2.cpp
-                )
-        set(HEADER_FILES
-                ${HEADER_FILES}
-                csr5avx2.hpp
-                )
-        include_directories(${CSR5}/CSR5_avx2)
-    else()
-        message( FATAL_ERROR "OpenMP not found. CSR5 can only be used with OpenMP" )
-    endif()
-
-endif ()
-
-
-
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
 
 ##
