@@ -19,6 +19,7 @@ std::unique_ptr<SpmvMethod> SpmvMethodRegistry::getMethod(std::string name) {
     for (auto it = registry.begin(); it != registry.end(); ++it ){
       std::cerr << it->first << "  ";
     }
+    std::cerr << std::endl;
     exit(1);
   }
 
