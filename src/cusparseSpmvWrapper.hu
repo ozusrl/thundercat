@@ -1,0 +1,29 @@
+#ifndef _THUNDERCAT_CUSPARSE_HU
+#define _THUNDERCAT_CUSPARSE_HU
+
+#include <cuda_runtime.h>
+#include "cusparse.h"
+
+
+namespace thundercat {
+ class CusparseSpmvWrapper {
+ public:
+   ~CusparseSpmvWrapper();
+   void init();
+   void preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values);
+   void spmv(double * v, double * w);
+ private :
+   cusparseHandle_t handle;
+   cusparseMatDescr_t descr;
+   int * rowIndexDevPtr;
+   int * colIndexDevPtr;
+   double * valDevPtr;
+   double * x;
+   double * y;
+   int M;
+   int N;
+   int NNZ;
+ };
+}
+
+#endif //_THUNDERCAT_CUSPARSE_HU

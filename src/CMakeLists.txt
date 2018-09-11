@@ -71,8 +71,10 @@ endif ()
 find_package(CUDA)
 if (CUDA_FOUND)
     enable_language(CUDA)
-    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparse.cu)
-    set(HEADER_FILES ${HEADER_FILES} cusparse.hpp)
+    CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
+    LIST(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS})
+    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparseSpmvWrapper.cu)
+    set(HEADER_FILES ${HEADER_FILES} cusparse.hpp cusparseSpmvWrapper.hu)
 
 endif()
 
