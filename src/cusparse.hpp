@@ -5,6 +5,7 @@
 #include "method.h"
 
 namespace thundercat {
+
   class CusparseSpmvWrapper {
   public:
       ~CusparseSpmvWrapper();
@@ -13,18 +14,21 @@ namespace thundercat {
       void spmv(double *v, double *w);
   };
 
+  CusparseSpmvWrapper* newCusparseSpmvWrapper();
+  void deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper);
+
   class Cusparse : public SpmvMethod {
    public:
 
       virtual void init(unsigned int numThreads);
-      virtual ~Cusparse() {};
+      virtual ~Cusparse();
       virtual void preprocess(MMMatrix<VALUE_TYPE> &matrix);
       virtual void spmv(double* __restrict v, double* __restrict w);
 
       static const std::string name;
   private:
       std::unique_ptr<CSRMatrix<VALUE_TYPE>> csrMatrix;
-      CusparseSpmvWrapper wrapper;
+      CusparseSpmvWrapper* wrapper;
   };
 
 }

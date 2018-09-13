@@ -6,24 +6,27 @@
 
 
 namespace thundercat {
- class CusparseSpmvWrapper {
- public:
-   ~CusparseSpmvWrapper();
-   void init();
-   void preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values);
-   void spmv(double * v, double * w);
- private :
-   cusparseHandle_t handle;
-   cusparseMatDescr_t descr;
-   int * rowIndexDevPtr;
-   int * colIndexDevPtr;
-   double * valDevPtr;
-   double * x;
-   double * y;
-   int M;
-   int N;
-   int NNZ;
- };
+  class CusparseSpmvWrapper {
+  public:
+    ~CusparseSpmvWrapper();
+    void init();
+    void preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values);
+    void spmv(double * v, double * w);
+  private :
+    cusparseHandle_t handle;
+    cusparseMatDescr_t descr;
+    int * rowIndexDevPtr;
+    int * colIndexDevPtr;
+    double * valDevPtr;
+    double * x;
+    double * y;
+    int M;
+    int N;
+    int NNZ;
+  };
+
+  CusparseSpmvWrapper* newCusparseSpmvWrapper();
+  void deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper);
 }
 
 #endif //_THUNDERCAT_CUSPARSE_HU

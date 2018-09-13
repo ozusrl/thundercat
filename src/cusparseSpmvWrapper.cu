@@ -2,6 +2,13 @@
 
 using namespace thundercat;
 
+CusparseSpmvWrapper* thundercat::newCusparseSpmvWrapper() {
+  return new CusparseSpmvWrapper();
+};
+
+void thundercat::deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper) {
+  delete wrapper;
+}
 
 CusparseSpmvWrapper::~CusparseSpmvWrapper() {
   cudaFree(rowIndexDevPtr);
@@ -33,16 +40,16 @@ void CusparseSpmvWrapper::preprocess(int nnz, int m, int n, int * rowPtr, int* c
   N = n;
   NNZ = nnz;
 
-  cudaMalloc((void**)&rowIndexDevPtr, (N + 1) * sizeof(int));
-  cudaMalloc((void**)&colIndexDevPtr, NNZ * sizeof(int));
-  cudaMalloc((void**)&valDevPtr, NNZ * sizeof(double));
+  cudaError_t error = cudaMalloc((void**)&rowIndexDevPtr, (N + 1) * sizeof(int));
+  error = cudaMalloc((void**)&colIndexDevPtr, NNZ * sizeof(int));
+  error = cudaMalloc((void**)&valDevPtr, NNZ * sizeof(double));
 
-  cudaMemcpy(rowIndexDevPtr, rowPtr,(size_t)((N + 1)*sizeof(rowPtr[0])),cudaMemcpyHostToDevice);
-  cudaMemcpy(colIndexDevPtr, colIdx,(size_t)(NNZ*sizeof(colIdx[0])),cudaMemcpyHostToDevice);
-  cudaMemcpy(valDevPtr, values,(size_t)(NNZ*sizeof(values[0])),cudaMemcpyHostToDevice);
+  error = cudaMemcpy((void *)rowIndexDevPtr, (void*)rowPtr, (size_t) ((N + 1) * sizeof(int)), cudaMemcpyHostToDevice);
+  error = cudaMemcpy((void*)colIndexDevPtr, (void*)colIdx, (size_t) (NNZ * sizeof(int)), cudaMemcpyHostToDevice);
+  error = cudaMemcpy((void*) valDevPtr, (void*)values, (size_t) (NNZ * sizeof(double)), cudaMemcpyHostToDevice);
 
-  cudaMalloc((void**)&x, M * sizeof(double));
-  cudaMalloc((void**)&y, N * sizeof(double));
+  error = cudaMalloc((void**)&x, M * sizeof(double));
+  error = cudaMalloc((void**)&y, N * sizeof(double));
 
 
 }
@@ -51,11 +58,11 @@ void CusparseSpmvWrapper::spmv(double * v, double * w) {
   double alpha = 1.0;
   double beta = 1.0;
 
-  cudaMemcpy(x, v,(size_t)(M*sizeof(v[0])),cudaMemcpyHostToDevice);
+  cudaMemcpy((void*) x, (void*) v,(size_t)(M*sizeof(double)),cudaMemcpyHostToDevice);
 
   cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, M, N, NNZ, &alpha,
                  descr, valDevPtr, rowIndexDevPtr, colIndexDevPtr, x, &beta, y);
 
-  cudaMemcpy(y, w,(size_t)(N*sizeof(y[0])),cudaMemcpyDeviceToHost);
+  cudaMemcpy((void*) w, (void*) y,(size_t)(N*sizeof(double)),cudaMemcpyDeviceToHost);
 
 }
