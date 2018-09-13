@@ -15,30 +15,37 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 
 set(SOURCE_FILES
-        csrByNZ.cpp
-        csrLenWithGOTO.cpp
-        csrWithGOTO.cpp
-        genOski.cpp
-        incrementalCSR.cpp
         method.cpp
         mkl.cpp
-        plaincsr.cpp
         profiler.cpp
-        rowPattern.cpp
-        unfolding.cpp
-        unrollingWithGOTO.cpp
         main2.cpp
         spmvRegistry.cpp
         parse_options.cpp
         )
 
 set(HEADER_FILES
-        incrementalCSR.hpp
         method.h
         profiler.h
         spmvRegistry.h
         parse_options.h
         )
+
+if (CODEGEN)
+    set(SOURCE_FILES
+            csrByNZ.cpp
+            csrLenWithGOTO.cpp
+            csrWithGOTO.cpp
+            genOski.cpp
+            incrementalCSR.cpp
+            plaincsr.cpp
+            rowPattern.cpp
+            unfolding.cpp
+            unrollingWithGOTO.cpp
+            )
+
+    set(HEADER_FILES incrementalCSR.hpp)
+endif()
+
 
 ##
 ## Yzelman
