@@ -75,14 +75,26 @@ if (OPENMP_FOUND)
     message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 endif ()
 
+
+##
+## CUDA
+##
 find_package(CUDA)
 if (CUDA_FOUND)
     enable_language(CUDA)
     CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
-    LIST(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS})
+    LIST(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS} -std=c++11)
     set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparseSpmvWrapper.cu)
     set(HEADER_FILES ${HEADER_FILES} cusparse.hpp cusparseSpmvWrapper.hu)
 
+endif()
+
+##
+## ViennaCL
+##
+if (VIENNACL)
+    set(SOURCE_FILES ${SOURCE_FILES} viennacl.cpp)
+    set(SOURCE_FILES ${SOURCE_FILES} viennacl.hpp)
 endif()
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
@@ -156,4 +168,17 @@ find_library(docopt
 target_link_libraries(thundercat ${docopt})
 
 target_link_libraries(thundercat ${CUDA_cusparse_LIBRARY} )
+
+#
+# ViennaCL library
+#
+if (VIENNACL)
+    find_library(VIENNACL_LIB
+            viennacl
+            PATHS ${VIENNACL}/build/libviennacl
+            )
+    target_link_libraries(thundercat ${VIENNACL_LIB})
+    target_include_directories(thundercat PUBLIC ${VIENNACL}/libviennacl/include ${VIENNACL})
+endif()
+
 
