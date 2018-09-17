@@ -2,13 +2,28 @@
 #define _THUNDERCAT_VIENNACL_HPP
 
 #include "method.h"
-#include "viennacl/compressed_matrix.hpp"
-#include "viennacl/vector.hpp"
+#include <vector>
+#include <map>
 
 namespace thundercat {
+
+  // Forward declare ViennaCL Adapter class. Implemantions of this class will
+  // ViennaCL backend specific.
+  class ViennaCLAdapter {
+  public:
+      ViennaCLAdapter();
+      void preprocess(std::vector<std::map<int,double> > &cpuMatrix);
+      void spmv(std::vector<double> &cpuX, std::vector<double> &cpuY);
+  };
+
+  ViennaCLAdapter * newViennaCLAdapter(int M, int N);
+  void deleteViennaCLAdapter(ViennaCLAdapter* handle);
+
   class ViennaCL : public SpmvMethod {
 
   public:
+
+    ~ViennaCL();
     virtual void init(unsigned int numThreads);
 
     virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
@@ -18,11 +33,9 @@ namespace thundercat {
     static const std::string name;
 
   private:
-      viennacl::compressed_matrix<VALUE_TYPE,16> A;
+      ViennaCLAdapter* adapter;
       int M;
       int N;
-      int NNZ;
-
   };
 }
 
