@@ -18,7 +18,7 @@ set(SOURCE_FILES
         method.cpp
         mkl.cpp
         profiler.cpp
-        main2.cpp
+        main.cpp
         spmvRegistry.cpp
         parse_options.cpp
         )
