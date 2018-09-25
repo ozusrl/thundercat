@@ -109,6 +109,23 @@ if (VIENNACL)
     endif()
 endif()
 
+##
+## CUSP
+##
+
+#if (CUSP)
+#    if(CUDA_FOUND)
+        set(SOURCE_FILES ${SOURCE_FILES} cusp.cpp cuspAdapter.cu)
+        set(SOURCE_FILES ${SOURCE_FILES} cusp.hpp cuspAdapter.hu)
+        include_directories(${CUSP})
+
+#    else()
+#        message(FATAL_ERROR "CUSP enabled but no CUDA found")
+#    endif()
+
+#endif()
+
+
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
 
 ##

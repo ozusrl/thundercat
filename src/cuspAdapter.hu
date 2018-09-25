@@ -1,0 +1,28 @@
+//
+// Created by Sarili, Erdem on 20.09.18.
+//
+
+#ifndef THUNDERCAT_CUSPADAPTER_HU
+#define THUNDERCAT_CUSPADAPTER_HU
+
+namespace thundercat {
+  class CuspAdapter {
+  public:
+    void preprocess(int, int, int, int*, int*, double*);
+    void spmv(double*, double*);
+  private:
+    int *devRowPtr;
+    int *devColIndx;
+    double *devValues;
+    double *devX;
+    double *devY;
+    int M;
+    int N;
+    int NNZ;
+  };
+
+  CuspAdapter* newCuspAdapter();
+  void deleteCuspAdapter(CuspAdapter* handle);
+}
+
+#endif //THUNDERCAT_CUSPADAPTER_HU
