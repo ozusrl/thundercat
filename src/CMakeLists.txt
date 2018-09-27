@@ -17,13 +17,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 set(SOURCE_FILES
         method.cpp
         mkl.cpp
+        incrementalCSR.cpp
         profiler.cpp
+        plaincsr.cpp
         main.cpp
         spmvRegistry.cpp
         parse_options.cpp
         )
 
 set(HEADER_FILES
+        incrementalCSR.hpp
         method.h
         profiler.h
         spmvRegistry.h
@@ -32,18 +35,19 @@ set(HEADER_FILES
 
 if (CODEGEN)
     set(SOURCE_FILES
+            ${SOURCE_FILES}
             csrByNZ.cpp
             csrLenWithGOTO.cpp
             csrWithGOTO.cpp
             genOski.cpp
-            incrementalCSR.cpp
-            plaincsr.cpp
             rowPattern.cpp
+            specializers.cpp
             unfolding.cpp
             unrollingWithGOTO.cpp
             )
 
-    set(HEADER_FILES incrementalCSR.hpp)
+    set(HEADER_FILES ${HEADER_FILES} specializers.h)
+
 endif()
 
 
@@ -113,17 +117,16 @@ endif()
 ## CUSP
 ##
 
-#if (CUSP)
-#    if(CUDA_FOUND)
+if (CUSP)
+    if(CUDA_FOUND)
         set(SOURCE_FILES ${SOURCE_FILES} cusp.cpp cuspAdapter.cu)
         set(SOURCE_FILES ${SOURCE_FILES} cusp.hpp cuspAdapter.hu)
         include_directories(${CUSP})
 
-#    else()
-#        message(FATAL_ERROR "CUSP enabled but no CUDA found")
-#    endif()
-
-#endif()
+    else()
+        message(FATAL_ERROR "CUSP enabled but no CUDA found")
+    endif()
+endif()
 
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})

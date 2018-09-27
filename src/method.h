@@ -14,316 +14,91 @@
 
 
 namespace thundercat {
-
-  // multByM(v, w, rows, cols, vals)
-  typedef void(*MultByMFun)(double*, double*, int*, int*, double*);
-
+    
+  
   class SpmvMethod {
   public:
-      virtual void init(unsigned int numThreads) = 0;
-
-      virtual ~SpmvMethod() {}
-
-      virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix) = 0;
-
-      virtual void spmv(double* __restrict v, double* __restrict w) = 0;
+    virtual void init(unsigned int numThreads) = 0;
+  
+    virtual ~SpmvMethod() {}
+  
+    virtual void preprocess(MMMatrix<VALUE_TYPE> &matrix) = 0;
+  
+    virtual void spmv(double *__restrict v, double *__restrict w) = 0;
   };
   
   class CsrSpmvMethod : public SpmvMethod {
   public:
     virtual void init(unsigned int numThreads);
-
-    virtual ~CsrSpmvMethod();
-
-    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
   
-    virtual void spmv(double* __restrict v, double* __restrict w) = 0;
-
-    
+    virtual ~CsrSpmvMethod();
+  
+    virtual void preprocess(MMMatrix<VALUE_TYPE> &matrix);
+  
+    virtual void spmv(double *__restrict v, double *__restrict w) = 0;
+  
+  
   protected:
     virtual void analyzeMatrix();
+  
     virtual void convertMatrix();
-    
+  
     std::vector<MatrixStripeInfo> *stripeInfos;
     unsigned int numPartitions;
-
+  
     std::unique_ptr<CSRMatrix<VALUE_TYPE>> csrMatrix;
-    };
+  };
   
   ///
   /// MKL
   ///
-  class MKL: public CsrSpmvMethod {
+  class MKL : public CsrSpmvMethod {
   public:
     virtual void init(unsigned int numThreads) final;
-    
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-
+  
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
   };
   
   ///
   /// PlainCSR
   ///
-  class PlainCSR: public CsrSpmvMethod {
+  class PlainCSR : public CsrSpmvMethod {
   public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
   };
-
-  class PlainCSR4: public CsrSpmvMethod {
+  
+  class PlainCSR4 : public CsrSpmvMethod {
   public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
   };
-
-  class PlainCSR8: public CsrSpmvMethod {
+  
+  class PlainCSR8 : public CsrSpmvMethod {
   public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
   };
-
-  class PlainCSR16: public CsrSpmvMethod {
+  
+  class PlainCSR16 : public CsrSpmvMethod {
   public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
   };
-
-  class PlainCSR32: public CsrSpmvMethod {
+  
+  class PlainCSR32 : public CsrSpmvMethod {
   public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
+    virtual void spmv(double *__restrict v, double *__restrict w) final;
+  
     static const std::string name;
-  };
-
-  ///
-  /// Duff's Device
-  ///
-  class DuffsDevice4: public CsrSpmvMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-  
-  class DuffsDevice8: public CsrSpmvMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  class DuffsDevice16: public CsrSpmvMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  class DuffsDevice32: public CsrSpmvMethod {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  ///
-  /// LCSR utility
-  ///
-  class RowByNZ {
-  public:
-    std::vector<int> *getRowIndices();
-    void addRowIndex(int index);
-    
-  private:
-    std::vector<int> rowIndices;
-  };
-  
-  // To keep the map keys in ascending order, using the "greater" comparator.
-  typedef std::map<unsigned long, RowByNZ, std::greater<unsigned long> > NZtoRowMap;
-  
-  class LCSRAnalyzer {
-  public:
-      virtual void analyzeMatrix(CSRMatrix<VALUE_TYPE>& csrMatrix,
-                               std::vector<MatrixStripeInfo> stripeInfos,
-                               std::vector<NZtoRowMap> &rowByNZLists) final;
-  };
-  
-  ///
-  /// Duff's Device for the LCSR format
-  ///
-  class DuffsDeviceLCSR: public CsrSpmvMethod {
-  protected:
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-    
-  protected:
-    std::vector<NZtoRowMap> rowByNZLists;
-//    LCSRInfo *lcsrInfo;
-  };
-
-  class DuffsDeviceLCSR4: public DuffsDeviceLCSR {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  class DuffsDeviceLCSR8: public DuffsDeviceLCSR {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-  
-  class DuffsDeviceLCSR16: public DuffsDeviceLCSR {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  class DuffsDeviceLCSR32: public DuffsDeviceLCSR {
-  public:
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-  };
-
-  ///
-  /// Specializer
-  ///
-  class Specializer : public CsrSpmvMethod {
-  public:
-    virtual void init(unsigned int numThreads) final;
-
-    virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
-
-    virtual std::vector<asmjit::CodeHolder*> *getCodeHolders() final;
-
-    virtual void spmv(double* __restrict v, double* __restrict w) final;
-    
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) = 0;
-    
-    std::vector<asmjit::CodeHolder*> codeHolders;
-    
-    std::vector<MultByMFun> functions;
-    std::unique_ptr<CSRMatrix<VALUE_TYPE>> matrix;
-
-
-    
-  private:
-    virtual void emitCode() final;
-    asmjit::JitRuntime rt;
-  };
-
-  ///
-  /// CSRbyNZ
-  ///
-  class CSRbyNZ: public Specializer {
-  public:
-    static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index);
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix();
-
-  protected:
-    std::vector<NZtoRowMap> rowByNZLists;
-  };
-  
-  ///
-  /// UnrollingWithGOTO
-  ///
-  class UnrollingWithGOTO: public CSRbyNZ {
-  public:
-      static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void convertMatrix() final;
-  };
-  
-  ///
-  /// Gen OSKI
-  ///
-  typedef std::map<unsigned long, std::pair<std::vector<std::pair<int, int> >, std::vector<double> > > GroupByBlockPatternMap;
-  
-  class GenOSKI: public Specializer {
-  public:
-    GenOSKI(unsigned int b_r, unsigned int b_c);
-
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-
-  private:
-    unsigned int b_r, b_c;
-    std::vector<GroupByBlockPatternMap> groupByBlockPatternMaps;
-    std::vector<unsigned int> numBlocks;
-  };
-
-  class GenOSKI33: public GenOSKI {
-  public:
-      static const std::string name;
-      GenOSKI33();
-  };
-
-  class GenOSKI44: public GenOSKI {
-  public:
-      static const std::string name;
-      GenOSKI44();
-  };
-  ///
-  /// RowPattern
-  ///
-  // Map row patterns to row indices
-  typedef std::map<std::vector<int>, std::vector<int> > RowPatternInfo;
-  
-  class RowPattern: public Specializer {
-  public:
-    static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-    
-  private:
-    std::vector<RowPatternInfo> patternInfos;
-  };
-  
-
-  ///
-  /// Unfolding
-  ///
-  class Unfolding: public Specializer {
-  public:
-    static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-
-  private:
-    std::vector<std::map<double, unsigned long> > valToIndexMaps;
-    std::vector<std::vector<double> > distinctValueLists;
-    
-    bool hasFewDistinctValues();
-  };
-
-  ///
-  /// CSRWithGOTO
-  ///
-  class CSRWithGOTO: public Specializer {
-  public:
-      static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-    
-  private:
-    std::vector<unsigned long> maxRowLengths;
-  };
-
-  ///
-  /// CSRLenWithGOTO
-  ///
-  class CSRLenWithGOTO: public Specializer {
-  public:
-      static const std::string name;
-  protected:
-    virtual void emitMultByMFunction(unsigned int index) final;
-    virtual void analyzeMatrix() final;
-    virtual void convertMatrix() final;
-    
-  private:
-    std::vector<unsigned long> maxRowLengths;
   };
 }
+
 
 #endif
