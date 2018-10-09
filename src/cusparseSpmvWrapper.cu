@@ -56,7 +56,7 @@ void CusparseSpmvWrapper::preprocess(int nnz, int m, int n, int * rowPtr, int* c
 
 void CusparseSpmvWrapper::spmv(double * v, double * w) {
   double alpha = 1.0;
-  double beta = 1.0;
+  double beta = 0;
 
   cudaMemcpy((void*) x, (void*) v,(size_t)(M*sizeof(double)),cudaMemcpyHostToDevice);
 
