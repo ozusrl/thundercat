@@ -50,18 +50,6 @@ namespace thundercat {
   };
   
   ///
-  /// MKL
-  ///
-  class MKL : public CsrSpmvMethod {
-  public:
-    virtual void init(unsigned int numThreads) final;
-  
-    virtual void spmv(double *__restrict v, double *__restrict w) final;
-  
-    static const std::string name;
-  };
-  
-  ///
   /// PlainCSR
   ///
   class PlainCSR : public CsrSpmvMethod {

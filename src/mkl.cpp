@@ -1,14 +1,13 @@
-#include "method.h"
+#include "mkl.h"
+#include "mkl.hpp"
+//#include "mkl_spblas.h"
+#include "spmvRegistry.h"
 
 using namespace thundercat;
 using namespace std;
 
 const std::string MKL::name = "mkl";
 
-#ifdef MKL_EXISTS
-
-#include <mkl.h>
-#include "spmvRegistry.h"
 REGISTER_METHOD(MKL)
 
 void MKL::init(unsigned int numThreads) {
@@ -30,17 +29,3 @@ void MKL::spmv(double* __restrict v, double* __restrict w) {
   mkl_dcsrmv(trans, &mkl_n, &mkl_m, &alpha, matdescra,
              csrMatrix->values, csrMatrix->colIndices, ptrb, ptre, v, &beta, w);
 }
-
-#else
-
-void MKL::spmv(double* __restrict v, double* __restrict w) {
-  cerr << "MKL is not supported on this platform.\n";
-  exit(1);
-}
-
-void MKL::init(unsigned int numThreads) {
-  cerr << "MKL is not supported on this platform.\n";
-  exit(1);
-}
-
-#endif

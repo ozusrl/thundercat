@@ -14,9 +14,12 @@ set(dir ${CMAKE_CURRENT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${dir}")
 
 
+###################################
+### Setup source & header files ###
+###################################
+
 set(SOURCE_FILES
         method.cpp
-        mkl.cpp
         incrementalCSR.cpp
         profiler.cpp
         plaincsr.cpp
@@ -47,9 +50,7 @@ if (CODEGEN)
             )
 
     set(HEADER_FILES ${HEADER_FILES} specializers.h)
-
 endif()
-
 
 ##
 ## Yzelman
@@ -66,7 +67,6 @@ if (YZELMAN)
             )
     include_directories(${YZELMAN}/include)
 endif ()
-
 
 ##
 ## OpenMP
@@ -120,7 +120,7 @@ endif()
 if (CUSP)
     if(CUDA_FOUND)
         set(SOURCE_FILES ${SOURCE_FILES} cusp.cpp cuspAdapter.cu)
-        set(SOURCE_FILES ${SOURCE_FILES} cusp.hpp cuspAdapter.hu)
+        set(HEADER_FILES ${HEADER_FILES} cusp.hpp cuspAdapter.hu)
         include_directories(${CUSP})
 
     else()
@@ -128,8 +128,26 @@ if (CUSP)
     endif()
 endif()
 
+##
+## MKL
+##
+set(MKL_ROOT_DIR $ENV{MKLROOT})
+if (MKL_ROOT_DIR)
+    set(SOURCE_FILES ${SOURCE_FILES} mkl.cpp)
+    set(HEADER_FILES ${HEADER_FILES} mkl.hpp)
+endif ()
+
+
+#########################
+### Define executable ###
+#########################
 
 add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
+
+
+#########################
+### Library discovery ###
+#########################
 
 ##
 ## asmjit library
@@ -141,11 +159,9 @@ find_library(ASMJIT
         )
 target_link_libraries(thundercat ${ASMJIT})
 
-
 ##
 ## MKL
 ##
-set(MKL_ROOT_DIR $ENV{MKLROOT})
 if (MKL_ROOT_DIR)
     message(STATUS "Found MKL at " $ENV{MKLROOT})
     add_definitions(-DMKL_EXISTS)
