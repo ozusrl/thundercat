@@ -21,13 +21,17 @@ void Profiler::recordTime(std::string description, std::function<void()> codeBlo
   timingLevel--;
 }
 
-void Profiler::print(unsigned int numIters) {
+void Profiler::print(unsigned int numIters, unsigned int NNZ, unsigned int flopsPerNNZ) {
   for (auto &info : timingInfos) {
     std::cout << info.level << " ";
     std::cout << std::setw(10) << info.duration;
-    std::cout << " usec.    " << info.description << "\n";
+    std::cout << " usec.    " << info.description << std::endl;
   }
   auto &lastOne = timingInfos.back();
-  std::cout << "0 " << std::setw(10) << lastOne.duration / (double)numIters << " usec.    perIteration\n";
+  auto x = timingInfos.back();
+
+  std::cout << "0 " << std::setw(10) << lastOne.duration / (float)numIters << " usec.    perIteration" <<  std::endl;
+  std::cout << "0 " << std::setw(10) << (flopsPerNNZ * NNZ) / (lastOne.duration / (float)numIters) / 1000 << " GFlops   perIteration" <<  std::endl;
   std::cout << "0 " << std::setw(10) << numIters << " times    iterated\n";
+
 }

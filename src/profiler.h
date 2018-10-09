@@ -16,7 +16,7 @@ namespace thundercat {
   class Profiler {
   public:
     static void recordTime(std::string description, std::function<void()> codeBlock);
-    static void print(unsigned int numIters);
+    static void print(unsigned int numIters, unsigned int NNZ, unsigned int flopPerNNZ = 2);
   private:
     static int timingLevel;
     static std::vector<TimingInfo> timingInfos;

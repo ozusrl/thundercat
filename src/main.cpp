@@ -64,7 +64,7 @@ int main(int argc, const char *argv[]) {
   });
 
 
-  Profiler::print(cliOptions->iters);
+  Profiler::print(cliOptions->iters, matrix->getElements().size());
 
   return 0;
 }
