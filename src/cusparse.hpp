@@ -6,16 +6,16 @@
 
 namespace thundercat {
 
-  class CusparseSpmvWrapper {
+  class CusparseAdaptor {
   public:
-      ~CusparseSpmvWrapper();
+      ~CusparseAdaptor();
       void init();
       void preprocess(int nnz, int m, int n, int *rowPtr, int *colIdx, double *values);
       void spmv(double *v, double *w);
   };
 
-  CusparseSpmvWrapper* newCusparseSpmvWrapper();
-  void deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper);
+  CusparseAdaptor* newCusparseAdaptor();
+  void deleteCusparseAdaptor(CusparseAdaptor* adaptor);
 
   class Cusparse : public SpmvMethod {
    public:
@@ -28,7 +28,7 @@ namespace thundercat {
       static const std::string name;
   private:
       std::unique_ptr<CSRMatrix<VALUE_TYPE>> csrMatrix;
-      CusparseSpmvWrapper* wrapper;
+      CusparseAdaptor* adaptor;
   };
 
 }

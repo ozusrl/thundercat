@@ -88,8 +88,8 @@ if (CUDA_FOUND)
     enable_language(CUDA)
     CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
     LIST(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS} -std=c++11)
-    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparseSpmvWrapper.cu)
-    set(HEADER_FILES ${HEADER_FILES} cusparse.hpp cusparseSpmvWrapper.hu)
+    set(SOURCE_FILES ${SOURCE_FILES} cusparse.cpp cusparseAdaptor.cu)
+    set(HEADER_FILES ${HEADER_FILES} cusparse.hpp cusparseAdaptor.hu)
 
 endif()
 

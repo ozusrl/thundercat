@@ -1,16 +1,16 @@
-#include "cusparseSpmvWrapper.hu"
+#include "cusparseAdaptor.hu"
 
 using namespace thundercat;
 
-CusparseSpmvWrapper* thundercat::newCusparseSpmvWrapper() {
-  return new CusparseSpmvWrapper();
+CusparseAdaptor* thundercat::newCusparseAdaptor() {
+  return new CusparseAdaptor();
 };
 
-void thundercat::deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper) {
-  delete wrapper;
+void thundercat::deleteCusparseAdaptor(CusparseAdaptor* adaptor) {
+  delete adaptor;
 }
 
-CusparseSpmvWrapper::~CusparseSpmvWrapper() {
+CusparseAdaptor::~CusparseAdaptor() {
   cudaFree(rowIndexDevPtr);
   cudaFree(colIndexDevPtr);
   cudaFree(valDevPtr);
@@ -20,10 +20,9 @@ CusparseSpmvWrapper::~CusparseSpmvWrapper() {
 
   cusparseDestroyMatDescr(descr);
   cusparseDestroy(handle);
-
 }
 
-void CusparseSpmvWrapper::init() {
+void CusparseAdaptor::init() {
   handle = 0;
   descr = 0;
 
@@ -34,7 +33,7 @@ void CusparseSpmvWrapper::init() {
   cusparseSetMatIndexBase(descr, CUSPARSE_INDEX_BASE_ZERO);
 }
 
-void CusparseSpmvWrapper::preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values) {
+void CusparseAdaptor::preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values) {
 
   M = m;
   N = n;
@@ -50,11 +49,9 @@ void CusparseSpmvWrapper::preprocess(int nnz, int m, int n, int * rowPtr, int* c
 
   error = cudaMalloc((void**)&x, M * sizeof(double));
   error = cudaMalloc((void**)&y, N * sizeof(double));
-
-
 }
 
-void CusparseSpmvWrapper::spmv(double * v, double * w) {
+void CusparseAdaptor::spmv(double * v, double * w) {
   double alpha = 1.0;
   double beta = 0;
 

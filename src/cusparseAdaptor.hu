@@ -6,9 +6,9 @@
 
 
 namespace thundercat {
-  class CusparseSpmvWrapper {
+  class CusparseAdaptor {
   public:
-    ~CusparseSpmvWrapper();
+    ~CusparseAdaptor();
     void init();
     void preprocess(int nnz, int m, int n, int * rowPtr, int* colIdx, double* values);
     void spmv(double * v, double * w);
@@ -25,8 +25,8 @@ namespace thundercat {
     int NNZ;
   };
 
-  CusparseSpmvWrapper* newCusparseSpmvWrapper();
-  void deleteCusparseSpmvWrapper(CusparseSpmvWrapper* wrapper);
+  CusparseAdaptor* newCusparseAdaptor();
+  void deleteCusparseAdaptor(CusparseAdaptor* adaptor);
 }
 
 #endif //_THUNDERCAT_CUSPARSE_HU

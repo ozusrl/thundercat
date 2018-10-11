@@ -9,22 +9,21 @@ const std::string Cusparse::name = "cusparse";
 REGISTER_METHOD(Cusparse)
 
 Cusparse::~Cusparse() {
-  deleteCusparseSpmvWrapper(wrapper);
+  deleteCusparseAdaptor(adaptor);
 }
 void Cusparse::init(unsigned int numThreads) {
-  wrapper = newCusparseSpmvWrapper();
-  wrapper->init();
+  adaptor = newCusparseAdaptor();
+  adaptor->init();
 }
 
 void Cusparse::preprocess(MMMatrix<VALUE_TYPE> &matrix) {
 
   csrMatrix = matrix.toCSR();
-  wrapper->preprocess(csrMatrix->NZ, csrMatrix->M, csrMatrix->N, csrMatrix->rowPtr,
+  adaptor->preprocess(csrMatrix->NZ, csrMatrix->M, csrMatrix->N, csrMatrix->rowPtr,
                      csrMatrix->colIndices, csrMatrix->values);
 
 }
 
-
 void Cusparse::spmv(double* __restrict v, double* __restrict w) {
-  wrapper->spmv(v, w);
+  adaptor->spmv(v, w);
 }
