@@ -5,14 +5,29 @@
 using namespace thundercat;
 
 int Profiler::timingLevel = 0;
+bool Profiler::startedSpmv = false;
+TimingInfo Profiler::spmvTiming;
 std::vector<TimingInfo> Profiler::timingInfos;
+std::map<std::string, TimingInfo> Profiler::spmvOverheads;
 
-void Profiler::recordTime(std::string description, std::function<void()> codeBlock) {
-  timingLevel++;
+long long  Profiler::measure(std::function<void()> codeBlock) {
   auto start = std::chrono::high_resolution_clock::now();
   codeBlock();
   auto end = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+  return duration;
+}
+
+void Profiler::recordSpmv(std::function<void()> codeBlock) {
+  startedSpmv = true;
+  auto duration = measure(codeBlock);
+  spmvTiming.description = "Spmv";
+  spmvTiming.duration = duration;
+  spmvTiming.level = 0;
+}
+void Profiler::recordTime(std::string description, std::function<void()> codeBlock) {
+  timingLevel++;
+  auto duration = measure(codeBlock);
   TimingInfo info;
   info.level = timingLevel;
   info.duration = duration;
@@ -21,17 +36,57 @@ void Profiler::recordTime(std::string description, std::function<void()> codeBlo
   timingLevel--;
 }
 
+void Profiler::recordSpmvOverhead(std::string description, std::function<void()> codeBlock) {
+  if (startedSpmv) {
+    auto duration = measure(codeBlock);
+
+    auto info = spmvOverheads[description];
+
+    if(description.compare(info.description)) {
+      info.description = description;
+      info.level = timingLevel + 1;
+      info.duration = duration;
+
+    } else {
+      info.duration += duration;
+    }
+    spmvOverheads[description] = info;
+  }
+}
+
 void Profiler::print(unsigned int numIters, unsigned int NNZ, unsigned int flopsPerNNZ) {
+  timingInfos.push_back(spmvTiming);
+
   for (auto &info : timingInfos) {
     std::cout << info.level << " ";
     std::cout << std::setw(10) << info.duration;
     std::cout << " usec.    " << info.description << std::endl;
   }
-  auto &lastOne = timingInfos.back();
-  auto x = timingInfos.back();
 
-  std::cout << "0 " << std::setw(10) << lastOne.duration / (float)numIters << " usec.    perIteration" <<  std::endl;
-  std::cout << "0 " << std::setw(10) << (flopsPerNNZ * NNZ) / (lastOne.duration / (float)numIters) / 1000 << " GFlops   perIteration" <<  std::endl;
+  long long totalSpmvOverhead = 0;
+
+  if (spmvOverheads.size()) {
+    std::cout << std::endl <<"Spmv Overheads: " << std::endl;
+    for (auto &entry : spmvOverheads) {
+      auto info = entry.second;
+      std::cout << std::setw(12) << info.duration;
+      std::cout << " usec.    " << info.description<< std::endl;
+      totalSpmvOverhead += info.duration;
+    }
+  }
+
+  std::cout << std::endl;
+  long long  netSpmvDuration = spmvTiming.duration - totalSpmvOverhead;
+
+  if (spmvOverheads.size()) {
+    std::cout << spmvTiming.level << " ";
+    std::cout << std::setw(10) << netSpmvDuration;
+    std::cout << " usec.    " << spmvTiming.description << " w/o Overheads" << std::endl;
+  }
+  float durationPerIteration = netSpmvDuration / numIters;
+
+  std::cout << "0 " << std::setw(10) << durationPerIteration << " usec.    perIteration" <<  std::endl;
+  std::cout << "0 " << std::setw(10) << (flopsPerNNZ * NNZ) / durationPerIteration / 1000 << " GFlops   perIteration" <<  std::endl;
   std::cout << "0 " << std::setw(10) << numIters << " times    iterated\n";
 
 }

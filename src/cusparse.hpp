@@ -11,7 +11,9 @@ namespace thundercat {
       ~CusparseAdaptor();
       void init();
       void preprocess(int nnz, int m, int n, int *rowPtr, int *colIdx, double *values);
-      void spmv(double *v, double *w);
+      void setX(double *v);
+      void getY(double *w);
+      void spmv();
   };
 
   CusparseAdaptor* newCusparseAdaptor();

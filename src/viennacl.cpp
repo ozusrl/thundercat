@@ -1,5 +1,8 @@
 #include "viennacl.hpp"
 #include "spmvRegistry.h"
+#include "profiler.h"
+#include <iostream>
+#include <fstream>
 
 using namespace thundercat;
 
@@ -30,8 +33,19 @@ void ViennaCL::preprocess(thundercat::MMMatrix<double> &matrix) {
 }
 
 void ViennaCL::spmv(double *v, double *w) {
-  std::vector<double> cpuX(v, v+M);
-  std::vector<double> cpuY(w, w+N);
 
-  adapter->spmv(cpuX, cpuY);
+
+  Profiler::recordSpmvOverhead("Copy input matrix to Device", [&]() {
+      std::vector<double> cpuX(v, v+M);
+      adapter->setX(cpuX);
+  });
+
+  adapter->spmv();
+
+  Profiler::recordSpmvOverhead("Copy output matrix to Host", [&]() {
+      std::vector<double> cpuY(w, w+N);
+      adapter->getY(cpuY);
+      memcpy(w, cpuY.data(), N * sizeof(double));
+  });
+
 }

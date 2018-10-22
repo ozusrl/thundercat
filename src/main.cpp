@@ -6,18 +6,20 @@
 #include "mmmatrix.hpp"
 #include "profiler.h"
 
+#include <fstream>
+
 using namespace thundercat;
 
 const int warmupIterations = 5;
 
-void populateInputOutputVectors(VALUE_TYPE** input, VALUE_TYPE** output, unsigned int n, unsigned int m) {
+void populateInputOutputVectors(VALUE_TYPE** input,  unsigned int m, VALUE_TYPE** output, unsigned int n) {
   *input = new double[m];
   *output = new double[n];
   for(int i = 0; i < m; ++i) {
     (*input)[i] = i + 1;
   }
   for(int i = 0; i < n; ++i) {
-    (*input)[i] = i + 1;
+    (*output)[i] = i + 1;
   }
 }
 
@@ -47,7 +49,7 @@ int main(int argc, const char *argv[]) {
 
   double *in, *out;
 
-  populateInputOutputVectors(&in, &out, matrix->N, matrix->M);
+  populateInputOutputVectors(&in, matrix->M, &out, matrix->N);
 
   // Warm up
   Profiler::recordTime("Warm up", [&]() {
@@ -57,7 +59,7 @@ int main(int argc, const char *argv[]) {
   });
 
   // Do benchmark
-  Profiler::recordTime("Spmv", [&]() {
+  Profiler::recordSpmv([&]() {
     for (int i = 0; i < cliOptions->iters; ++i) {
       method->spmv(in, out);
     }
@@ -65,6 +67,13 @@ int main(int argc, const char *argv[]) {
 
 
   Profiler::print(cliOptions->iters, matrix->getElements().size());
+
+  std::ofstream myfile;
+  myfile.open (cliOptions->method);
+  for(int i = 0; i < matrix->N; i++) {
+    myfile << out[i] << std::endl;
+  }
+  myfile.close();
 
   return 0;
 }

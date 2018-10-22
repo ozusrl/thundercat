@@ -1,4 +1,5 @@
 #include "cusparseAdaptor.hu"
+#include <iostream>
 
 using namespace thundercat;
 
@@ -51,15 +52,21 @@ void CusparseAdaptor::preprocess(int nnz, int m, int n, int * rowPtr, int* colId
   error = cudaMalloc((void**)&y, N * sizeof(double));
 }
 
-void CusparseAdaptor::spmv(double * v, double * w) {
+void CusparseAdaptor::setX(double *v) {
+  cudaMemcpy((void*) x, (void*) v,(size_t)(M*sizeof(double)),cudaMemcpyHostToDevice);
+  cudaThreadSynchronize();
+}
+
+void CusparseAdaptor::getY(double *w) {
+  cudaMemcpy((void*) w, (void*) y,(size_t)(N*sizeof(double)),cudaMemcpyDeviceToHost);
+  cudaThreadSynchronize();
+}
+
+void CusparseAdaptor::spmv() {
   double alpha = 1.0;
   double beta = 0;
-
-  cudaMemcpy((void*) x, (void*) v,(size_t)(M*sizeof(double)),cudaMemcpyHostToDevice);
-
   cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, M, N, NNZ, &alpha,
                  descr, valDevPtr, rowIndexDevPtr, colIndexDevPtr, x, &beta, y);
 
-  cudaMemcpy((void*) w, (void*) y,(size_t)(N*sizeof(double)),cudaMemcpyDeviceToHost);
-
+  cudaThreadSynchronize();
 }

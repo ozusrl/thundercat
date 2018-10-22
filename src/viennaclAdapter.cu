@@ -2,19 +2,23 @@
 
 using namespace thundercat;
 
-ViennaCLAdapter::ViennaCLAdapter(int M,int N):A(M, N) {}
+ViennaCLAdapter::ViennaCLAdapter(int M,int N):A(M, N), x(M), y(N) {}
 
 void ViennaCLAdapter::preprocess(std::vector< std::map<int,double> > &cpuMatrix) {
   viennacl::copy(cpuMatrix, A);
 }
 
-void ViennaCLAdapter::spmv(std::vector<double> &cpuX, std::vector<double> &cpuY) {
-  viennacl::vector<double> x;
+void ViennaCLAdapter::setX(std::vector<double> &cpuX) {
   viennacl::copy(cpuX, x);
+}
 
-  viennacl::vector<double> y= viennacl::linalg::prod(A, x);
-
+void ViennaCLAdapter::getY(std::vector<double> &cpuY) {
   viennacl::copy(y, cpuY);
+}
+
+void ViennaCLAdapter::spmv() {
+  y = viennacl::linalg::prod(A, x);
+  viennacl::backend::finish();
 }
 
 ViennaCLAdapter * thundercat::newViennaCLAdapter(int M, int N) {

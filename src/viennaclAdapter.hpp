@@ -13,10 +13,14 @@ namespace thundercat {
   public:
     ViennaCLAdapter(int M, int N);
     void preprocess(std::vector< std::map<int,double> > &cpuMatrix);
-    void spmv(std::vector<double> &cpuX, std::vector<double> &cpuY);
+    void setX(std::vector<double> &cpuX);
+    void getY(std::vector<double> &cpuY);
+    void spmv();
 
   private:
-    viennacl::compressed_matrix<double,16> A;
+    viennacl::compressed_matrix<double> A;
+    viennacl::vector<double> x;
+    viennacl::vector<double> y;
 
   };
 

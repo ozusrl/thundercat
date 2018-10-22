@@ -9,7 +9,9 @@ namespace thundercat {
   class CuspAdapter {
   public:
       void preprocess(int m, int n, int nnz, int * rowPtr, int * colIndx, double * values);
-      void spmv(double * v, double * w);
+      void setX(double *);
+      void getY(double *);
+      void spmv();
   };
 
   CuspAdapter* newCuspAdapter();

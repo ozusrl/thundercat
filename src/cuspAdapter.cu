@@ -8,47 +8,55 @@ void CuspAdapter::preprocess( int m, int n, int nnz, int * rowPtr, int * colIndx
   N = n;
   NNZ = nnz;
 
-  cudaMalloc(&devRowPtr, M * sizeof(int));
+  int *devRowPtr;
+  int *devColIndx;
+  double *devValues;
+
+  cudaMalloc(&devRowPtr, (N+1) * sizeof(int));
   cudaMalloc(&devColIndx, NNZ * sizeof(int));
   cudaMalloc(&devValues, NNZ * sizeof(double));
   cudaMalloc(&devX, M * sizeof(double));
   cudaMalloc(&devY, N * sizeof(double));
 
-  cudaMemcpy(devRowPtr,  rowPtr, M * sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(devRowPtr,  rowPtr, (N+1) * sizeof(int), cudaMemcpyHostToDevice);
   cudaMemcpy(devColIndx, colIndx, NNZ * sizeof(int), cudaMemcpyHostToDevice);
   cudaMemcpy(devValues, values, NNZ * sizeof(double), cudaMemcpyHostToDevice);
 
-}
-
-void CuspAdapter::spmv(double * v, double * w) {
-  cudaMemcpy(devX, v, M * sizeof(double), cudaMemcpyHostToDevice);
-
-    // *NOTE* raw pointers must be wrapped with thrust::device_ptr!
+  // *NOTE* raw pointers must be wrapped with thrust::device_ptr!
   thrust::device_ptr<int>   wrapped_device_Ap(devRowPtr);
   thrust::device_ptr<int>   wrapped_device_Aj(devColIndx);
   thrust::device_ptr<double> wrapped_device_Ax(devValues);
   thrust::device_ptr<double> wrapped_device_x(devX);
   thrust::device_ptr<double> wrapped_device_y(devY);
 
-  // use array1d_view to wrap the individual arrays
-  typedef typename cusp::array1d_view< thrust::device_ptr<int>   > DeviceIndexArrayView;
-  typedef typename cusp::array1d_view< thrust::device_ptr<double> > DeviceValueArrayView;
 
-  DeviceIndexArrayView row_offsets   (wrapped_device_Ap, wrapped_device_Ap + M);
+
+  DeviceIndexArrayView row_offsets(wrapped_device_Ap, wrapped_device_Ap + N + 1);
   DeviceIndexArrayView column_indices(wrapped_device_Aj, wrapped_device_Aj + NNZ);
-  DeviceValueArrayView values        (wrapped_device_Ax, wrapped_device_Ax + NNZ);
-  DeviceValueArrayView x (wrapped_device_x, wrapped_device_x + M);
-  DeviceValueArrayView y (wrapped_device_y, wrapped_device_y + N);
+  DeviceValueArrayView values_array        (wrapped_device_Ax, wrapped_device_Ax + NNZ);
+  DeviceValueArrayView x_local(wrapped_device_x, wrapped_device_x + M);
+  DeviceValueArrayView y_local(wrapped_device_y, wrapped_device_y + N);
 
+  DeviceView A_local(M, N, NNZ, row_offsets, column_indices, values_array);
+  A = A_local;
+  x = x_local;
+  y = y_local;
 
-  typedef cusp::csr_matrix_view<DeviceIndexArrayView,
-      DeviceIndexArrayView,
-      DeviceValueArrayView> DeviceView;
-  DeviceView A(M, N, NNZ, row_offsets, column_indices, values);
+}
 
+void CuspAdapter::setX(double * v) {
+  cudaMemcpy(devX, v, M * sizeof(double), cudaMemcpyHostToDevice);
+  cudaThreadSynchronize();
+}
 
-  cusp::multiply(A, x, y);
+void CuspAdapter::getY(double * w) {
   cudaMemcpy(w, devY, N * sizeof(double), cudaMemcpyDeviceToHost);
+  cudaThreadSynchronize();
+}
+
+void CuspAdapter::spmv() {
+  cusp::multiply(A, x, y);
+  cudaThreadSynchronize();
 }
 
 CuspAdapter* thundercat::newCuspAdapter() {

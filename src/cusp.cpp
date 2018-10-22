@@ -1,5 +1,6 @@
 #include "cusp.hpp"
 #include "spmvRegistry.h"
+#include "profiler.h"
 
 using namespace thundercat;
 
@@ -18,5 +19,13 @@ void Cusp::preprocess(thundercat::MMMatrix<double> &matrix) {
 }
 
 void Cusp::spmv(double *v, double *w) {
-  adapter->spmv(v, w);
+  Profiler::recordSpmvOverhead("Copy input matrix to Device", [&]() {
+      adapter->setX(v);
+  });
+
+  adapter->spmv();
+
+  Profiler::recordSpmvOverhead("Copy output matrix to Host", [&]() {
+      adapter->getY(w);
+  });
 }
