@@ -68,12 +68,14 @@ int main(int argc, const char *argv[]) {
 
   Profiler::print(cliOptions->iters, matrix->getElements().size());
 
-  std::ofstream myfile;
-  myfile.open (cliOptions->method);
-  for(int i = 0; i < matrix->N; i++) {
-    myfile << out[i] << std::endl;
+  if (cliOptions->dumpOutput){
+    std::ofstream myfile;
+    myfile.open (cliOptions->method + ".out");
+    for(int i = 0; i < matrix->N; i++) {
+      myfile << out[i] << std::endl;
+    }
+    myfile.close();
   }
-  myfile.close();
 
   return 0;
 }

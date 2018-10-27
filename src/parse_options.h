@@ -9,6 +9,7 @@ struct CliOptions {
     const long threads;
     const long iters;
     const bool debug;
+    const bool dumpOutput;
 
 };
 

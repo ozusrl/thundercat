@@ -6,13 +6,14 @@ static const char USAGE[] =
 R"(OzU SRL SpMV Benchmarking.
   Usage:
     spmv_benchmarking <mtxFile> <method>
-      [--threads=<num>] [--debug] [--iters=<count>]
+      [--threads=<num>] [--debug] [--iters=<count>] [--dump-output]
     spmv_benchmarking (-h | --help)
     spmv_benchmarking --version
   Options:
     -h --help                     Show this screen.
     --version                     Show version.
-    -d --debug                    Turn debug mode on.
+    --debug                       Turn debug mode on.
+    --dump-output                 Dump output vector to <method>.out
     --threads=<num>               Number of threads to use [default: 1].
     --iters=<count>               Number of iterations for benchmarking [default: 10].
 )";
@@ -25,6 +26,7 @@ void dumpOptions(std::unique_ptr<CliOptions>& options) {
             "threads    : " << options->threads << std::endl <<
             "iters      : " << options->iters << std::endl <<
             "debug      : " << (options->debug ? "true" : "false" )<< std::endl <<
+            "dump output: " << (options->dumpOutput ? "true" : "false" )<< std::endl <<
             "==================" << std::endl << std::endl;
 
 }
@@ -39,7 +41,8 @@ std::unique_ptr<CliOptions> parseCliOptions(int argc, const char * argv[]) {
       args["<method>"].asString(),
       args["--threads"].asLong(),
       args["--iters"].asLong(),
-      args["--debug"].asLong() ? true : false
+      args["--debug"].asBool(),
+      args["--dump-output"].asBool()
   });
 
   dumpOptions(options);
