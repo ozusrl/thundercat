@@ -19,7 +19,7 @@ void populateInputOutputVectors(VALUE_TYPE** input,  unsigned int m, VALUE_TYPE*
     (*input)[i] = i + 1;
   }
   for(int i = 0; i < n; ++i) {
-    (*output)[i] = i + 1;
+    (*output)[i] = 0;
   }
 }
 

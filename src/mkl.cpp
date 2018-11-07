@@ -18,7 +18,7 @@ void MKL::init(unsigned int numThreads) {
 
 void MKL::spmv(double* __restrict v, double* __restrict w) {
   double  alpha = 1.0;
-  double beta = 0.0;
+  double beta = 1.0;
   int *ptrb = csrMatrix->rowPtr;
   int *ptre = csrMatrix->rowPtr + 1;
   char trans[] = "N";

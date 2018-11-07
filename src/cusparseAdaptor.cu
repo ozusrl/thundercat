@@ -50,6 +50,7 @@ void CusparseAdaptor::preprocess(int nnz, int m, int n, int * rowPtr, int* colId
 
   error = cudaMalloc((void**)&x, M * sizeof(double));
   error = cudaMalloc((void**)&y, N * sizeof(double));
+  error = cudaMemset(y, 0, N * sizeof(double));
 }
 
 void CusparseAdaptor::setX(double *v) {
@@ -64,7 +65,7 @@ void CusparseAdaptor::getY(double *w) {
 
 void CusparseAdaptor::spmv() {
   double alpha = 1.0;
-  double beta = 0;
+  double beta = 1.0;
   cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, M, N, NNZ, &alpha,
                  descr, valDevPtr, rowIndexDevPtr, colIndexDevPtr, x, &beta, y);
 
