@@ -2,13 +2,13 @@
 #include <string>
 #include "incrementalCSR.hpp"
 
-const std::string RowIncrementalCSR::name = "ricsr";
-REGISTER_METHOD(RowIncrementalCSR)
+const std::string IncrementalCsr::name = "icsr";
+REGISTER_METHOD(IncrementalCsr)
 
-RowIncrementalCSR::RowIncrementalCSR() {
+IncrementalCsr::IncrementalCsr() {
 }
 
-void RowIncrementalCSR::convertMatrix() {
+void IncrementalCsr::convertMatrix() {
   int *rows = new int[csrMatrix->N];
   unsigned char *rowPtr = (unsigned char *)rows;
   int *cols = csrMatrix->colIndices;
@@ -58,7 +58,7 @@ void RowIncrementalCSR::convertMatrix() {
   matrix = std::make_unique<CSRMatrix<VALUE_TYPE>>(rows, cols, vals, csrMatrix->N, csrMatrix->M, csrMatrix->NZ);
 }
 
-void RowIncrementalCSR::spmv(double* __restrict v, double* __restrict w) {
+void IncrementalCsr::spmv(double* __restrict v, double* __restrict w) {
   const int *rows = matrix->rowPtr;
   switch(sizeOfRowLength) {
     case 1:

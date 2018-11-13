@@ -10,9 +10,9 @@ using namespace std;
 ///
 /// Incremental rows array with compression
 ///
-class RowIncrementalCSR: public CsrSpmvMethod {
+class IncrementalCsr: public CsrSpmvMethod {
 public:
-  RowIncrementalCSR();
+  IncrementalCsr();
   
   virtual void spmv(double* __restrict v, double* __restrict w) final;
 
@@ -35,7 +35,7 @@ private:
 
 
 template <typename T>
-void RowIncrementalCSR::spmvICSR(double* __restrict v, double* __restrict w, T* __restrict rows) {
+void IncrementalCsr::spmvICSR(double* __restrict v, double* __restrict w, T* __restrict rows) {
 #pragma omp parallel for
   for (unsigned int t = 0; t < stripeInfos->size(); t++) {
     int rowIndexBegin = stripeInfos->at(t).rowIndexBegin;
