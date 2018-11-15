@@ -19,11 +19,17 @@ long long  Profiler::measure(std::function<void()> codeBlock) {
 }
 
 void Profiler::recordSpmv(std::function<void()> codeBlock) {
-  startedSpmv = true;
-  auto duration = measure(codeBlock);
-  spmvTiming.description = "Spmv";
-  spmvTiming.duration = duration;
-  spmvTiming.level = 0;
+  if (startedSpmv == false) {
+    startedSpmv = true;
+    auto duration = measure(codeBlock);
+    spmvTiming.description = "Spmv";
+    spmvTiming.duration = duration;
+    spmvTiming.level = 1;
+  } else {
+    std::cerr << "Attempted call Profiler::recordSpmv second time" << std::endl;
+    exit(2);
+  }
+
 }
 void Profiler::recordTime(std::string description, std::function<void()> codeBlock) {
   timingLevel++;
@@ -56,7 +62,6 @@ void Profiler::recordSpmvOverhead(std::string description, std::function<void()>
 
 void Profiler::print(unsigned int numIters, unsigned int NNZ, unsigned int flopsPerNNZ) {
   timingInfos.push_back(spmvTiming);
-
   for (auto &info : timingInfos) {
     std::cout << info.level << " ";
     std::cout << std::setw(10) << info.duration;
@@ -79,14 +84,13 @@ void Profiler::print(unsigned int numIters, unsigned int NNZ, unsigned int flops
   long long  netSpmvDuration = spmvTiming.duration - totalSpmvOverhead;
 
   if (spmvOverheads.size()) {
-    std::cout << spmvTiming.level << " ";
-    std::cout << std::setw(10) << netSpmvDuration;
+    std::cout << std::setw(12) << netSpmvDuration;
     std::cout << " usec.    " << spmvTiming.description << " w/o Overheads" << std::endl;
   }
   float durationPerIteration = netSpmvDuration / numIters;
 
-  std::cout << "0 " << std::setw(10) << durationPerIteration << " usec.    perIteration" <<  std::endl;
-  std::cout << "0 " << std::setw(10) << (flopsPerNNZ * NNZ) / durationPerIteration / 1000 << " GFlops   perIteration" <<  std::endl;
-  std::cout << "0 " << std::setw(10) << numIters << " times    iterated\n";
+  std::cout << std::setw(12) << durationPerIteration << " usec.    perIteration" <<  std::endl;
+  std::cout << std::setw(12) << (flopsPerNNZ * NNZ) / durationPerIteration / 1000 << " GFlops   perIteration" <<  std::endl;
+  std::cout << std::setw(12) << numIters << " times    iterated\n";
 
 }
