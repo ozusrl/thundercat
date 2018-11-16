@@ -8,7 +8,7 @@ using namespace asmjit;
 using namespace x86;
 
 
-const std::string UnrollingWithGOTO::name = "unfoldingwithgoto";
+const std::string UnrollingWithGOTO::name = "unrollingwithgoto";
 REGISTER_METHOD(UnrollingWithGOTO)
 
 ///
