@@ -10,8 +10,7 @@ using namespace std;
 using namespace asmjit;
 using namespace x86;
 
-const std::string CSRbyNZ::name = "csrbynz";
-REGISTER_METHOD(CSRbyNZ)
+REGISTER_METHOD(CSRbyNZ, "csrbynz")
 
 ///
 /// Analysis

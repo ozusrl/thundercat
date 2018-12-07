@@ -271,10 +271,8 @@ void GenOSKICodeEmitter::emitSingleLoop(bitset<32> &patternBits, unsigned int nu
 // TODO: GenOski requires extra b_r and b_c params. We don't have support for this in registry yet, therefore we define
 // TODO: GenOSKI33 and GenOSKI44 as separate methods
 
-const std::string GenOSKI33::name = "genoski33";
-REGISTER_METHOD(GenOSKI33)
-const std::string GenOSKI44::name = "genoski44";
-REGISTER_METHOD(GenOSKI44)
+REGISTER_METHOD(GenOSKI33, "genoski33")
+REGISTER_METHOD(GenOSKI44, "genoski44")
 
 GenOSKI33::GenOSKI33()
     : GenOSKI(3,3) {

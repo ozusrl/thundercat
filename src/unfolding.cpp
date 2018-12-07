@@ -12,8 +12,7 @@ using namespace x86;
 #define REGISTER_LIMIT 7
 #define LIMIT_TO_DO_LEAQ 120
 
-const std::string Unfolding::name = "unfolding";
-REGISTER_METHOD(Unfolding)
+REGISTER_METHOD(Unfolding, "unfolding")
 
 ///
 /// Analysis

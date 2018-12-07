@@ -9,8 +9,7 @@ using namespace x86;
 
 
 
-const std::string RowPattern::name = "rowpattern";
-REGISTER_METHOD(RowPattern)
+REGISTER_METHOD(RowPattern, "rowpattern")
 ///
 /// Analysis
 ///

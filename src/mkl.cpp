@@ -1,14 +1,11 @@
 #include "mkl.h"
 #include "mkl.hpp"
-//#include "mkl_spblas.h"
 #include "spmvRegistry.h"
 
 using namespace thundercat;
 using namespace std;
 
-const std::string MKL::name = "mkl";
-
-REGISTER_METHOD(MKL)
+REGISTER_METHOD(MKL, "mkl")
 
 void MKL::init(unsigned int numThreads) {
   CsrSpmvMethod::init(numThreads);

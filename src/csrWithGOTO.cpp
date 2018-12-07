@@ -8,8 +8,7 @@ using namespace asmjit;
 using namespace x86;
 
 
-const std::string CSRWithGOTO::name = "csrwithgoto";
-REGISTER_METHOD(CSRWithGOTO)
+REGISTER_METHOD(CSRWithGOTO, "csrwithgoto")
 
 
 ///

@@ -45,8 +45,6 @@ namespace thundercat {
   };
 
   class ZzCrs: public YzelmanMethod<ZZ_CRS<VALUE_TYPE>> {
-  public:
-      static const std::string name;
 
   protected:
       virtual std::unique_ptr<ZZ_CRS<VALUE_TYPE>> createUnderlying(
@@ -57,8 +55,6 @@ namespace thundercat {
   };
 
   class THilbert : public YzelmanMethod<Hilbert<VALUE_TYPE>> {
-  public:
-      static const std::string name;
 
   protected:
       virtual std::unique_ptr<Hilbert<VALUE_TYPE>> createUnderlying(
@@ -69,8 +65,6 @@ namespace thundercat {
   };
 
     class Hts : public YzelmanMethod<HTS<VALUE_TYPE>> {
-    public:
-        static const std::string name;
 
     protected:
         virtual std::unique_ptr<HTS<VALUE_TYPE>> createUnderlying(

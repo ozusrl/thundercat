@@ -2,8 +2,7 @@
 #include <string>
 #include "incrementalCSR.hpp"
 
-const std::string IncrementalCsr::name = "icsr";
-REGISTER_METHOD(IncrementalCsr)
+REGISTER_METHOD(IncrementalCsr, "icsr")
 
 IncrementalCsr::IncrementalCsr() {
 }

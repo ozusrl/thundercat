@@ -8,8 +8,6 @@ namespace thundercat {
     virtual void init(unsigned int numThreads) final;
 
     virtual void spmv(double *__restrict v, double *__restrict w) final;
-
-    static const std::string name;
   };
 }
 

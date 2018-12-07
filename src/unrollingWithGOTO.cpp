@@ -8,8 +8,7 @@ using namespace asmjit;
 using namespace x86;
 
 
-const std::string UnrollingWithGOTO::name = "unrollingwithgoto";
-REGISTER_METHOD(UnrollingWithGOTO)
+REGISTER_METHOD(UnrollingWithGOTO, "unrollingwithgoto")
 
 ///
 /// Analysis is inherited from CSRbyNZ.

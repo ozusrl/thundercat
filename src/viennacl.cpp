@@ -7,8 +7,7 @@
 using namespace thundercat;
 
 
-const std::string ViennaCL::name = "viennacl";
-REGISTER_METHOD(ViennaCL)
+REGISTER_METHOD(ViennaCL, "viennacl")
 
 ViennaCL::~ViennaCL() {
   deleteViennaCLAdapter(adapter);

@@ -32,8 +32,6 @@ namespace thundercat {
 
     virtual void spmv(double* __restrict v, double* __restrict w);
 
-    static const std::string name;
-
   private:
       ViennaCLAdapter* adapter;
       int M;

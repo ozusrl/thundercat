@@ -5,8 +5,7 @@
 using namespace thundercat;
 using namespace std;
 
-const std::string Cusparse::name = "cusparse";
-REGISTER_METHOD(Cusparse)
+REGISTER_METHOD(Cusparse, "cusparse")
 
 Cusparse::~Cusparse() {
   deleteCusparseAdaptor(adaptor);

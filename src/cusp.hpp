@@ -24,8 +24,6 @@ namespace thundercat {
     virtual void preprocess(MMMatrix<VALUE_TYPE>& matrix);
     virtual void spmv(double* __restrict v, double* __restrict w);
 
-    static const std::string name;
-
   private:
     std::unique_ptr<CSRMatrix<VALUE_TYPE>> csrMatrix;
     CuspAdapter* adapter;

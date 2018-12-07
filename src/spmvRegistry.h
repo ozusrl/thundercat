@@ -43,7 +43,7 @@ public:
 template<class TSpmvMethod>
 SpmvMethodCreatorImpl<TSpmvMethod>::SpmvMethodCreatorImpl(std::string name) {
   SpmvMethodRegistry &factory = SpmvMethodRegistry::instance();
-  factory.add(this, TSpmvMethod::name);
+  factory.add(this, name);
 }
 
 template<class TSpmvMethod>
@@ -51,10 +51,10 @@ std::unique_ptr<SpmvMethod> SpmvMethodCreatorImpl<TSpmvMethod>::getMethod() {
   return std::unique_ptr<SpmvMethod>(new TSpmvMethod());
 }
 
-#define REGISTER_METHOD(CLASSNAME) \
+#define REGISTER_METHOD(CLASSNAME, NAME) \
     namespace { \
         static SpmvMethodCreatorImpl<CLASSNAME> \
-        CLASSNAME##_creator( CLASSNAME :: name); \
+        CLASSNAME##_creator( NAME); \
     };
 
 #endif //SPMV_BENCHMARKING_SPMV_REGISTRY_H

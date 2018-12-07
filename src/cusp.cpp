@@ -4,8 +4,7 @@
 
 using namespace thundercat;
 
-const std::string Cusp::name = "cusp";
-REGISTER_METHOD(Cusp)
+REGISTER_METHOD(Cusp, "cusp")
 
 Cusp::~Cusp() {
   deleteCuspAdapter(adapter);

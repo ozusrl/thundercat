@@ -13,8 +13,7 @@ using namespace x86;
 /// This way, we do not have to compute the distance dynamically.
 /// Matrix values are not reordered. Only the rows array changes.
 
-const std::string CSRLenWithGOTO::name = "csrlenwithgoto";
-REGISTER_METHOD(CSRLenWithGOTO)
+REGISTER_METHOD(CSRLenWithGOTO, "csrlenwithgoto")
 
 ///
 /// Analysis

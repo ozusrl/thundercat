@@ -62,8 +62,6 @@ namespace thundercat {
   /// CSRbyNZ
   ///
   class CSRbyNZ: public Specializer {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index);
     virtual void analyzeMatrix() final;
@@ -77,8 +75,6 @@ namespace thundercat {
   /// UnrollingWithGOTO
   ///
   class UnrollingWithGOTO: public CSRbyNZ {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void convertMatrix() final;
@@ -106,13 +102,11 @@ namespace thundercat {
 
   class GenOSKI33: public GenOSKI {
   public:
-    static const std::string name;
     GenOSKI33();
   };
 
   class GenOSKI44: public GenOSKI {
   public:
-    static const std::string name;
     GenOSKI44();
   };
   ///
@@ -122,8 +116,6 @@ namespace thundercat {
   typedef std::map<std::vector<int>, std::vector<int> > RowPatternInfo;
 
   class RowPattern: public Specializer {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -138,8 +130,6 @@ namespace thundercat {
   /// Unfolding
   ///
   class Unfolding: public Specializer {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -156,8 +146,6 @@ namespace thundercat {
   /// CSRWithGOTO
   ///
   class CSRWithGOTO: public Specializer {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;
@@ -171,8 +159,6 @@ namespace thundercat {
   /// CSRLenWithGOTO
   ///
   class CSRLenWithGOTO: public Specializer {
-  public:
-    static const std::string name;
   protected:
     virtual void emitMultByMFunction(unsigned int index) final;
     virtual void analyzeMatrix() final;

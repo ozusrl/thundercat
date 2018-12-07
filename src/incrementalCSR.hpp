@@ -22,9 +22,6 @@ protected:
 private:
   template <typename T>
   void spmvICSR(double* __restrict v, double* __restrict w, T* __restrict rows);
-
-public:
-  static const std::string name;
 protected:
   int sizeOfRowLength;
 
