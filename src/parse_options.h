@@ -8,6 +8,7 @@ struct CliOptions {
     const std::string method;
     const long threads;
     const long iters;
+    const long warmups;
     const bool debug;
     const bool dumpOutput;
 

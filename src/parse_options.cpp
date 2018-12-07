@@ -7,6 +7,7 @@ R"(OzU SRL SpMV Benchmarking.
   Usage:
     spmv_benchmarking <mtxFile> <method>
       [--threads=<num>] [--debug] [--iters=<count>] [--dump-output]
+      [--warmups=<count>]
     spmv_benchmarking (-h | --help)
     spmv_benchmarking --version
   Options:
@@ -16,6 +17,8 @@ R"(OzU SRL SpMV Benchmarking.
     --dump-output                 Dump output vector to <method>.out
     --threads=<num>               Number of threads to use [default: 1].
     --iters=<count>               Number of iterations for benchmarking [default: 10].
+    --warmups=<count>             Number of warmup iterations before benchmarking [default: 5].
+
 )";
 
 void dumpOptions(std::unique_ptr<CliOptions>& options) {
@@ -25,6 +28,7 @@ void dumpOptions(std::unique_ptr<CliOptions>& options) {
             "method     : " << options->method << std::endl <<
             "threads    : " << options->threads << std::endl <<
             "iters      : " << options->iters << std::endl <<
+            "warmups    : " << options->warmups << std::endl <<
             "debug      : " << (options->debug ? "true" : "false" )<< std::endl <<
             "dump output: " << (options->dumpOutput ? "true" : "false" )<< std::endl <<
             "==================" << std::endl << std::endl;
@@ -41,6 +45,7 @@ std::unique_ptr<CliOptions> parseCliOptions(int argc, const char * argv[]) {
       args["<method>"].asString(),
       args["--threads"].asLong(),
       args["--iters"].asLong(),
+      args["--warmups"].asLong(),
       args["--debug"].asBool(),
       args["--dump-output"].asBool()
   });

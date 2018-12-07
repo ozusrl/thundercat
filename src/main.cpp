@@ -10,8 +10,6 @@
 
 using namespace thundercat;
 
-const int warmupIterations = 5;
-
 void populateInputOutputVectors(VALUE_TYPE** input,  unsigned int m, VALUE_TYPE** output, unsigned int n) {
   *input = new double[m];
   *output = new double[n];
@@ -53,7 +51,7 @@ int main(int argc, const char *argv[]) {
 
   // Warm up
   Profiler::recordTime("Warm up", [&]() {
-    for (int i = 0; i < warmupIterations; ++i) {
+    for (int i = 0; i < cliOptions->warmups; ++i) {
       method->spmv(in, out);
     }
   });
