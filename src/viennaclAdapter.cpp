@@ -17,8 +17,7 @@ void ViennaCLAdapter::getY(std::vector<double> &cpuY) {
 }
 
 void ViennaCLAdapter::spmv() {
-  viennacl::vector<double> t  = viennacl::linalg::prod(A, x);
-  y = y + t;
+  y  += viennacl::linalg::prod(A, x);
   viennacl::backend::finish();
 }
 
