@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(thundercat)
+project(spmv_benchmark)
 
 message(STATUS "System is " ${CMAKE_SYSTEM_NAME})
 message(STATUS "Compiler is " ${CMAKE_CXX_COMPILER_ID})
@@ -26,6 +26,7 @@ set(SOURCE_FILES
         main.cpp
         spmvRegistry.cpp
         parse_options.cpp
+        newmethod.cpp
         )
 
 set(HEADER_FILES
@@ -34,6 +35,7 @@ set(HEADER_FILES
         profiler.h
         spmvRegistry.h
         parse_options.h
+        newmethod.h
         )
 
 if (CODEGEN)
@@ -142,7 +144,7 @@ endif ()
 ### Define executable ###
 #########################
 
-add_executable(thundercat ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(spmv_benchmark ${SOURCE_FILES} ${HEADER_FILES})
 
 
 #########################
@@ -157,7 +159,7 @@ find_library(ASMJIT
         asmjit
         PATHS ${CMAKE_SOURCE_DIR}/../asmjit/build
         )
-target_link_libraries(thundercat ${ASMJIT})
+target_link_libraries(spmv_benchmark ${ASMJIT})
 
 ##
 ## MKL
@@ -183,7 +185,7 @@ if (MKL_ROOT_DIR)
             iomp5
             PATHS ${MKL_ROOT_DIR}/../lib ${MKL_ROOT_DIR}/../lib/intel64
             )
-    target_link_libraries(thundercat
+    target_link_libraries(spmv_benchmark
             ${MKL_CORE}
             ${MKL_INTEL_THREAD}
             ${MKL_INTEL_LP64}
@@ -202,8 +204,8 @@ find_library(MMMatrixIO
         mmmatrixio
         PATHS ${CMAKE_SOURCE_DIR}/../lib/mmmatrixio
         )
-target_link_libraries(thundercat ${MMMatrixIO})
-target_include_directories(thundercat PUBLIC ${CMAKE_SOURCE_DIR}/../MMMatrixIO/src)
+target_link_libraries(spmv_benchmark ${MMMatrixIO})
+target_include_directories(spmv_benchmark PUBLIC ${CMAKE_SOURCE_DIR}/../MMMatrixIO/src)
 
 #
 # docopt library
@@ -213,9 +215,9 @@ find_library(docopt
         docopt
         PATHS ${CMAKE_SOURCE_DIR}/../lib/docopt.cpp
         )
-target_link_libraries(thundercat ${docopt})
+target_link_libraries(spmv_benchmark ${docopt})
 
-target_link_libraries(thundercat ${CUDA_cusparse_LIBRARY} )
+target_link_libraries(spmv_benchmark ${CUDA_cusparse_LIBRARY} )
 
 #
 # ViennaCL library
@@ -225,8 +227,8 @@ if (VIENNACL)
             viennacl
             PATHS ${VIENNACL}/build/libviennacl
             )
-    target_link_libraries(thundercat ${VIENNACL_LIB})
-    target_include_directories(thundercat PUBLIC ${VIENNACL}/libviennacl/include ${VIENNACL})
+    target_link_libraries(spmv_benchmark ${VIENNACL_LIB})
+    target_include_directories(spmv_benchmark PUBLIC ${VIENNACL}/libviennacl/include ${VIENNACL})
 endif()
 
 
