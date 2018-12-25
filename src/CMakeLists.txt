@@ -26,7 +26,6 @@ set(SOURCE_FILES
         main.cpp
         spmvRegistry.cpp
         parse_options.cpp
-        newmethod.cpp
         )
 
 set(HEADER_FILES
@@ -35,7 +34,6 @@ set(HEADER_FILES
         profiler.h
         spmvRegistry.h
         parse_options.h
-        newmethod.h
         )
 
 if (CODEGEN)
